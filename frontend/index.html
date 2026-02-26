@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ground Control System - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'gcs-dark': '#111827',
+            'gcs-background': '#F9F4F1',
+            'gcs-primary': 'var(--gcs-primary)',
+            'gcs-primary-light': 'var(--gcs-primary-light)',
+            'gcs-primary-dark': 'var(--gcs-primary-dark)',
+            'gcs-text-on-primary': 'var(--gcs-text-on-primary)',
+            'gcs-orange': 'var(--gcs-primary)', // Keep gcs-orange for compatibility
+            'gcs-text-dark': '#1F2937',
+            'gcs-text-light': '#D1D5DB',
+            'gcs-card': '#FFFFFF',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          // --- ADD THIS KEYFRAMES/ANIMATION BLOCK ---
+          keyframes: {
+            'fade-in-fast': {
+              '0%': { opacity: '0', transform: 'translateY(-10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            }
+          },
+          animation: {
+            'fade-in-fast': 'fade-in-fast 0.2s ease-out forwards',
+          }
+          // --- END OF ADDITION ---
+        }
+      }
+    }
+    </script>
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <style>
+      .leaflet-control-attribution {
+        font-size: 0.6rem !important; /* Smaller font size for attribution */
+      }
+      :root {
+        --gcs-primary: #F97316;
+        --gcs-primary-light: #FB923C;
+        --gcs-primary-dark: #EA580C;
+        --gcs-text-on-primary: #FFFFFF;
+      }
+      .theme-purple {
+        --gcs-primary: #8B5CF6;
+        --gcs-primary-light: #A78BFA;
+        --gcs-primary-dark: #7C3AED;
+        --gcs-text-on-primary: #FFFFFF;
+      }
+      .theme-orange {
+        --gcs-primary: #F97316;
+        --gcs-primary-light: #FB923C;
+        --gcs-primary-dark: #EA580C;
+        --gcs-text-on-primary: #FFFFFF;
+      }
+      .theme-blue {
+        --gcs-primary: #3B82F6;
+        --gcs-primary-light: #60A5FA;
+        --gcs-primary-dark: #2563EB;
+        --gcs-text-on-primary: #FFFFFF;
+      }
+      .theme-green {
+        --gcs-primary: #10B981;
+        --gcs-primary-light: #34D399;
+        --gcs-primary-dark: #059669;
+        --gcs-text-on-primary: #FFFFFF;
+      }
+      .theme-black {
+        --gcs-primary: #1F2937;
+        --gcs-primary-light: #374151;
+        --gcs-primary-dark: #111827;
+        --gcs-text-on-primary: #FFFFFF;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-gcs-background font-sans dark:bg-gcs-dark">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

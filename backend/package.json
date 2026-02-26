@@ -1,0 +1,32 @@
+{
+  "name": "gcs-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "npx tsx watch src/index.ts",
+    "build": "npx tsc",
+    "start": "node dist/index.js",
+    "setup-db": "node dist/setup-db.js",
+    "db:setup": "npx tsx src/setup-db.ts",
+    "db:migrate": "npx tsx src/migrate-db.ts",
+    "db:backup": "npx tsx src/backup-restore.ts backup",
+    "db:restore": "npx tsx src/backup-restore.ts restore"
+  },
+  "dependencies": {
+    "@fastify/websocket": "^10.0.1",
+    "@supabase/supabase-js": "^2.31.0",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.28.1",
+    "pg": "^8.12.0",
+    "serialport": "^12.0.0",
+    "types": "file:../packages/types"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.9",
+    "@types/pg": "^8.11.6",
+    "fastify-tsconfig": "^3.0.0",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3"
+  }
+}

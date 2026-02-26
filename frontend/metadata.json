@@ -1,0 +1,8 @@
+{
+  "name": "Ground Control Station",
+  "description": "A modern, responsive Ground Control Station (GCS) GUI for monitoring and controlling drone telemetry and flight operations. Features a simulated flight data feed, attitude indicator, map view, and command console.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}

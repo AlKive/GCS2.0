@@ -1,0 +1,11 @@
+node_modules
+dist
+test
+coverage
+.env
+.git
+*.log
+*.md
+Dockerfile
+dockerfile
+package-lock.json
