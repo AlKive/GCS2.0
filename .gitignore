@@ -26,3 +26,13 @@ yarn-error.log*
 .vscode/
 *.swp
 *.swo
+
+# Python build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
