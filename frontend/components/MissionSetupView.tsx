@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L, { LatLng, Icon } from 'leaflet';
 import type { MissionPlan } from 'types';
 import iconUrl from 'leaflet/dist/images/marker-icon.png?url';
@@ -17,15 +17,17 @@ const DefaultIcon = new Icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // --- Map Component ---
-const WaypointMap = React.memo(({ waypoints, onAddWaypoint }: { 
-    waypoints: LatLng[], 
-    onAddWaypoint: (latlng: LatLng) => void 
+const WaypointMap = React.memo(({ waypoints }: { 
+    waypoints: LatLng[]
 }) => {
-  useMapEvents({
-    click(e) {
-      onAddWaypoint(e.latlng);
-    },
-  });
+  const map = useMap();
+
+  useEffect(() => {
+    if (waypoints.length > 0) {
+      const bounds = L.latLngBounds(waypoints);
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+  }, [waypoints, map]);
 
   return (
     <>
@@ -50,8 +52,6 @@ const MissionSetupView: React.FC<MissionSetupViewProps> = ({ onLaunch, onClose, 
   const [altitude, setAltitude] = useState(50);
   const [speed, setSpeed] = useState(10);
   const [waypoints, setWaypoints] = useState<LatLng[]>([]);
-  const [undoStack, setUndoStack] = useState<LatLng[][]>([]);
-  const [redoStack, setRedoStack] = useState<LatLng[][]>([]);
   const [checklist, setChecklist] = useState({
     battery: false,
     propellers: false,
@@ -87,38 +87,6 @@ const MissionSetupView: React.FC<MissionSetupViewProps> = ({ onLaunch, onClose, 
     setChecklist(prev => ({ ...prev, [item]: !prev[item] }));
   };
   
-  const handleAddWaypoint = React.useCallback((latlng: LatLng) => {
-    setUndoStack(prev => [...prev, waypoints]);
-    setRedoStack([]);
-    setWaypoints(prev => [...prev, latlng]);
-  }, [waypoints]);
-
-  const handleUndo = () => {
-    if (undoStack.length > 0) {
-      const previousState = undoStack[undoStack.length - 1];
-      setRedoStack(prev => [...prev, waypoints]);
-      setWaypoints(previousState);
-      setUndoStack(prev => prev.slice(0, -1));
-    }
-  };
-
-  const handleRedo = () => {
-    if (redoStack.length > 0) {
-      const nextState = redoStack[redoStack.length - 1];
-      setUndoStack(prev => [...prev, waypoints]);
-      setWaypoints(nextState);
-      setRedoStack(prev => prev.slice(0, -1));
-    }
-  };
-
-  const handleClear = () => {
-    if (waypoints.length > 0) {
-      setUndoStack(prev => [...prev, waypoints]);
-      setRedoStack([]);
-      setWaypoints([]);
-    }
-  };
-
   const isChecklistComplete = Object.values(checklist).every(Boolean);
   const allPreArmingComplete = Object.values(preArmingChecks).every(check => check.status === 'success');
   const allChecksComplete = isChecklistComplete && allPreArmingComplete;
@@ -198,68 +166,203 @@ const MissionSetupView: React.FC<MissionSetupViewProps> = ({ onLaunch, onClose, 
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-        <div className="bg-gray-900 text-white rounded-lg shadow-2xl w-full h-full flex flex-col">
+      <div className="relative w-full h-full flex flex-col bg-gray-900 text-white rounded-lg shadow-2xl overflow-hidden">
           
-          {/* Header */}
-          <div className="flex items-center justify-between p-2 border-b border-gray-700">
-            <h1 className="text-base font-bold">Mission Setup & Pre-flight Checklist</h1>
-            <button 
-              onClick={onClose}
-              className="text-gray-400 hover:text-white text-xl font-bold leading-none"
-            >
-              ×
-            </button>
-          </div>
-
           {/* Main Content */}
-          <div className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 overflow-hidden min-h-0">
             
-            {/* Left Side: Map */}
-            <div className="w-2/3 p-3 flex flex-col border-r border-gray-700">
-              <h2 className="text-orange-500 text-sm font-semibold mb-2">Flight Path Planning</h2>
-              
-              <div className="flex-1 bg-gray-800 rounded overflow-hidden mb-2">
-                <MapContainer
-                  center={[14.5995, 120.9842]} 
-                  zoom={13}
-                  className="w-full h-full"
-                >
-                  <TileLayer
-                    url={url}
-                    attribution={attribution}
-                  />
-                  <WaypointMap waypoints={waypoints} onAddWaypoint={handleAddWaypoint} />
-                </MapContainer>
+                        {/* Left Side: Map */}
+                        <div className="w-2/3 p-3 flex flex-col border-r border-gray-700 min-h-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <h2 className="text-orange-500 text-sm font-semibold">Flight Path Planning</h2>
+                            <button 
+                              onClick={() => alert(`Map Source: ${url}\nIf blank, try switching style in Settings.`)}
+                              className="text-[10px] text-gray-500 hover:text-white"
+                            >
+                              ⚙️ Map Debug
+                            </button>
+                          </div>
+                          
+                          <div className="flex-1 bg-gray-800 rounded overflow-hidden mb-2 relative border border-gray-700" style={{ minHeight: '450px', height: '100%' }}>
+                            <MapContainer
+                              center={[14.5995, 120.9842]} 
+                              zoom={13}
+                              className="w-full h-full"
+                              style={{ height: '450px', width: '100%' }}
+                            >
+                              <TileLayer
+                                url={url || "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}
+                                attribution={attribution}
+                              />
+                              <WaypointMap waypoints={waypoints} />
+                            </MapContainer>
+                          </div>
+                        </div>
+            
+                        {/* Right Side: Form & Checklists */}
+                        <div className="w-1/3 p-3 flex flex-col overflow-y-auto">
+                          
+                          {/* iNAV Mission Import & USB Connect */}
+                          <div className="mb-4 p-3 bg-gray-800 border border-gray-700 rounded-lg">
+                            <h3 className="text-orange-500 text-xs font-bold uppercase tracking-wider mb-2">View Current Waypoints</h3>
+                            
+                            <div className="grid grid-cols-2 gap-2 mb-3">
+                              <button
+                                onClick={async () => {
+                                  if (!('serial' in navigator)) {
+                                    alert("USB Serial is not supported. Use Chrome/Edge over HTTPS or localhost.");
+                                    return;
+                                  }
+            
+                                  try {
+                                    // @ts-ignore
+                                    const port = await navigator.serial.requestPort();
+                                    await port.open({ baudRate: 115200 });
+                                    
+                                    const writer = port.writable.getWriter();
+                                    const reader = port.readable.getReader();
+            
+                                    console.log("USB Sync: Reading mission from EEPROM...");
+                                    const newSyncWaypoints: LatLng[] = [];
+                                    let firstAlt = 50;
+            
+                                    // Loop through first 5 waypoints to get the mission
+                                    for (let i = 1; i <= 5; i++) {
+                                      // MSP_WP (118) for index i
+                                      const checksum = 0x01 ^ 0x76 ^ i;
+                                      const request = new Uint8Array([0x24, 0x4D, 0x3C, 0x01, 0x76, i, checksum]);
+                                      
+                                      await writer.write(request);
+                                      const { value } = await reader.read();
+                                      
+                                      if (value && value.length >= 15) {
+                                        let offset = 0;
+                                        while (offset < value.length - 10) {
+                                          if (value[offset] === 0x24 && value[offset+1] === 0x4D && value[offset+2] === 0x3E) {
+                                            const payloadOffset = offset + 5;
+                                            const view = new DataView(value.buffer, value.byteOffset, value.byteLength);
+                                            const lat = view.getInt32(payloadOffset + 2, true) / 10000000;
+                                            const lon = view.getInt32(payloadOffset + 6, true) / 10000000;
+                                            const alt = view.getUint32(payloadOffset + 10, true) / 100;
+            
+                                            if (lat !== 0 && lon !== 0) {
+                                              newSyncWaypoints.push(new LatLng(lat, lon));
+                                              if (i === 1) firstAlt = alt;
+                                              console.log(`Synced WP #${i}: ${lat}, ${lon}`);
+                                            }
+                                            break;
+                                          }
+                                          offset++;
+                                        }
+                                      }
+                                    }
+            
+                                    if (newSyncWaypoints.length > 0) {
+                                      setWaypoints(newSyncWaypoints);
+                                      setAltitude(firstAlt);
+                                      alert(`Successfully synced ${newSyncWaypoints.length} waypoints from Drone EEPROM!`);
+                                    } else {
+                                      alert("Connected, but no mission waypoints were found in EEPROM. Ensure a mission is 'Saved to FC' in iNAV.");
+                                    }
+            
+                                    writer.releaseLock();
+                                    reader.releaseLock();
+                                    await port.close();
+                                  } catch (err) {
+                                    console.error("Serial error:", err);
+                                    alert("USB Sync Failed. Check cable and ensure iNAV Configurator is closed.");
+                                  }
+                                }}
+                                className="flex items-center justify-center gap-2 py-2 px-3 rounded bg-orange-600 hover:bg-orange-700 text-white text-[10px] font-bold transition-colors"
+                              >
+                                <span>🔌</span> SYNC FROM USB
+                              </button>
+                  <label className="flex items-center justify-center gap-2 py-2 px-3 rounded bg-gray-700 hover:bg-gray-600 text-white text-[10px] font-bold transition-colors cursor-pointer text-center">
+                    <span>📁</span> LOAD FILE
+                    <input
+                      type="file"
+                      accept=".mission,.xml"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            const content = event.target?.result as string;
+                            try {
+                              const parser = new DOMParser();
+                              const xmlDoc = parser.parseFromString(content, "text/xml");
+                              
+                              // Look for waypoints inside <waypoints>, <missionitem> or directly under root
+                              let wpNodes = Array.from(xmlDoc.getElementsByTagName("waypoint"));
+                              if (wpNodes.length === 0) {
+                                wpNodes = Array.from(xmlDoc.getElementsByTagName("WayPoint"));
+                              }
+                              if (wpNodes.length === 0) {
+                                wpNodes = Array.from(xmlDoc.getElementsByTagName("missionitem"));
+                              }
+                              
+                              console.log(`Found ${wpNodes.length} waypoint nodes in XML`);
+                              const newWaypoints: LatLng[] = [];
+                              
+                              for (let i = 0; i < wpNodes.length; i++) {
+                                const node = wpNodes[i];
+                                
+                                // Helper to get value from either child element or attribute
+                                const getVal = (name: string) => {
+                                  const child = node.getElementsByTagName(name)[0];
+                                  if (child) return child.textContent?.trim() || "0";
+                                  return node.getAttribute(name) || "0";
+                                };
+
+                                const latStr = getVal("lat");
+                                const lonStr = getVal("lon");
+                                const altStr = getVal("alt");
+                                const actionStr = getVal("action");
+                                
+                                let lat = parseFloat(latStr);
+                                let lon = parseFloat(lonStr);
+                                const altValue = parseFloat(altStr);
+                                
+                                // iNAV coordinates can be decimal degrees (51.5) or integer (515000000)
+                                if (Math.abs(lat) > 180) lat /= 10000000;
+                                if (Math.abs(lon) > 180) lon /= 10000000;
+                                
+                                // Actions can be numeric (1=WAYPOINT) or string ("WAYPOINT")
+                                const isActionValid = actionStr === "WAYPOINT" || ["1", "3", "5", "8"].includes(actionStr);
+                                
+                                console.log(`WP ${i}: Action=${actionStr}, Lat=${lat}, Lon=${lon}, Alt=${altValue}`);
+
+                                if (isActionValid && !isNaN(lat) && !isNaN(lon) && (lat !== 0 || lon !== 0)) {
+                                  newWaypoints.push(new LatLng(lat, lon));
+                                  // Use the first waypoint's altitude as the mission altitude
+                                  if (newWaypoints.length === 1 && altValue > 0) {
+                                    setAltitude(altValue > 1000 ? altValue / 100 : altValue);
+                                  }
+                                }
+                              }
+                              
+                              if (newWaypoints.length > 0) {
+                                setWaypoints(newWaypoints);
+                                setMissionName(file.name.replace(/\.[^/.]+$/, ""));
+                                alert(`Successfully loaded ${newWaypoints.length} waypoints from ${file.name}`);
+                              } else {
+                                alert("No valid waypoints found in the file.");
+                              }
+                            } catch (error) {
+                              console.error("Error parsing mission file:", error);
+                              alert("Failed to parse mission file.");
+                            }
+                          };
+                          reader.readAsText(file);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+                <p className="text-[9px] text-gray-500 italic">Direct USB sync requires Chrome or Edge.</p>
               </div>
 
-              <div className="flex space-x-2">
-                <button 
-                  onClick={handleUndo}
-                  disabled={undoStack.length === 0}
-                  className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Undo
-                </button>
-                <button 
-                  onClick={handleRedo}
-                  disabled={redoStack.length === 0}
-                  className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Redo
-                </button>
-                <button 
-                  onClick={handleClear}
-                  className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-            
-            {/* Right Side: Form & Checklists */}
-            <div className="w-1/3 p-3 flex flex-col overflow-y-auto">
-              
               {/* Mission Name */}
               <div className="mb-3">
                 <label className="block text-xs font-medium mb-1 text-gray-300">Mission Name</label>
@@ -405,7 +508,6 @@ const MissionSetupView: React.FC<MissionSetupViewProps> = ({ onLaunch, onClose, 
             </div>
           </div>
         </div>
-      </div>
 
       {isLoadModalOpen && (
         <LoadPlanModal 

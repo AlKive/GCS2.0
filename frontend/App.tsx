@@ -17,12 +17,11 @@ import { useDashboardData } from './hooks/useDashboardData';
 import type { Mission, BreedingSiteInfo, MissionPlan, LiveTelemetry } from 'types';
 // ---
 
-type View = 'dashboard' | 'analytics' | 'flightLogs' | 'settings' | 'guide' | 'about';
+type View = 'dashboard' | 'analytics' | 'flightLogs' | 'settings' | 'guide' | 'about' | 'missionControl';
 
 const App: React.FC = () => {
   const [isMissionActive, setMissionActive] = useState(false);
   const [missionPlan, setMissionPlan] = useState<MissionPlan | null>(null);
-  const [isSetupViewVisible, setSetupViewVisible] = useState(false);
   const [isDarkMode, setDarkMode] = useState(false);
   const [mapStyle, setMapStyle] = useState(() => {
     return localStorage.getItem('mapStyle') || 'Satellite';
@@ -128,7 +127,7 @@ const App: React.FC = () => {
 
   const handleLaunchMission = async (plan: MissionPlan) => {
     setMissionPlan(plan);
-    setSetupViewVisible(false);
+    setCurrentView('dashboard');
     setMissionActive(true);
 
     // fire off the python processes (do not await so UI is instant)
@@ -136,7 +135,7 @@ const App: React.FC = () => {
   };
 
   const handleOpenMissionSetup = () => {
-    setSetupViewVisible(true);
+    setCurrentView('missionControl');
   };
 
   const renderView = () => {
@@ -158,6 +157,8 @@ const App: React.FC = () => {
         return <GuidePanel />;
       case 'about':
         return <AboutPanel />;
+      case 'missionControl':
+        return <MissionSetupView onLaunch={handleLaunchMission} onClose={() => setCurrentView('dashboard')} mapStyle={mapStyle} />;
       case 'dashboard':
       default:
         return <DashboardView overviewStats={overviewStats} missions={missions} onMissionSetup={handleOpenMissionSetup} telemetry={liveTelemetry} setArmedState={setArmedState} />;
@@ -171,6 +172,7 @@ const App: React.FC = () => {
     settings: 'Settings',
     guide: 'Guide',
     about: 'About Project',
+    missionControl: 'Mission Control',
   };
 
   return (
@@ -183,7 +185,6 @@ const App: React.FC = () => {
         </div>
       </main>
       
-      {isSetupViewVisible && <MissionSetupView onLaunch={handleLaunchMission} onClose={() => setSetupViewVisible(false)} mapStyle={mapStyle} />}
       {isMissionActive && <LiveMissionView telemetry={liveTelemetry} onEndMission={endMission} mapStyle={mapStyle} />}
     </div>
   );

@@ -72,12 +72,6 @@ const PreFlightPanel: React.FC<PreFlightPanelProps> = ({ onMissionSetup, telemet
                     </div>
                 </div>
             </div>
-            <button
-                onClick={onMissionSetup}
-                className="w-full mt-3 text-white font-bold py-2 px-4 text-sm rounded-lg transition-all duration-200 bg-gcs-primary hover:opacity-90 shadow-lg shadow-gcs-primary/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gcs-primary"
-            >
-                Plan New Mission
-            </button>
         </div>
     );
 };
