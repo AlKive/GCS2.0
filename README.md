@@ -1,61 +1,78 @@
-# Ground-Control-System-for-Drone-main
-# Ground-Control-System-for-Drone-main
+# LIPAD Ground Control System (GCS)
 
-## Automatic Mission Launch Helpers
+Welcome to the LIPAD GCS project. Follow these steps to set up the project and get the drone stream working.
 
-When you click **Launch Mission** from the frontend (after planning a new mission), the app now tells the backend to start two helper Python scripts (`ssh_connection_setup_gstreamer.py` and `gstreamer_test3.py`). These are the same files you previously ran with `START_SYSTEM2.bat`.
+## Prerequisites
 
-The backend will spawn them detached, so they continue running even if the server restarts.
+1.  **Tailscale**: Ensure both your laptop and the Raspberry Pi are connected to the same Tailscale network.
+2.  **GStreamer**: Install the GStreamer runtime on your laptop (Windows).
+    *   Download and install `gstreamer-1.0-msvc-x86_64-1.xx.x.msi` and `gstreamer-1.0-devel-msvc-x86_64-1.xx.x.msi` from [gstreamer.freedesktop.org](https://gstreamer.freedesktop.org/download/).
+    *   Make sure the GStreamer `bin` folder (e.g., `C:\Program Files\gstreamer\1.0\msvc_x86_64\bin`) is in your system's PATH.
+3.  **Python 3.11+**: Ensure Python is installed and available in your PATH.
 
-### Configuration
+## Installation
 
-- **PYTHON_PATH** – optional environment variable that points to the Python executable to use (defaults to `python` from your PATH).
-- **SCRIPTS_DIR** – optional environment variable pointing to the directory containing the two helper scripts. By default the backend assumes `../YOLOV8 TRAINING` relative to the `backend` folder (i.e. `<workspace>/YOLOV8 TRAINING`).
-
-Example (Windows PowerShell):
-
-```powershell
-$env:PYTHON_PATH = 'C:\Users\Cate\AppData\Local\Programs\Python\Python311\python.exe'
-$env:SCRIPTS_DIR = 'C:\Users\Cate\Downloads\ALL THESIS\YOLOV8 TRAINING'
-npm run dev # in backend folder
+### 1. Clone the Repository
+```bash
+git clone https://github.com/AlKive/GCS2.0.git
+cd GCS_with_RaspberryPi
 ```
 
-### Camera feed
-
-The `gstreamer_test3.py` helper now includes a small Flask server that exposes the drone camera as an MJPEG stream at `http://localhost:5000/video_feed`.  When a mission starts the frontend will load this stream into the left pane of the live view, replacing the previous map placeholder.
-
-**Script location**
-
-By default the backend looks for the helper Python files in a folder called `python_helpers` located at the workspace root (you can change this by setting the `SCRIPTS_DIR` env var).  This keeps everything inside the main project directory instead of referencing the external `YOLOV8 TRAINING` folder.
-
-Create that folder and copy the three scripts (`ssh_connection_setup_gstreamer.py`, `gstreamer_test3.py`, and `START_SYSTEM2.bat`) into it.  For example:
-
-```powershell
-mkdir python_helpers
-copy "..\YOLOV8 TRAINING\ssh_connection_setup_gstreamer.py" python_helpers
-copy "..\YOLOV8 TRAINING\gstreamer_test3.py" python_helpers
-copy "..\YOLOV8 TRAINING\START_SYSTEM2.bat" python_helpers
+### 2. Backend Setup
+```bash
+cd backend
+npm install
+cp .env.example .env
+# Edit .env with your Supabase and Database credentials
 ```
 
-> You may also edit `START_SYSTEM2.bat` to point at the local copies.
+### 3. Frontend Setup
+```bash
+cd ../frontend
+npm install
+cp .env.example .env
+# Edit .env with your Supabase credentials
+```
 
-**Python environment & requirements**
+### 4. Python Helpers Setup
+```bash
+cd ../python_helpers
+python -m venv venv
+.\venv\Scripts\activate  # Windows
+pip install -r requirements.txt
+# If GStreamer issues occur, ensure you have the full 'opencv-python' (not headless)
+pip uninstall opencv-python-headless
+pip install opencv-python
+```
 
-The helper scripts are executed by whatever Python interpreter is invoked by the backend.  By default this is the first `python` on your `PATH`; you can override it with the `PYTHON_PATH` environment variable (as described above).  If you create a virtual environment inside `python_helpers`, the backend can be pointed at that interpreter.
+## Running the Project
 
-To install packages for that environment:
+### 1. Start the Backend
+From the `backend` directory:
+```bash
+npm run dev
+```
 
-1. Activate the interpreter you plan to use. If you created a virtual env in `python_helpers/venv`:
-   ```powershell
-   cd python_helpers
-   .\venv\Scripts\activate   # Windows PowerShell
-   ```
-2. Install dependencies from the provided `requirements.txt` (see below):
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 2. Start the Frontend
+From the `frontend` directory:
+```bash
+npm run dev
+```
+Open `http://localhost:3000` in your browser.
 
-This ensures Flask, OpenCV, Paramiko, YOLOv8, etc. are available to the helpers.
+## Drone Stream Functionality
 
-The Vite configuration proxies `/camera_feed` to the Flask server, so from the React app you simply refer to `/camera_feed`.  The frontend automatically switches to the camera view during a mission; no additional logic is needed.
+The **Drone Stream** tab automatically triggers the camera connection when opened.
 
+*   **How it works**: The backend launches two Python scripts:
+    1.  `ssh_connection_setup_gstreamer.py`: Connects to the Pi via SSH (Tailscale), detects your laptop's IP, and starts the GStreamer stream.
+    2.  `gstreamer_test3.py`: Listens on port 5600 for the incoming stream, runs YOLOv8 object detection, and serves an MJPEG feed on port 5000.
+*   **Troubleshooting**:
+    *   Check `python_helpers/p1.log` for SSH connection and IP detection logs.
+    *   Check `python_helpers/p2.log` for GStreamer and YOLO status.
+    *   Use the **RESTART LIVESTREAM** button in the Drone Stream tab if the feed hangs.
+
+## Configuration Notes
+
+*   **Pi Tailscale IP**: Currently configured as `100.127.53.123` in the Python scripts. If the Pi's IP changes, update `PI_TAILSCALE_IP` in `python_helpers/ssh_connection_setup_gstreamer.py`.
+*   **Laptop IP Detection**: The system automatically detects your laptop's Tailscale IP (`100.x.x.x`). Ensure your laptop is connected to Tailscale before starting the stream.
