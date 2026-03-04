@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 
 // ---
 
-import Sidebar from './components/ControlPanel'; 
+import Sidebar, { View } from './components/ControlPanel'; 
 import DashboardHeader from './components/Header'; 
-import LiveMissionView from './components/LiveMissionView';
+import LiveMissionViewNew from './components/LiveMissionViewNew';
 import DashboardView from './components/DashboardView';
 import AnalyticsPanel from './components/AnalyticsPanel';
 import FlightLogsPanel from './components/FlightLogsPanel';
@@ -12,12 +12,11 @@ import SettingsPanel from './components/SettingsPanel';
 import MissionSetupView from './components/MissionSetupView';
 import GuidePanel from './components/GuidePanel';
 import AboutPanel from './components/AboutPanel';
+import DroneStreamView from './components/DroneStreamView';
 
 import { useDashboardData } from './hooks/useDashboardData';
 import type { Mission, BreedingSiteInfo, MissionPlan, LiveTelemetry } from 'types';
 // ---
-
-type View = 'dashboard' | 'analytics' | 'flightLogs' | 'settings' | 'guide' | 'about' | 'missionControl';
 
 const App: React.FC = () => {
   const [isMissionActive, setMissionActive] = useState(false);
@@ -83,11 +82,15 @@ const App: React.FC = () => {
   }, [isDarkMode]);
   
   // 4. This function now SAVES the mission to the backend
-  const endMission = async (duration: string, gpsTrack: { lat: number; lon: number }[], detectedSites: BreedingSiteInfo[]) => {
+  const endMission = async (duration: string | number, gpsTrack: { lat: number; lon: number }[], detectedSites: BreedingSiteInfo[]) => {
+    const formattedDuration = typeof duration === 'number' 
+        ? `${Math.floor(duration / 60).toString().padStart(2, '0')}:${(duration % 60).toString().padStart(2, '0')}`
+        : duration;
+
     const newMission: Omit<Mission, 'id'> = { // The database will create the 'id'
         name: missionPlan?.name || `Mission ${missions.length + 1}`,
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        duration,
+        duration: formattedDuration,
         status: 'Completed',
         location: 'Live Location',
         gpsTrack,
@@ -135,7 +138,7 @@ const App: React.FC = () => {
   };
 
   const handleOpenMissionSetup = () => {
-    setCurrentView('missionControl');
+    setCurrentView('droneStream');
   };
 
   const renderView = () => {
@@ -157,8 +160,8 @@ const App: React.FC = () => {
         return <GuidePanel />;
       case 'about':
         return <AboutPanel />;
-      case 'missionControl':
-        return <MissionSetupView onLaunch={handleLaunchMission} onClose={() => setCurrentView('dashboard')} mapStyle={mapStyle} />;
+      case 'droneStream':
+        return <DroneStreamView telemetry={liveTelemetry} onClose={() => setCurrentView('dashboard')} mapStyle={mapStyle} />;
       case 'dashboard':
       default:
         return <DashboardView overviewStats={overviewStats} missions={missions} onMissionSetup={handleOpenMissionSetup} telemetry={liveTelemetry} setArmedState={setArmedState} />;
@@ -172,20 +175,20 @@ const App: React.FC = () => {
     settings: 'Settings',
     guide: 'Guide',
     about: 'About Project',
-    missionControl: 'Mission Control',
+    droneStream: 'Drone Stream',
   };
 
   return (
     <div className="flex h-screen bg-gcs-background text-gcs-text-dark font-sans dark:bg-gcs-dark dark:text-gcs-text-light overflow-hidden">
-      <Sidebar currentView={currentView} onNavigate={setCurrentView} />
+      {currentView !== 'droneStream' && <Sidebar currentView={currentView} onNavigate={setCurrentView} />}
       <main className="flex-1 flex flex-col p-4 overflow-hidden">
-        <DashboardHeader time={time} date={date} title={viewTitles[currentView]} batteryPercentage={liveTelemetry.battery.percentage} />
+        {currentView !== 'droneStream' && <DashboardHeader time={time} date={date} title={viewTitles[currentView]} batteryPercentage={liveTelemetry.battery.percentage} />}
         <div className="flex-1 overflow-y-auto min-h-0">
           {renderView()}
         </div>
       </main>
       
-      {isMissionActive && <LiveMissionView telemetry={liveTelemetry} onEndMission={endMission} mapStyle={mapStyle} />}
+      {isMissionActive && <LiveMissionViewNew telemetry={liveTelemetry} onEndMission={endMission} mapStyle={mapStyle} />}
     </div>
   );
 };
