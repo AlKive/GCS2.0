@@ -4,8 +4,9 @@ import { supabase } from './supabaseClient.js';
 import type { Mission, LiveTelemetry, MissionPlan } from './types.js'; 
 
 // child_process for launching external Python scripts
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import path from 'path';
+import fs from 'fs';
 
 const fastify = Fastify({ logger: true });
 fastify.register(websocketPlugin);
@@ -294,28 +295,49 @@ fastify.get('/api/plans/:id', async (request, reply) => {
 // NEW: launch helper endpoint
 fastify.post('/api/mission/start', async (request, reply) => {
   try {
+    // Before spawning, we should try to kill any existing python processes 
+    // to avoid port conflicts and stale SSH connections
+    try {
+       if (process.platform === 'win32') {
+         // Kill processes with python.exe in them, but ignore errors if none found
+         execSync('taskkill /F /IM python.exe /T', { stdio: 'ignore' });
+       } else {
+         execSync('pkill -f python', { stdio: 'ignore' });
+       }
+       console.log('🧹 Cleaned up old python processes');
+    } catch (e) {}
+
     // Determine python interpreter and script locations via environment or defaults
     const pythonExec = process.env.PYTHON_PATH || 'python';
     // python_helpers is at the root level, one level UP from backend/src
-    // When running from backend/, process.cwd() is the backend folder, so we go up with ../
     const scriptsDir = process.env.SCRIPTS_DIR || path.join(process.cwd(), '..', 'python_helpers');
     const script1 = path.join(scriptsDir, 'ssh_connection_setup_gstreamer.py');
     const script2 = path.join(scriptsDir, 'gstreamer_test3.py');
+
+    // Use fs to open log files
+    const log1 = fs.openSync(path.join(scriptsDir, 'p1.log'), 'a');
+    const log2 = fs.openSync(path.join(scriptsDir, 'p2.log'), 'a');
 
     // Spawn each script detached so the server doesn't wait for them
     console.log('⏳ launching helper scripts using', pythonExec);
     console.log('  script1 =', script1);
     console.log('  script2 =', script2);
-    // Run completely silently - no windows or console output visible to user
+    
     // On Windows, use windowsHide to suppress the console window
-    const spawnOptions = { 
+    const spawnOptions1 = { 
       detached: true, 
-      stdio: ['ignore', 'ignore', 'ignore'],
+      stdio: ['ignore', log1, log1],
       windowsHide: true
     };
-    const p1 = spawn(pythonExec, [script1], spawnOptions);
+    const spawnOptions2 = { 
+      detached: true, 
+      stdio: ['ignore', log2, log2],
+      windowsHide: true
+    };
+
+    const p1 = spawn(pythonExec, [script1], spawnOptions1);
     p1.unref();
-    const p2 = spawn(pythonExec, [script2], spawnOptions);
+    const p2 = spawn(pythonExec, [script2], spawnOptions2);
     p2.unref();
 
     return { success: true, message: 'Python helper scripts launched' };
@@ -335,7 +357,7 @@ fastify.put('/api/plans/:id', async (request, reply) => {
     return data;
   } catch (err) {
     fastify.log.error(err);
-    reply.code(500).send({ error: 'Database error while updating plan' });
+    reply.code(500).send({ error: 'Database error while updating mission' });
   }
 });
 

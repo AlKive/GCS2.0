@@ -496,13 +496,13 @@ const MissionSetupView: React.FC<MissionSetupViewProps> = ({ onLaunch, onClose, 
                 <button
                   onClick={handleLaunch}
                   disabled={!allChecksComplete} 
-                  className={`py-2 px-3 rounded text-xs font-semibold transition-colors ${
+                  className={`py-2 px-3 rounded text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
                     !allChecksComplete
-                      ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                      : 'bg-orange-600 hover:bg-orange-700 text-white' 
+                      ? 'bg-gray-700 text-gray-500 cursor-not-allowed border border-gray-600'
+                      : 'bg-orange-600 hover:bg-orange-700 text-white shadow-[0_0_15px_rgba(234,88,12,0.4)] border border-orange-500' 
                   }`}
                 >
-                  Launch Mission
+                  🚀 Launch Mission
                 </button>
               </div>
             </div>

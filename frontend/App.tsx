@@ -22,15 +22,26 @@ const SplashScreen: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    // Phase 1: Show welcome and progress bar
+    const fadeTimer = setTimeout(() => {
       setFadeOut(true);
-      setTimeout(onComplete, 800); // Wait for fade animation
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, [onComplete]);
+    }, 3000);
+
+    // Phase 2: Unmount component after fade animation
+    const completeTimer = setTimeout(() => {
+      onComplete();
+    }, 3800);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(completeTimer);
+    };
+  }, []); // Run once on mount
 
   return (
-    <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0f171e] transition-opacity duration-700 ${fadeOut ? 'opacity-0' : 'opacity-100'}`}>
+    <div 
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0f171e] transition-all duration-1000 ease-in-out ${fadeOut ? 'opacity-0 scale-110 pointer-events-none' : 'opacity-100 scale-100'}`}
+    >
       <div className="relative flex flex-col items-center animate-bounce-slow">
         <div className="w-48 h-48 mb-8 relative">
           <div className="absolute inset-0 bg-[#00a8ff]/20 rounded-full blur-3xl animate-pulse" />
@@ -195,6 +206,12 @@ const App: React.FC = () => {
     setCurrentView('droneStream');
   };
 
+  useEffect(() => {
+    if (currentView === 'droneStream') {
+      launchPythonHelpers();
+    }
+  }, [currentView]);
+
   const renderView = () => {
     switch (currentView) {
       case 'analytics':
@@ -215,7 +232,11 @@ const App: React.FC = () => {
       case 'about':
         return <AboutPanel />;
       case 'droneStream':
-        return <DroneStreamView telemetry={liveTelemetry} onClose={() => setCurrentView('dashboard')} mapStyle={mapStyle} />;
+        return <DroneStreamView 
+          telemetry={liveTelemetry} 
+          onClose={() => setCurrentView('dashboard')} 
+          mapStyle={mapStyle} 
+        />;
       case 'dashboard':
       default:
         return <DashboardView overviewStats={overviewStats} missions={missions} onMissionSetup={handleOpenMissionSetup} telemetry={liveTelemetry} setArmedState={setArmedState} />;

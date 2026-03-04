@@ -1,124 +1,105 @@
 import paramiko
 import time
 import sys
+import socket
 
 # === Configuration ===
-# Using Tailscale IPs from your screenshot
+# The Raspberry Pi Tailscale IP
 PI_TAILSCALE_IP = "100.127.53.123"
-LAPTOP_TAILSCALE_IP = "100.126.70.35"
+
+def get_local_ip_for_pi(target_ip):
+    """
+    Determines which local IP address is used to reach the target_ip.
+    """
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect((target_ip, 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+        return local_ip
+    except Exception as e:
+        print(f"[WARN] Failed to auto-detect local IP for target {target_ip}: {e}")
+        return None
+
+# Try to find the best laptop IP to tell the Pi to stream to
+LAPTOP_IP = get_local_ip_for_pi(PI_TAILSCALE_IP)
+if not LAPTOP_IP:
+    LAPTOP_IP = "100.112.119.23" # Fallback
+
+print(f"[INFO] Pi Target: {PI_TAILSCALE_IP}")
+print(f"[INFO] Laptop IP (Streaming Destination): {LAPTOP_IP}")
 
 USERNAME = "rpi3408"
 PASSWORD = "rpi3408"
 
-# The GStreamer command now sends data to the Laptop's Tailscale IP
-# Optimized for your Sampaloc field research (lower latency)
-# Redirect to a log file instead of /dev/null to capture errors
-CMD_VPN_STREAM = (
-    "nohup gst-launch-1.0 -v libcamerasrc ! "
-    "video/x-raw,width=960,height=540,framerate=15/1 ! "
-    "videoconvert ! "
-    "x264enc threads=2 tune=zerolatency bitrate=1000 speed-preset=ultrafast ! "
-    "rtph264pay config-interval=1 pt=96 mtu=1200 ! "
-    f"udpsink host={LAPTOP_TAILSCALE_IP} port=5600 sync=false > /tmp/gstream.log 2>&1 &"
-)
+# The GStreamer command - Optimized for Tailscale/VPN
+# Using a slightly lower MTU (1000) and bitrate (800k) to ensure packets pass through VPN
+def get_stream_command(destination_ip):
+    return (
+        "nohup gst-launch-1.0 -v libcamerasrc ! "
+        "video/x-raw,width=640,height=480,framerate=15/1 ! "
+        "videoconvert ! "
+        "x264enc threads=2 tune=zerolatency bitrate=800 speed-preset=ultrafast ! "
+        "rtph264pay config-interval=1 pt=96 mtu=1000 ! "
+        f"udpsink host={destination_ip} port=5600 sync=false > /tmp/gstream.log 2>&1 &"
+    )
 
-def monitor_stream(ssh, command_to_run):
-    """
-    Keeps the script open. Checks if stream is running every 5 seconds.
-    If stream dies, it restarts it. Also reads logs from the Pi.
-    """
-    print("\n👁️  Monitoring Stream (Ctrl+C to stop)...")
-    last_log_pos = 0
-    
+def monitor_stream(ssh, destination_ip):
+    print("\n[MONITOR] Monitoring Stream (Ctrl+C to stop)...")
     while True:
         try:
-            # Check if gst-launch-1.0 is running
             stdin, stdout, stderr = ssh.exec_command("pgrep -f gst-launch-1.0")
             pid = stdout.read().decode().strip()
-
             if pid:
-                print(f"\r✅ VPN Stream Active (PID: {pid}) - {time.strftime('%H:%M:%S')}", end="", flush=True)
+                print(f"\r[ACTIVE] Stream Active (PID: {pid}) - Destination: {destination_ip} - {time.strftime('%H:%M:%S')}", end="", flush=True)
             else:
-                print("\n⚠️  Stream died! Restarting...")
-                ssh.exec_command(command_to_run)
-                print("🚀 Restart command sent.")
+                print("\n[WARN] Stream died! Restarting...")
+                cmd = get_stream_command(destination_ip)
+                ssh.exec_command(cmd)
                 time.sleep(2)
                 continue
-
-            # Read recent logs from gstream.log
-            stdin, stdout, stderr = ssh.exec_command("tail -5 /tmp/gstream.log 2>/dev/null")
-            log_output = stdout.read().decode().strip()
-            if log_output:
-                print(f"\n[PI LOG] {log_output}")
-            
-            # Check if camera is available
-            stdin, stdout, stderr = ssh.exec_command("ls -la /dev/video* 2>/dev/null | head -1")
-            cam_check = stdout.read().decode().strip()
-            if not cam_check and pid:
-                print("\n⚠️  WARNING: No camera device found on Pi!")
-
             time.sleep(5)
-
         except KeyboardInterrupt:
-            print("\n\n🛑 User stopped the script.")
+            print("\n\n[STOP] User stopped the script.")
             return
         except Exception as e:
-            print(f"\n❌ Connection lost during monitoring: {e}")
+            print(f"\n[ERROR] Connection lost during monitoring: {e}")
             return
 
 # === Main Loop ===
-print("🔄 Starting VPN Auto-Streamer for Drone Research...")
+print("[START] Starting Pi Streamer (Tailscale Mode) for GCS...")
 
 while True:
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    
     try:
-        print(f"\n🔌 Connecting to Pi via VPN at {PI_TAILSCALE_IP}...")
-        # Connecting to the Pi's specific Tailscale IP
+        print(f"\n[CONN] Connecting to Pi at {PI_TAILSCALE_IP}...")
         ssh.connect(PI_TAILSCALE_IP, username=USERNAME, password=PASSWORD, timeout=10)
-        print(f"✅ Secure Tunnel Established!")
+        print(f"[SUCCESS] Secure Tunnel Established!")
+        
+        LAPTOP_IP = get_local_ip_for_pi(PI_TAILSCALE_IP) or LAPTOP_IP
 
-        # Check camera availability
-        print("📷 Checking camera availability on Pi...")
-        stdin, stdout, stderr = ssh.exec_command("libcamera-hello --version 2>/dev/null || echo 'libcamera not found'")
-        cam_info = stdout.read().decode().strip()
-        if "not found" in cam_info:
-            print("⚠️  WARNING: libcamera not found on Pi, trying legacy raspicam...")
-        else:
-            print(f"✅ Camera system: {cam_info[:50]}")
-
-        # Clean up old processes
-        print("🧹 Cleaning up old streams...")
+        print("[CLEAN] Cleaning up old streams...")
         ssh.exec_command("pkill -f gst-launch-1.0; sleep 1")
         time.sleep(1)
 
-        # Launch new stream targeted at Laptop IP
-        print(f"🚀 Launching Stream to Laptop ({LAPTOP_TAILSCALE_IP})...")
-        print(f"   Command: {CMD_VPN_STREAM[:100]}...")
-        stdin, stdout, stderr = ssh.exec_command(CMD_VPN_STREAM)
+        print(f"[LAUNCH] Launching Stream to Laptop at {LAPTOP_IP}...")
+        cmd = get_stream_command(LAPTOP_IP)
+        ssh.exec_command(cmd)
         time.sleep(2)
         
-        # Verify stream started
         stdin, stdout, stderr = ssh.exec_command("pgrep -f gst-launch-1.0")
         pid = stdout.read().decode().strip()
         if pid:
-            print(f"✅ Stream process started (PID: {pid})")
+            print(f"[SUCCESS] Stream process started (PID: {pid})")
         else:
-            print("❌ Stream process did not start! Check /tmp/gstream.log on Pi")
-            stdin, stdout, stderr = ssh.exec_command("cat /tmp/gstream.log 2>/dev/null || echo 'Log not available'")
-            log_data = stdout.read().decode()
-            print(f"[PI LOG]: {log_data}")
+            print("[ERROR] Stream process did not start!")
+            stdin, stdout, stderr = ssh.exec_command("cat /tmp/gstream.log 2>/dev/null")
+            print(f"[LOG]: {stdout.read().decode()}")
 
-        # Monitor the connection
-        monitor_stream(ssh, CMD_VPN_STREAM)
-        
+        monitor_stream(ssh, LAPTOP_IP)
         ssh.close()
-
     except Exception as e:
-        print(f"  (Could not reach Pi: {e})")
-        import traceback
-        traceback.print_exc()
-    
-    print("\n⏳ Retrying VPN connection in 5 seconds...")
+        print(f"[ERROR] (Could not reach Pi: {e})")
+    print("\n[RETRY] Retrying connection in 5 seconds...")
     time.sleep(5)

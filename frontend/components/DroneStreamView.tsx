@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { LiveTelemetry, BreedingSiteInfo } from 'types';
+import type { LiveTelemetry, BreedingSiteInfo, MissionPlan } from 'types';
 
 // --- Reusable Panel Component ---
 const Panel: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({ title, children, className = '' }) => (
@@ -162,6 +162,34 @@ interface DroneStreamViewProps {
 }
 
 const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, mapStyle }) => {
+    const [feedError, setFeedError] = useState(false);
+    const [reloadKey, setReloadKey] = useState(0);
+
+    const [isReinitializing, setReinitializing] = useState(false);
+
+    const handleReinitialize = async () => {
+        setReinitializing(true);
+        try {
+            await fetch('/api/mission/start', { method: 'POST' });
+            setReloadKey(k => k + 1);
+        } catch (err) {
+            console.error('Failed to reinitialize systems:', err);
+        } finally {
+            setTimeout(() => setReinitializing(false), 2000);
+        }
+    };
+
+    const handleFeedError = () => {
+        console.warn('[Camera Feed] Error detected, will retry in 3 seconds...');
+        if (!feedError) {
+            setFeedError(true);
+            setTimeout(() => {
+                setFeedError(false);
+                setReloadKey(k => k + 1);
+            }, 3000);
+        }
+    };
+
     const flightModes = [
         "POSITION HOLD",
         "ALTITUDE HOLD",
@@ -183,11 +211,15 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                         <p className="text-[8px] text-[#8b9bb4] uppercase tracking-tighter">GEP-F405-HD V2 | RPi 4</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-6">
-                    <div className="text-right">
-                        <span className="text-[7px] uppercase text-[#8b9bb4]">Connection</span>
-                        <p className="text-[9px] font-bold text-[#00e676]">UART2 / MSP</p>
-                    </div>
+                <div className="flex items-center gap-4">
+                    <button 
+                        onClick={handleReinitialize}
+                        disabled={isReinitializing}
+                        className={`flex items-center gap-2 px-3 py-1 rounded border text-[10px] font-bold transition-all ${isReinitializing ? 'bg-blue-600/20 border-blue-600 text-blue-500' : 'bg-blue-600 hover:bg-blue-700 border-blue-500 text-white shadow-[0_0_10px_rgba(37,99,235,0.3)]'}`}
+                    >
+                        <span>{isReinitializing ? '⏳' : '🔄'}</span>
+                        {isReinitializing ? 'RECONFIGURING...' : 'RESTART LIVESTREAM'}
+                    </button>
                     <div className="h-6 w-px bg-[#2c3e50]" />
                     <div className="text-right">
                         <span className="text-[7px] uppercase text-[#8b9bb4]">Status</span>
@@ -242,11 +274,22 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                 <div className="col-span-2 flex flex-col gap-2 min-h-0">
                     <div className="flex-1 bg-black rounded border border-[#2c3e50] relative overflow-hidden">
                         <iframe
+                            key={reloadKey}
                             src={`/camera_feed`}
                             className="absolute inset-0 w-full h-full border-0"
                             title="Live Camera Feed"
+                            onError={handleFeedError}
                             style={{ background: '#0f171e' }}
                         />
+                        
+                        {feedError && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-[#0f171e]/90 z-20">
+                                <div className="flex flex-col items-center">
+                                    <div className="w-6 h-6 border-2 border-[#2c3e50] border-t-[#00a8ff] rounded-full animate-spin mb-2"></div>
+                                    <p className="text-[#8b9bb4] text-[10px] uppercase tracking-wider">Stream Lost - Reconnecting...</p>
+                                </div>
+                            </div>
+                        )}
                         
                         {/* Overlay: Attitude & Map */}
                         <div className="absolute top-2 left-2 flex gap-2">
