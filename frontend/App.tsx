@@ -18,7 +18,61 @@ import { useDashboardData } from './hooks/useDashboardData';
 import type { Mission, BreedingSiteInfo, MissionPlan, LiveTelemetry } from 'types';
 // ---
 
+const SplashScreen: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+  const [fadeOut, setFadeOut] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFadeOut(true);
+      setTimeout(onComplete, 800); // Wait for fade animation
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
+  return (
+    <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0f171e] transition-opacity duration-700 ${fadeOut ? 'opacity-0' : 'opacity-100'}`}>
+      <div className="relative flex flex-col items-center animate-bounce-slow">
+        <div className="w-48 h-48 mb-8 relative">
+          <div className="absolute inset-0 bg-[#00a8ff]/20 rounded-full blur-3xl animate-pulse" />
+          <img src="/logo.png" alt="LIPAD Logo" className="w-full h-full object-contain relative z-10" />
+        </div>
+        <div className="text-center space-y-2 relative z-10">
+          <h1 className="text-3xl font-black tracking-[0.2em] text-white uppercase italic">
+            Welcome to <span className="text-[#00a8ff]">LIPAD</span>
+          </h1>
+          <p className="text-[#8b9bb4] text-sm tracking-[0.4em] font-light uppercase">
+            Ground Control System
+          </p>
+        </div>
+      </div>
+      
+      {/* Loading Bar */}
+      <div className="absolute bottom-20 w-64 h-1 bg-[#1a242f] rounded-full overflow-hidden">
+        <div className="h-full bg-gradient-to-r from-[#00a8ff] to-[#00e676] animate-progress shadow-[0_0_10px_#00a8ff]" />
+      </div>
+
+      <style>{`
+        @keyframes progress {
+          0% { width: 0%; }
+          100% { width: 100%; }
+        }
+        .animate-progress {
+          animation: progress 2.5s ease-in-out forwards;
+        }
+        .animate-bounce-slow {
+          animation: bounce-slow 3s ease-in-out infinite;
+        }
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
+  const [isAppLoading, setAppLoading] = useState(true);
   const [isMissionActive, setMissionActive] = useState(false);
   const [missionPlan, setMissionPlan] = useState<MissionPlan | null>(null);
   const [isDarkMode, setDarkMode] = useState(false);
@@ -179,17 +233,20 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gcs-background text-gcs-text-dark font-sans dark:bg-gcs-dark dark:text-gcs-text-light overflow-hidden">
-      {currentView !== 'droneStream' && <Sidebar currentView={currentView} onNavigate={setCurrentView} />}
-      <main className="flex-1 flex flex-col p-4 overflow-hidden">
-        {currentView !== 'droneStream' && <DashboardHeader time={time} date={date} title={viewTitles[currentView]} batteryPercentage={liveTelemetry.battery.percentage} />}
-        <div className="flex-1 overflow-y-auto min-h-0">
-          {renderView()}
-        </div>
-      </main>
-      
-      {isMissionActive && <LiveMissionViewNew telemetry={liveTelemetry} onEndMission={endMission} mapStyle={mapStyle} />}
-    </div>
+    <>
+      {isAppLoading && <SplashScreen onComplete={() => setAppLoading(false)} />}
+      <div className="flex h-screen bg-gcs-background text-gcs-text-dark font-sans dark:bg-gcs-dark dark:text-gcs-text-light overflow-hidden">
+        {currentView !== 'droneStream' && <Sidebar currentView={currentView} onNavigate={setCurrentView} />}
+        <main className="flex-1 flex flex-col p-4 overflow-hidden">
+          {currentView !== 'droneStream' && <DashboardHeader time={time} date={date} title={viewTitles[currentView]} batteryPercentage={liveTelemetry.battery.percentage} />}
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {renderView()}
+          </div>
+        </main>
+        
+        {isMissionActive && <LiveMissionViewNew telemetry={liveTelemetry} onEndMission={endMission} mapStyle={mapStyle} />}
+      </div>
+    </>
   );
 };
 
