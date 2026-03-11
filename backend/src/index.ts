@@ -7,6 +7,7 @@ import type { Mission, LiveTelemetry, MissionPlan } from './types.js';
 import { spawn, execSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
+import http from 'http';
 
 const fastify = Fastify({ logger: true });
 fastify.register(websocketPlugin);
@@ -18,24 +19,16 @@ fastify.register(async function (server) {
     let currentBattery = 99.0;
     const missionStartTime = Date.now();
 
-    // When a message arrives from the drone/client, attempt to persist it to Supabase
+    // REMOVED: Automatic insertion of every telemetry message into mission_logs.
+    // This was causing database bloat. Missions are now saved explicitly via POST /api/missions.
     connection.on('message', async (message: any) => {
       try {
         const payload = typeof message === 'string' ? JSON.parse(message) : JSON.parse(message.toString());
-
-        // Map telemetry to mission_logs fields with safe defaults
-        const name = payload.name || 'telemetry';
-        const date = payload.date || new Date().toISOString();
-        const duration = payload.duration ? String(payload.duration) : payload.flightTime || '0';
-        const status = payload.status || 'live';
-        const location = payload.location || (payload.gps ? `${payload.gps.lat},${payload.gps.lon}` : '');
-        const gps_track = payload.gpsTrack || payload.gps ? [payload.gps] : [];
-        const detected_sites = payload.detectedSites || [];
-
-        await supabase.from('mission_logs').insert([{ name, date, duration, status, location, gps_track, detected_sites }]);
+        // For now, we just log that we received data. 
+        // If real-time persistence is needed, it should be done to a 'live_telemetry' table with UPDATE, not INSERT.
+        // console.log('Received telemetry:', payload.gps);
       } catch (err) {
-        // Log and continue; we don't want telemetry persistence failures to break the socket
-        fastify.log.error('Telemetry persist error: ' + String(err));
+        fastify.log.error('Telemetry parse error: ' + String(err));
       }
     });
 
@@ -94,6 +87,27 @@ fastify.register(async function (server) {
   });
 });
 
+// --- Proxy Route for Camera Feed ---
+// This forwards /camera_feed requests to the Flask app on port 5000
+fastify.get('/camera_feed', (request, reply) => {
+  const proxyRequest = http.request({
+    host: 'localhost',
+    port: 5000,
+    path: '/video_feed',
+    method: 'GET'
+  }, (proxyResponse) => {
+    reply.raw.writeHead(proxyResponse.statusCode || 200, proxyResponse.headers);
+    proxyResponse.pipe(reply.raw);
+  });
+
+  proxyRequest.on('error', (err) => {
+    fastify.log.error('Camera proxy error: ' + err.message);
+    reply.code(502).send({ error: 'Camera stream unavailable' });
+  });
+
+  proxyRequest.end();
+});
+
 // --- REST API Routes ---
 
 // Root endpoint with API information
@@ -106,11 +120,6 @@ fastify.get('/', async (request, reply) => {
         'GET /api/missions': 'Get all missions',
         'GET /api/missions/stats': 'Get mission statistics',
         'POST /api/missions': 'Create a new mission'
-      },
-      plans: {
-        'GET /api/plans': 'Get all mission plans',
-        'GET /api/plans/:id': 'Get a specific mission plan',
-        'POST /api/plans': 'Create a new mission plan'
       },
       websocket: {
         'WS /ws/live': 'Live telemetry WebSocket'
@@ -141,66 +150,9 @@ fastify.get('/api/missions/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
     const { data, error } = await supabase.from('mission_logs').select('*').eq('id', parseInt(id, 10)).single();
     if (error) {
-      // Supabase returns an error when not found
       return reply.code(404).send({ error: 'Mission not found' });
     }
     return data;
-  } catch (err) {
-    fastify.log.error(err);
-    reply.code(500).send({ error: 'Database error' });
-  }
-});
-
-// UPDATE a mission
-fastify.put('/api/missions/:id', async (request, reply) => {
-  try {
-    const { id } = request.params as { id: string };
-    const payload = request.body as any;
-    const { data, error } = await supabase.from('mission_logs').update(payload).eq('id', parseInt(id, 10)).select().single();
-    if (error) throw error;
-    return data;
-  } catch (err) {
-    fastify.log.error(err);
-    reply.code(500).send({ error: 'Database error while updating mission' });
-  }
-});
-
-// DELETE a mission
-fastify.delete('/api/missions/:id', async (request, reply) => {
-  try {
-    const { id } = request.params as { id: string };
-    const { error } = await supabase.from('mission_logs').delete().eq('id', parseInt(id, 10));
-    if (error) throw error;
-    return { success: true };
-  } catch (err) {
-    fastify.log.error(err);
-    reply.code(500).send({ error: 'Database error while deleting mission' });
-  }
-});
-
-// GET dashboard stats
-fastify.get('/api/missions/stats', async (request, reply) => {
-  try {
-    const { data: durations, error: dErr } = await supabase
-      .from('mission_logs')
-      .select('duration');
-    if (dErr) throw dErr;
-
-    const { count, error: cErr } = await supabase
-      .from('mission_logs')
-      .select('id', { count: 'exact', head: true });
-    if (cErr) throw cErr;
-
-    let totalSeconds = 0;
-    for (const row of durations || []) {
-      const seconds = parseInt((row as any).duration, 10);
-      if (!isNaN(seconds)) totalSeconds += seconds;
-    }
-    const hours = totalSeconds / 3600;
-    return {
-      totalFlights: count || 0,
-      totalFlightTime: `${hours.toFixed(1)} Hours`
-    };
   } catch (err) {
     fastify.log.error(err);
     reply.code(500).send({ error: 'Database error' });
@@ -227,79 +179,11 @@ fastify.post('/api/missions', async (request, reply) => {
   }
 });
 
-
-// ---
-// NEW ROUTES FOR MISSION PLANNING
-// ---
-
-// POST a new MISSION PLAN (Save Plan)
-fastify.post('/api/plans', async (request, reply) => {
-  try {
-    const plan = request.body as MissionPlan; 
-    const { name, altitude, speed, waypoints } = plan;
-
-    // Check for bad data
-    if (!name || !waypoints || waypoints.length === 0) {
-      return reply.code(400).send({ error: 'Invalid plan data. Name and waypoints are required.' });
-    }
-
-    const { data, error } = await supabase
-      .from('mission_plans')
-      .insert([{ name, altitude, speed, waypoints }])
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
-  } catch (err) {
-    fastify.log.error(err);
-    reply.code(500).send({ error: 'Database error while saving plan' });
-  }
-});
-
-// GET all saved mission plans (for Load Plan modal)
-fastify.get('/api/plans', async (request, reply) => {
-  try {
-    // Only fetch id and name for the list view
-    const { data, error } = await supabase
-      .from('mission_plans')
-      .select('id, name')
-      .order('id', { ascending: false });
-    if (error) throw error;
-    return data;
-  } catch (err) {
-    fastify.log.error(err);
-    reply.code(500).send({ error: 'Database error while fetching plans' });
-  }
-});
-
-// GET a *single* saved mission plan by its ID (when user clicks a plan)
-fastify.get('/api/plans/:id', async (request, reply) => {
-  try {
-    const { id } = request.params as { id: string };
-    const { data, error } = await supabase
-      .from('mission_plans')
-      .select('*')
-      .eq('id', parseInt(id, 10))
-      .single();
-    if (error) {
-      if ((error as any).code === 'PGRST116') return reply.code(404).send({ error: 'Plan not found' });
-      throw error;
-    }
-    return data;
-  } catch (err) {
-    fastify.log.error(err);
-    reply.code(500).send({ error: 'Database error while fetching plan' });
-  }
-});
-
 // NEW: launch helper endpoint
 fastify.post('/api/mission/start', async (request, reply) => {
   try {
-    // Before spawning, we should try to kill any existing python processes 
-    // to avoid port conflicts and stale SSH connections
     try {
        if (process.platform === 'win32') {
-         // Kill processes with python.exe in them, but ignore errors if none found
          execSync('taskkill /F /IM python.exe /T', { stdio: 'ignore' });
        } else {
          execSync('pkill -f python', { stdio: 'ignore' });
@@ -307,33 +191,18 @@ fastify.post('/api/mission/start', async (request, reply) => {
        console.log('🧹 Cleaned up old python processes');
     } catch (e) {}
 
-    // Determine python interpreter and script locations via environment or defaults
     const pythonExec = process.env.PYTHON_PATH || 'python';
-    // python_helpers is at the root level, one level UP from backend/src
     const scriptsDir = process.env.SCRIPTS_DIR || path.join(process.cwd(), '..', 'python_helpers');
     const script1 = path.join(scriptsDir, 'ssh_connection_setup_gstreamer.py');
     const script2 = path.join(scriptsDir, 'gstreamer_test3.py');
 
-    // Use fs to open log files
     const log1 = fs.openSync(path.join(scriptsDir, 'p1.log'), 'a');
     const log2 = fs.openSync(path.join(scriptsDir, 'p2.log'), 'a');
 
-    // Spawn each script detached so the server doesn't wait for them
     console.log('⏳ launching helper scripts using', pythonExec);
-    console.log('  script1 =', script1);
-    console.log('  script2 =', script2);
     
-    // On Windows, use windowsHide to suppress the console window
-    const spawnOptions1 = { 
-      detached: true, 
-      stdio: ['ignore', log1, log1],
-      windowsHide: true
-    };
-    const spawnOptions2 = { 
-      detached: true, 
-      stdio: ['ignore', log2, log2],
-      windowsHide: true
-    };
+    const spawnOptions1 = { detached: true, stdio: ['ignore', log1, log1], windowsHide: true };
+    const spawnOptions2 = { detached: true, stdio: ['ignore', log2, log2], windowsHide: true };
 
     const p1 = spawn(pythonExec, [script1], spawnOptions1);
     p1.unref();
@@ -346,34 +215,6 @@ fastify.post('/api/mission/start', async (request, reply) => {
     reply.code(500).send({ error: 'Failed to launch helper scripts' });
   }
 });
-
-// UPDATE a mission plan
-fastify.put('/api/plans/:id', async (request, reply) => {
-  try {
-    const { id } = request.params as { id: string };
-    const payload = request.body as any;
-    const { data, error } = await supabase.from('mission_plans').update(payload).eq('id', parseInt(id, 10)).select().single();
-    if (error) throw error;
-    return data;
-  } catch (err) {
-    fastify.log.error(err);
-    reply.code(500).send({ error: 'Database error while updating mission' });
-  }
-});
-
-// DELETE a mission plan
-fastify.delete('/api/plans/:id', async (request, reply) => {
-  try {
-    const { id } = request.params as { id: string };
-    const { error } = await supabase.from('mission_plans').delete().eq('id', parseInt(id, 10));
-    if (error) throw error;
-    return { success: true };
-  } catch (err) {
-    fastify.log.error(err);
-    reply.code(500).send({ error: 'Database error while deleting plan' });
-  }
-});
-
 
 // --- Start Server ---
 const start = async () => {

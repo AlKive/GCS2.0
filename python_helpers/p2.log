@@ -94,3 +94,237 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://127.0.0.1:5000
  * Running on http://192.168.254.144:5000
 Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing GStreamer on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+127.0.0.1 - - [10/Mar/2026 21:01:57] "GET /video_feed HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing GStreamer on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+127.0.0.1 - - [10/Mar/2026 21:02:25] "GET /video_feed HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing GStreamer on port 5600...
+[INFO] AI and Camera threads started.
+[ERROR] Could not open GStreamer pipeline. Check GStreamer installation.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing GStreamer on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+127.0.0.1 - - [11/Mar/2026 18:52:45] "GET /video_feed HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Adding GStreamer DLL directory: C:\Program Files\gstreamer\1.0\msvc_x86_64\bin
+[INFO] Initializing GStreamer on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+127.0.0.1 - - [11/Mar/2026 18:54:49] "GET /video_feed HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Adding GStreamer DLL directory: C:\Program Files\gstreamer\1.0\msvc_x86_64\bin
+[INFO] Initializing GStreamer on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+127.0.0.1 - - [11/Mar/2026 18:56:45] "GET /video_feed HTTP/1.1" 200 -
+127.0.0.1 - - [11/Mar/2026 18:56:50] "GET /video_feed HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Adding GStreamer DLL directory: C:\Program Files\gstreamer\1.0\msvc_x86_64\bin
+[INFO] Initializing GStreamer on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Adding GStreamer DLL directory: C:\Program Files\gstreamer\1.0\msvc_x86_64\bin
+[INFO] Initializing GStreamer on port 5600...
+[INFO] AI and Camera threads started.
+[ERROR] Could not open GStreamer pipeline. Check GStreamer installation.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+127.0.0.1 - - [11/Mar/2026 19:19:27] "GET /video_feed HTTP/1.1" 200 -
+127.0.0.1 - - [11/Mar/2026 19:19:32] "GET /video_feed HTTP/1.1" 200 -
+127.0.0.1 - - [11/Mar/2026 19:19:37] "GET /video_feed HTTP/1.1" 200 -
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing FFmpeg UDP listener on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing FFmpeg UDP listener on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing FFmpeg UDP listener on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+[INFO] SSH Connected for Sprayer
+[INFO] YOLO Model loaded.
+[INFO] FFmpeg pipeline opened. Waiting for data...
+[SUCCESS] Received first frame from Raspberry Pi!
+WARNING not enough matching points
+WARNING not enough matching points
+WARNING not enough matching points
+WARNING not enough matching points
+WARNING not enough matching points
+WARNING not enough matching points
+WARNING not enough matching points
+WARNING not enough matching points
+WARNING not enough matching points
+WARNING not enough matching points
+WARNING not enough matching points
+WARNING not enough matching points
+WARNING not enough matching points
+WARNING not enough matching points
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing FFmpeg UDP listener on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing FFmpeg UDP listener on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing FFmpeg UDP listener on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing FFmpeg UDP listener on port 5600...
+[INFO] AI and Camera threads started.
+[ERROR] Could not open UDP FFmpeg pipeline. Check if port is blocked or sender is down.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing FFmpeg UDP listener on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing FFmpeg UDP listener on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing FFmpeg UDP listener on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing FFmpeg UDP listener on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+[INFO] Initializing FFmpeg UDP listener on port 5600...
+[INFO] AI and Camera threads started.
+ * Serving Flask app 'gstreamer_test3'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit

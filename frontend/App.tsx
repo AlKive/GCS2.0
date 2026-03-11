@@ -15,7 +15,7 @@ import AboutPanel from './components/AboutPanel';
 import DroneStreamView from './components/DroneStreamView';
 
 import { useDashboardData } from './hooks/useDashboardData';
-import type { Mission, BreedingSiteInfo, MissionPlan, LiveTelemetry } from 'types';
+import type { Mission, BreedingSiteInfo, LiveTelemetry } from 'types';
 // ---
 
 const SplashScreen: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
@@ -85,7 +85,6 @@ const SplashScreen: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
 const App: React.FC = () => {
   const [isAppLoading, setAppLoading] = useState(true);
   const [isMissionActive, setMissionActive] = useState(false);
-  const [missionPlan, setMissionPlan] = useState<MissionPlan | null>(null);
   const [isDarkMode, setDarkMode] = useState(false);
   const [mapStyle, setMapStyle] = useState(() => {
     return localStorage.getItem('mapStyle') || 'Satellite';
@@ -116,27 +115,21 @@ const App: React.FC = () => {
   useEffect(() => {
     const fetchMissions = async () => {
       try {
-        const response = await fetch('/api/missions'); // Uses the vite proxy
+        const response = await fetch('/api/missions'); 
         
-        // ---
-        // 3. CRASH FIX
-        // This checks for 500 errors and prevents the "missions.slice" crash
-        // ---
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        // ---
 
         const data: Mission[] = await response.json();
         setMissions(data);
       } catch (error) {
         console.error("Failed to fetch missions:", error);
-        // On error, set missions to an empty array so the app doesn't crash
         setMissions([]); 
       }
     };
     fetchMissions();
-  }, []); // The empty array means this runs only once
+  }, []);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -152,8 +145,8 @@ const App: React.FC = () => {
         ? `${Math.floor(duration / 60).toString().padStart(2, '0')}:${(duration % 60).toString().padStart(2, '0')}`
         : duration;
 
-    const newMission: Omit<Mission, 'id'> = { // The database will create the 'id'
-        name: missionPlan?.name || `Mission ${missions.length + 1}`,
+    const newMission: Omit<Mission, 'id'> = {
+        name: `Mission ${missions.length + 1}`,
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         duration: formattedDuration,
         status: 'Completed',
@@ -163,7 +156,6 @@ const App: React.FC = () => {
     };
 
     try {
-      // Send the new mission data to the backend
       const response = await fetch('/api/missions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -174,32 +166,21 @@ const App: React.FC = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const savedMission: Mission = await response.json(); // Get the final mission back
-      setMissions(prevMissions => [savedMission, ...prevMissions]); // Add it to the list
+      const savedMission: Mission = await response.json();
+      setMissions(prevMissions => [savedMission, ...prevMissions]);
     } catch (error) {
       console.error("Failed to save mission:", error);
     }
 
     setMissionActive(false);
-    setMissionPlan(null);
   };
   
-  // helper that tells backend to start the external Python helpers
   const launchPythonHelpers = async () => {
     try {
       await fetch('/api/mission/start', { method: 'POST' });
     } catch (err) {
       console.error('Failed to launch helper scripts:', err);
     }
-  };
-
-  const handleLaunchMission = async (plan: MissionPlan) => {
-    setMissionPlan(plan);
-    setCurrentView('dashboard');
-    setMissionActive(true);
-
-    // fire off the python processes (do not await so UI is instant)
-    launchPythonHelpers();
   };
 
   const handleOpenMissionSetup = () => {

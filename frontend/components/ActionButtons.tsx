@@ -59,17 +59,17 @@ const PreFlightPanel: React.FC<PreFlightPanelProps> = ({ onMissionSetup, telemet
                     </div>
                 </div>
 
-                <div className="flex-1 flex flex-col">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">Live Telemetry</h4>
-                     <div className="grid grid-cols-2 gap-1.5 flex-1">
-                        <TelemetryItem icon={<GpsIcon />} label="GPS Status" value={gpsStatus.text} statusColor={gpsStatus.color} />
-                        <TelemetryItem icon={<SatelliteIcon />} label="Satellites" value={`${telemetry.satellites} Locked`} />
-                        <TelemetryItem icon={<BatteryIcon />} label="Drone Battery" value={`${telemetry.battery.percentage.toFixed(1)}%`} />
-                        <TelemetryItem icon={<SignalIcon />} label="Signal Strength" value={`${telemetry.signalStrength} dBm`} statusColor={signalStatus.color} />
-                    </div>
-                    <div className="text-center text-xs text-gray-400 dark:text-gray-500 mt-2">
-                        Mode: {telemetry.flightMode} | Lat: {telemetry.gps.lat.toFixed(4)}, Lon: {telemetry.gps.lon.toFixed(4)}
-                    </div>
+                <div className="flex-1 flex flex-col mt-4">
+                    <button 
+                        onClick={onMissionSetup}
+                        className="w-full py-2.5 bg-gcs-primary hover:bg-orange-600 text-white font-bold rounded-lg shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-2 group"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        LAUNCH DRONE STREAM
+                    </button>
+                    <p className="text-[10px] text-gray-500 text-center mt-2 italic">Starts GStreamer and AI detection system</p>
                 </div>
             </div>
         </div>

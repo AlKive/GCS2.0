@@ -10,9 +10,6 @@ from datetime import datetime
 from flask import Flask, Response, make_response
 import queue
 
-# GStreamer DLLs - Ensure these are correct for your installation
-os.add_dll_directory(r"C:\Program Files\gstreamer\1.0\msvc_x86_64\bin")
-
 app = Flask(__name__)
 
 @app.after_request
@@ -66,20 +63,20 @@ class SimpleSprayer:
         except: pass
 
 def camera_producer(frame_queue, stop_event):
-    # Optimized pipeline for RTP H264
-    gst = (
-        "udpsrc port=5600 caps=\"application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96\" ! "
-        "rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw,format=BGR ! appsink sync=false drop=1"
-    )
+    # Use FFmpeg to natively read the MPEG-TS UDP stream (bypassing GStreamer on Windows)
+    udp_stream_url = "udp://@0.0.0.0:5600?overrun_nonfatal=1&fifo_size=50000"
     
-    print(f"[INFO] Initializing GStreamer on port 5600...")
-    cap = cv2.VideoCapture(gst, cv2.CAP_GSTREAMER)
+    print(f"[INFO] Initializing FFmpeg UDP listener on port 5600...")
+    cap = cv2.VideoCapture(udp_stream_url, cv2.CAP_FFMPEG)
+    
+    # Lower the buffer size to minimize latency
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     
     if not cap.isOpened():
-        print("[ERROR] Could not open GStreamer pipeline. Check GStreamer installation.")
+        print("[ERROR] Could not open UDP FFmpeg pipeline. Check if port is blocked or sender is down.")
         return
 
-    print("[INFO] GStreamer pipeline opened. Waiting for data...")
+    print("[INFO] FFmpeg pipeline opened. Waiting for data...")
     
     last_frame_time = time.time()
     frame_count = 0

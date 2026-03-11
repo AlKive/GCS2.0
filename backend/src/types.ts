@@ -56,11 +56,3 @@ export interface LiveTelemetry {
       beeper: boolean;
     }
 }
-
-export interface MissionPlan {
-  id?: string | number;
-  name: string;
-  waypoints: { lat: number; lon: number }[];
-  altitude: number;
-  speed: number;
-}
