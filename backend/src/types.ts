@@ -44,6 +44,17 @@ export interface LiveTelemetry {
     currentBreedingSite?: BreedingSiteInfo;
     detectedSites: BreedingSiteInfo[];
     gpsTrack: { lat: number; lon: number }[];
+    
+    // --- AI & Sprayer Info ---
+    aiStatus: {
+      sharpnessScore: number;
+      isSharpEnough: boolean;
+      trackingProgress: number; // 0 to 5 seconds
+      waterConfirmed: boolean;
+      activeTarget?: string;
+      totalPipelineSpeedMs: number;
+    };
+
     modes: {
       angle: boolean;
       positionHold: boolean;

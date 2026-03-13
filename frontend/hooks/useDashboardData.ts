@@ -25,6 +25,15 @@ const defaultTelemetry: LiveTelemetry = {
     breedingSiteDetected: false,
     detectedSites: [],
     gpsTrack: [],
+    // --- AI & Sprayer Info ---
+    aiStatus: {
+      sharpnessScore: 0,
+      isSharpEnough: false,
+      trackingProgress: 0,
+      waterConfirmed: false,
+      activeTarget: undefined,
+      totalPipelineSpeedMs: 0
+    },
     // --- ADDED THIS BLOCK ---
     modes: {
       angle: false,

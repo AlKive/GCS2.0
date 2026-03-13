@@ -38,13 +38,32 @@ fastify.register(async function (server) {
     });
 
     // Keep sending test telemetry to connected clients (simulator)
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       const elapsedMilliseconds = Date.now() - missionStartTime;
       const totalSeconds = Math.floor(elapsedMilliseconds / 1000);
       const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
       const seconds = (totalSeconds % 60).toString().padStart(2, '0');
       const formattedFlightTime = `${minutes}:${seconds}`;
       currentBattery -= 0.01;
+
+      // Poll AI Status from Python AI Engine
+      let aiData = {
+        sharpnessScore: 0,
+        isSharpEnough: false,
+        trackingProgress: 0,
+        waterConfirmed: false,
+        activeTarget: undefined,
+        totalPipelineSpeedMs: 0
+      };
+
+      try {
+        const response = await fetch('http://localhost:5000/api/status');
+        if (response.ok) {
+          aiData = await response.json() as any;
+        }
+      } catch (e) {
+        // AI Engine might not be running yet
+      }
 
       const testTelemetry: LiveTelemetry = {
         gps: { lat: 14.531120 + (Math.random() - 0.5) * 0.001, lon: 121.057442 + (Math.random() - 0.5) * 0.001 },
@@ -61,10 +80,11 @@ fastify.register(async function (server) {
         flightMode: 'Loiter',
         armed: true,
         verticalSpeed: -6.8 + (Math.random() - 0.5) * 0.2,
-        breedingSiteDetected: false,
+        breedingSiteDetected: aiData.waterConfirmed,
         currentBreedingSite: undefined,
         detectedSites: [],
         gpsTrack: [],
+        aiStatus: aiData,
         modes: {
           angle: true,
           positionHold: true,
@@ -73,7 +93,7 @@ fastify.register(async function (server) {
           headingHold: false,
           airmode: true,
           surface: true,
-          mcBraking: true,
+          mcBraking: aiData.waterConfirmed, // Using as proxy for pump active
           beeper: false,
         }
       };
@@ -106,6 +126,18 @@ fastify.get('/camera_feed', (request, reply) => {
   });
 
   proxyRequest.end();
+});
+
+// --- Manual Spray Route ---
+fastify.post('/api/drone/spray', async (request, reply) => {
+  try {
+    const response = await fetch('http://localhost:5000/api/manual_spray', { method: 'POST' });
+    const result = await response.json();
+    return result;
+  } catch (err) {
+    fastify.log.error('Manual spray error: ' + String(err));
+    reply.code(500).send({ error: 'Failed to communicate with AI Engine' });
+  }
 });
 
 // --- REST API Routes ---
@@ -194,7 +226,7 @@ fastify.post('/api/mission/start', async (request, reply) => {
     const pythonExec = process.env.PYTHON_PATH || 'python';
     const scriptsDir = process.env.SCRIPTS_DIR || path.join(process.cwd(), '..', 'python_helpers');
     const script1 = path.join(scriptsDir, 'ssh_connection_setup_gstreamer.py');
-    const script2 = path.join(scriptsDir, 'gstreamer_test3.py');
+    const script2 = path.join(scriptsDir, 'ai_engine.py');
 
     const log1 = fs.openSync(path.join(scriptsDir, 'p1.log'), 'a');
     const log2 = fs.openSync(path.join(scriptsDir, 'p2.log'), 'a');

@@ -54,6 +54,16 @@ export interface LiveTelemetry {
     detectedSites: BreedingSiteInfo[];
     gpsTrack: { lat: number; lon: number }[];
     
+    // --- AI & Sprayer Info ---
+    aiStatus: {
+      sharpnessScore: number;
+      isSharpEnough: boolean;
+      trackingProgress: number; // 0 to 5 seconds
+      waterConfirmed: boolean;
+      activeTarget?: string;
+      totalPipelineSpeedMs: number;
+    };
+
     // --- THIS IS THE NEW PART ---
     // This will hold the status for your new 10-mode panel
     modes: {

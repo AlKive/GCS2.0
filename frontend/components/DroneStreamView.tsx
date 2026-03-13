@@ -368,16 +368,41 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
 
                     <Panel title="AI Detection" className="flex-shrink-0">
                         <div className="flex flex-col gap-2">
-                            <div className={`py-3 rounded flex flex-col items-center justify-center border transition-all duration-300 ${telemetry.detectedSites.length > 0 ? 'bg-[#ff5252]/10 border-[#ff5252] shadow-[0_0_15px_rgba(255,82,82,0.3)]' : 'bg-[#141d26] border-[#2c3e50]'}`}>
+                            <div className={`py-3 rounded flex flex-col items-center justify-center border transition-all duration-300 ${telemetry.aiStatus.waterConfirmed ? 'bg-[#00e676]/10 border-[#00e676] shadow-[0_0_15px_rgba(0,230,118,0.3)]' : telemetry.aiStatus.trackingProgress > 0 ? 'bg-[#f39c12]/10 border-[#f39c12]' : 'bg-[#141d26] border-[#2c3e50]'}`}>
                                 <span className="text-[8px] text-[#8b9bb4] uppercase font-bold mb-0.5">Target Status</span>
-                                <span className={`text-sm font-black tracking-widest ${telemetry.detectedSites.length > 0 ? 'text-[#ff5252] animate-pulse' : 'text-white/10'}`}>
-                                    {telemetry.detectedSites.length > 0 ? 'DETECTED' : 'SCANNING'}
+                                <span className={`text-sm font-black tracking-widest ${telemetry.aiStatus.waterConfirmed ? 'text-[#00e676] animate-pulse' : telemetry.aiStatus.trackingProgress > 0 ? 'text-[#f39c12]' : 'text-white/10'}`}>
+                                    {telemetry.aiStatus.waterConfirmed ? 'WATER CONFIRMED' : telemetry.aiStatus.trackingProgress > 0 ? `TRACKING ${telemetry.aiStatus.trackingProgress.toFixed(1)}s` : 'SCANNING'}
                                 </span>
                             </div>
-                            <div className="bg-[#141d26] p-1.5 rounded border border-[#2c3e50] flex justify-between items-center">
-                                <span className="text-[8px] text-[#8b9bb4] uppercase font-bold">Confirmed</span>
-                                <span className="font-mono text-white font-black text-sm">{telemetry.detectedSites.length}</span>
+                            
+                            {telemetry.aiStatus.trackingProgress > 0 && !telemetry.aiStatus.waterConfirmed && (
+                                <div className="w-full bg-[#2c3e50] h-1.5 rounded-full overflow-hidden">
+                                    <div 
+                                        className="bg-[#f39c12] h-full transition-all duration-300" 
+                                        style={{ width: `${(telemetry.aiStatus.trackingProgress / 5) * 100}%` }} 
+                                    />
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="bg-[#141d26] p-1.5 rounded border border-[#2c3e50] flex flex-col items-center">
+                                    <span className="text-[7px] text-[#8b9bb4] uppercase font-bold">Sharpness</span>
+                                    <span className={`font-mono font-black text-xs ${telemetry.aiStatus.isSharpEnough ? 'text-[#00e676]' : 'text-[#ff5252]'}`}>
+                                        {telemetry.aiStatus.sharpnessScore}
+                                    </span>
+                                </div>
+                                <div className="bg-[#141d26] p-1.5 rounded border border-[#2c3e50] flex flex-col items-center">
+                                    <span className="text-[7px] text-[#8b9bb4] uppercase font-bold">AI Latency</span>
+                                    <span className="font-mono text-white font-black text-xs">{telemetry.aiStatus.totalPipelineSpeedMs.toFixed(0)}<span className="text-[8px] ml-0.5 text-[#8b9bb4]">ms</span></span>
+                                </div>
                             </div>
+
+                            {telemetry.aiStatus.activeTarget && (
+                                <div className="bg-[#00a8ff]/10 border border-[#00a8ff]/30 p-1.5 rounded text-center">
+                                    <span className="text-[7px] text-[#00a8ff] uppercase font-black block">Active Target</span>
+                                    <span className="text-[10px] text-white font-bold">{telemetry.aiStatus.activeTarget}</span>
+                                </div>
+                            )}
                         </div>
                     </Panel>
 
@@ -394,19 +419,24 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                                 </div>
                             </div>
                             
-                            <div className="flex-1 bg-[#141d26] p-1.5 rounded border border-[#2c3e50] flex flex-col min-h-0">
-                                <span className="text-[7px] text-[#8b9bb4] uppercase mb-1 font-bold tracking-tighter">Rate (ml/s)</span>
-                                <div className="flex-1 relative flex items-end gap-0.5 px-0.5">
-                                    {[20, 45, 30, 60, 40, 25, 50, 45, 30, 55, 65, 40, 50, 35, 45, 30, 40].map((v, i) => (
-                                        <div key={i} className="flex-1 bg-[#00a8ff]/40 rounded-t-[1px]" style={{ height: `${v}%` }} />
-                                    ))}
-                                </div>
-                                <div className="flex justify-between mt-1 pt-1 border-t border-[#2c3e50]">
-                                    <span className="text-[7px] text-[#8b9bb4] font-bold">TOTAL</span>
-                                    <span className="text-[9px] font-black text-[#00a8ff]">525.4 ml</span>
-                                </div>
-                            </div>
-
+                            <button 
+                                onClick={async () => {
+                                    try {
+                                        await fetch('/api/drone/spray', { method: 'POST' });
+                                    } catch (err) {
+                                        console.error('Failed to trigger manual spray:', err);
+                                    }
+                                }}
+                                disabled={!telemetry.aiStatus.waterConfirmed}
+                                className={`w-full py-3 rounded-md border-2 font-black text-xs tracking-widest transition-all ${
+                                    telemetry.aiStatus.waterConfirmed 
+                                    ? 'bg-[#00e676] border-[#00e676] text-[#0f171e] shadow-[0_0_15px_rgba(0,230,118,0.4)] hover:scale-[1.02] active:scale-[0.98]' 
+                                    : 'bg-[#141d26] border-[#2c3e50] text-[#2c3e50] cursor-not-allowed'
+                                }`}
+                            >
+                                MANUAL SPRAY
+                            </button>
+                            
                             <div className={`p-1.5 rounded border flex justify-between items-center transition-all ${telemetry.modes.mcBraking ? 'bg-[#00e676]/10 border-[#00e676]' : 'bg-[#141d26] border-[#2c3e50]'}`}>
                                 <span className="text-[8px] text-[#8b9bb4] uppercase font-bold">Pump</span>
                                 <div className="flex items-center gap-1.5">

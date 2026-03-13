@@ -13,7 +13,7 @@ timeout /t 2
 
 REM 4. Launch the Detector in a new separate window
 echo Starting YOLO Detector...
-start "YOLO AI System" python "%CURRENT_DIR%gstreamer_test3.py"
+start "YOLO AI System" python "%CURRENT_DIR%ai_engine.py"
 
 echo.
 echo Both systems launched. 
