@@ -9,6 +9,12 @@ import path from 'path';
 import fs from 'fs';
 import http from 'http';
 
+// --- CONFIGURATION ---
+// Set this to the Tailscale IP of the machine running ai_engine.py
+// It defaults to the IP found in your SSH script, but can be overridden by an environment variable.
+const AI_ENGINE_IP = process.env.TAILSCALE_IP || '100.127.53.123';
+const AI_ENGINE_PORT = 5000;
+
 const fastify = Fastify({ logger: true });
 fastify.register(websocketPlugin);
 
@@ -19,13 +25,9 @@ fastify.register(async function (server) {
     let currentBattery = 99.0;
     const missionStartTime = Date.now();
 
-    // REMOVED: Automatic insertion of every telemetry message into mission_logs.
-    // This was causing database bloat. Missions are now saved explicitly via POST /api/missions.
     connection.on('message', async (message: any) => {
       try {
         const payload = typeof message === 'string' ? JSON.parse(message) : JSON.parse(message.toString());
-        // For now, we just log that we received data. 
-        // If real-time persistence is needed, it should be done to a 'live_telemetry' table with UPDATE, not INSERT.
         // console.log('Received telemetry:', payload.gps);
       } catch (err) {
         fastify.log.error('Telemetry parse error: ' + String(err));
@@ -46,7 +48,7 @@ fastify.register(async function (server) {
       const formattedFlightTime = `${minutes}:${seconds}`;
       currentBattery -= 0.01;
 
-      // Poll AI Status from Python AI Engine
+      // Poll AI Status from Python AI Engine over Tailscale
       let aiData = {
         sharpnessScore: 0,
         isSharpEnough: false,
@@ -57,12 +59,12 @@ fastify.register(async function (server) {
       };
 
       try {
-        const response = await fetch('http://localhost:5000/api/status');
+        const response = await fetch(`http://${AI_ENGINE_IP}:${AI_ENGINE_PORT}/api/status`);
         if (response.ok) {
           aiData = await response.json() as any;
         }
       } catch (e) {
-        // AI Engine might not be running yet
+        // AI Engine might not be running yet, fail silently to keep stream alive
       }
 
       const testTelemetry: LiveTelemetry = {
@@ -108,11 +110,11 @@ fastify.register(async function (server) {
 });
 
 // --- Proxy Route for Camera Feed ---
-// This forwards /camera_feed requests to the Flask app on port 5000
+// This forwards /camera_feed requests to the Flask app over Tailscale
 fastify.get('/camera_feed', (request, reply) => {
   const proxyRequest = http.request({
-    host: 'localhost',
-    port: 5000,
+    host: AI_ENGINE_IP,
+    port: AI_ENGINE_PORT,
     path: '/video_feed',
     method: 'GET'
   }, (proxyResponse) => {
@@ -131,12 +133,12 @@ fastify.get('/camera_feed', (request, reply) => {
 // --- Manual Spray Route ---
 fastify.post('/api/drone/spray', async (request, reply) => {
   try {
-    const response = await fetch('http://localhost:5000/api/manual_spray', { method: 'POST' });
+    const response = await fetch(`http://${AI_ENGINE_IP}:${AI_ENGINE_PORT}/api/manual_spray`, { method: 'POST' });
     const result = await response.json();
     return result;
   } catch (err) {
     fastify.log.error('Manual spray error: ' + String(err));
-    reply.code(500).send({ error: 'Failed to communicate with AI Engine' });
+    reply.code(500).send({ error: 'Failed to communicate with AI Engine over Tailscale' });
   }
 });
 
@@ -211,7 +213,7 @@ fastify.post('/api/missions', async (request, reply) => {
   }
 });
 
-// NEW: launch helper endpoint
+// launch helper endpoint
 fastify.post('/api/mission/start', async (request, reply) => {
   try {
     try {

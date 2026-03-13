@@ -36,8 +36,10 @@ def get_stream_command(destination_ip):
         f"gst-launch-1.0 -v libcamerasrc ! "
         f"video/x-raw,width=640,height=480,framerate=20/1 ! "
         f"videoconvert ! "
-        f"x264enc threads=4 tune=zerolatency bitrate=1500 speed-preset=ultrafast ! "
-        f"h264parse ! mpegtsmux ! "
+        # ADDED: key-int-max=20 forces an I-frame (Keyframe) every 1 second
+        f"x264enc threads=4 tune=zerolatency bitrate=1500 speed-preset=ultrafast key-int-max=20 ! "
+        # ADDED: config-interval=1 sends the SPS/PPS headers with every keyframe
+        f"h264parse config-interval=1 ! mpegtsmux alignment=7 ! "
         f"udpsink host={destination_ip} port={STREAM_PORT} sync=false"
     )
     # Wrap in nohup to keep it running if SSH hiccups
