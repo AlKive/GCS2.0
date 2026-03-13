@@ -12499,4 +12499,178 @@ Socket exception: An existing connection was forcibly closed by the remote host 
 15133) at 19:38:54 [STATUS] Stream Healthy (PID: 13716) at 19:38:59 [STATUS] Stream Healthy (PID: 13716
 15152) at 19:38:59 [STATUS] Stream Healthy (PID: 13716) at 19:39:04 [STATUS] Stream Healthy (PID: 13716) at 19:39:04 [STATUS] Stream Healthy (PID: 13716) at 19:39:09 [STATUS] Stream Healthy (PID: 13716) at 19:39:09 [STATUS] Stream Healthy (PID: 13716) at 19:39:14 [STATUS] Stream Healthy (PID: 13716
 15164) at 19:39:14 [STATUS] Stream Healthy (PID: 13716) at 19:39:19 [STATUS] Stream Healthy (PID: 13716
-15168) at 19:39:19 [STATUS] Stream Healthy (PID: 13716) at 19:39:24 [STATUS] Stream Healthy (PID: 13716) at 19:39:25 [STATUS] Stream Healthy (PID: 13716) at 19:39:29 [STATUS] Stream Healthy (PID: 13716) at 19:39:30 [STATUS] Stream Healthy (PID: 13716) at 19:39:34 [STATUS] Stream Healthy (PID: 13716) at 19:39:35 [STATUS] Stream Healthy (PID: 13716) at 19:39:40 [STATUS] Stream Healthy (PID: 13716) at 19:39:40 [STATUS] Stream Healthy (PID: 13716) at 19:39:45 [STATUS] Stream Healthy (PID: 13716) at 19:39:45 
+15168) at 19:39:19 [STATUS] Stream Healthy (PID: 13716) at 19:39:24 [STATUS] Stream Healthy (PID: 13716) at 19:39:25 [STATUS] Stream Healthy (PID: 13716) at 19:39:29 [STATUS] Stream Healthy (PID: 13716) at 19:39:30 [STATUS] Stream Healthy (PID: 13716) at 19:39:34 [STATUS] Stream Healthy (PID: 13716) at 19:39:35 [STATUS] Stream Healthy (PID: 13716) at 19:39:40 [STATUS] Stream Healthy (PID: 13716) at 19:39:40 [STATUS] Stream Healthy (PID: 13716) at 19:39:45 [STATUS] Stream Healthy (PID: 13716) at 19:39:45 [STATUS] Stream Healthy (PID: 13716) at 19:39:50 [STATUS] Stream Healthy (PID: 13716) at 19:39:50 [STATUS] Stream Healthy (PID: 13716) at 19:39:55 [STATUS] Stream Healthy (PID: 13716) at 19:39:56 [STATUS] Stream Healthy (PID: 13716) at 19:40:00 [STATUS] Stream Healthy (PID: 13716
+15200) at 19:40:01 [STATUS] Stream Healthy (PID: 13716) at 19:40:05 [STATUS] Stream Healthy (PID: 13716) at 19:40:06 [STATUS] Stream Healthy (PID: 13716) at 19:40:10 [STATUS] Stream Healthy (PID: 13716
+15208
+15210) at 19:40:11 [STATUS] Stream Healthy (PID: 13716) at 19:40:15 [STATUS] Stream Healthy (PID: 13716
+15213
+15214) at 19:40:16 [STATUS] Stream Healthy (PID: 13716) at 19:40:20 [STATUS] Stream Healthy (PID: 13716) at 19:40:21 [STATUS] Stream Healthy (PID: 13716) at 19:40:25 [STATUS] Stream Healthy (PID: 13716
+15220
+15221) at 19:40:26 [STATUS] Stream Healthy (PID: 13716) at 19:40:30 [STATUS] Stream Healthy (PID: 13716
+15224
+15226) at 19:40:31 [STATUS] Stream Healthy (PID: 13716) at 19:40:35 [STATUS] Stream Healthy (PID: 13716
+15230) at 19:40:37 [STATUS] Stream Healthy (PID: 13716) at 19:40:40 [STATUS] Stream Healthy (PID: 13716
+15234) at 19:40:42 [STATUS] Stream Healthy (PID: 13716) at 19:40:45 [STATUS] Stream Healthy (PID: 13716) at 19:40:47 [STATUS] Stream Healthy (PID: 13716) at 19:40:51 [STATUS] Stream Healthy (PID: 13716
+15242) at 19:40:52 [STATUS] Stream Healthy (PID: 13716) at 19:40:56 [STATUS] Stream Healthy (PID: 13716) at 19:40:57 [STATUS] Stream Healthy (PID: 13716) at 19:41:01 [STATUS] Stream Healthy (PID: 13716) at 19:41:02 [STATUS] Stream Healthy (PID: 13716) at 19:41:06 [STATUS] Stream Healthy (PID: 13716) at 19:41:08 [STATUS] Stream Healthy (PID: 13716) at 19:41:11 [STATUS] Stream Healthy (PID: 13716) at 19:41:13 [STATUS] Stream Healthy (PID: 13716) at 19:41:16 [STATUS] Stream Healthy (PID: 13716) at 19:41:18 [STATUS] Stream Healthy (PID: 13716) at 19:41:21 [STATUS] Stream Healthy (PID: 13716
+15266) at 19:41:23 [STATUS] Stream Healthy (PID: 13716) at 19:41:26 [STATUS] Stream Healthy (PID: 13716) at 19:41:28 [STATUS] Stream Healthy (PID: 13716) at 19:41:31 [STATUS] Stream Healthy (PID: 13716) at 19:41:33 [STATUS] Stream Healthy (PID: 13716) at 19:41:36 [STATUS] Stream Healthy (PID: 13716) at 19:41:38 [STATUS] Stream Healthy (PID: 13716) at 19:41:41 [STATUS] Stream Healthy (PID: 13716) at 19:41:44 [STATUS] Stream Healthy (PID: 13716) at 19:41:46 [STATUS] Stream Healthy (PID: 13716
+15285) at 19:41:49 [STATUS] Stream Healthy (PID: 13716) at 19:41:52 [STATUS] Stream Healthy (PID: 13716
+15289) at 19:41:54 [STATUS] Stream Healthy (PID: 13716) at 19:41:57 [STATUS] Stream Healthy (PID: 13716
+15294) at 19:41:59 [STATUS] Stream Healthy (PID: 13716) at 19:42:02 [STATUS] Stream Healthy (PID: 13716
+15298) at 19:42:04 [STATUS] Stream Healthy (PID: 13716) at 19:42:07 [STATUS] Stream Healthy (PID: 13716
+15301) at 19:42:09 [STATUS] Stream Healthy (PID: 13716) at 19:42:12 [STATUS] Stream Healthy (PID: 13716
+15304) at 19:42:14 [STATUS] Stream Healthy (PID: 13716) at 19:42:17 [STATUS] Stream Healthy (PID: 13716) at 19:42:20 [STATUS] Stream Healthy (PID: 13716) at 19:42:22 [STATUS] Stream Healthy (PID: 13716
+15312
+15314) at 19:42:25 [STATUS] Stream Healthy (PID: 13716) at 19:42:27 [STATUS] Stream Healthy (PID: 13716) at 19:42:30 [STATUS] Stream Healthy (PID: 13716) at 19:42:32 [STATUS] Stream Healthy (PID: 13716
+15320) at 19:42:35 [STATUS] Stream Healthy (PID: 13716) at 19:42:37 [STATUS] Stream Healthy (PID: 13716
+15325
+15326) at 19:42:40 [STATUS] Stream Healthy (PID: 13716) at 19:42:42 [STATUS] Stream Healthy (PID: 13716
+15329
+15330) at 19:42:45 [STATUS] Stream Healthy (PID: 13716) at 19:42:48 [STATUS] Stream Healthy (PID: 13716
+15334
+15335) at 19:42:51 [STATUS] Stream Healthy (PID: 13716) at 19:42:53 [STATUS] Stream Healthy (PID: 13716) at 19:42:56 [STATUS] Stream Healthy (PID: 13716) at 19:42:58 [STATUS] Stream Healthy (PID: 13716) at 19:43:01 [STATUS] Stream Healthy (PID: 13716) at 19:43:03 [STATUS] Stream Healthy (PID: 13716
+15347) at 19:43:06 [STATUS] Stream Healthy (PID: 13716) at 19:43:08 [STATUS] Stream Healthy (PID: 13716
+15351
+15352) at 19:43:11 [STATUS] Stream Healthy (PID: 13716) at 19:43:13 [STATUS] Stream Healthy (PID: 13716
+15355
+15356) at 19:43:16 [STATUS] Stream Healthy (PID: 13716) at 19:43:18 [STATUS] Stream Healthy (PID: 13716
+15360) at 19:43:21 [STATUS] Stream Healthy (PID: 13716) at 19:43:23 [STATUS] Stream Healthy (PID: 13716) at 19:43:27 [STATUS] Stream Healthy (PID: 13716) at 19:43:28 [STATUS] Stream Healthy (PID: 13716) at 19:43:32 [STATUS] Stream Healthy (PID: 13716) at 19:43:33 [STATUS] Stream Healthy (PID: 13716) at 19:43:37 [STATUS] Stream Healthy (PID: 13716) at 19:43:38 [STATUS] Stream Healthy (PID: 13716) at 19:43:42 [STATUS] Stream Healthy (PID: 13716) at 19:43:43 [STATUS] Stream Healthy (PID: 13716) at 19:43:47 [STATUS] Stream Healthy (PID: 13716) at 19:43:48 [STATUS] Stream Healthy (PID: 13716
+15384) at 19:43:52 [STATUS] Stream Healthy (PID: 13716) at 19:43:53 [STATUS] Stream Healthy (PID: 13716) at 19:43:57 [STATUS] Stream Healthy (PID: 13716) at 19:43:58 [STATUS] Stream Healthy (PID: 13716
+15393) at 19:44:03 [STATUS] Stream Healthy (PID: 13716) at 19:44:04 [STATUS] Stream Healthy (PID: 13716
+15398) at 19:44:08 [STATUS] Stream Healthy (PID: 13716) at 19:44:09 [STATUS] Stream Healthy (PID: 13716) at 19:44:13 [STATUS] Stream Healthy (PID: 13716) at 19:44:14 [STATUS] Stream Healthy (PID: 13716
+15405) at 19:44:18 [STATUS] Stream Healthy (PID: 13716) at 19:44:19 [STATUS] Stream Healthy (PID: 13716) at 19:44:23 [STATUS] Stream Healthy (PID: 13716) at 19:44:24 [STATUS] Stream Healthy (PID: 13716) at 19:44:28 [STATUS] Stream Healthy (PID: 13716) at 19:44:29 [STATUS] Stream Healthy (PID: 13716) at 19:44:33 [STATUS] Stream Healthy (PID: 13716) at 19:44:34 [STATUS] Stream Healthy (PID: 13716) at 19:44:38 [STATUS] Stream Healthy (PID: 13716) at 19:44:39 [STATUS] Stream Healthy (PID: 13716
+15424
+15425) at 19:44:44 [STATUS] Stream Healthy (PID: 13716) at 19:44:44 [STATUS] Stream Healthy (PID: 13716
+15430
+15431) at 19:44:49 [STATUS] Stream Healthy (PID: 13716) at 19:44:49 [STATUS] Stream Healthy (PID: 13716
+15435) at 19:44:54 [STATUS] Stream Healthy (PID: 13716) at 19:44:54 [STATUS] Stream Healthy (PID: 13716
+15439) at 19:44:59 [STATUS] Stream Healthy (PID: 13716) at 19:44:59 [STATUS] Stream Healthy (PID: 13716
+15441
+15443) at 19:45:04 [STATUS] Stream Healthy (PID: 13716) at 19:45:04 [STATUS] Stream Healthy (PID: 13716
+15446
+15447) at 19:45:09 [STATUS] Stream Healthy (PID: 13716) at 19:45:09 [STATUS] Stream Healthy (PID: 13716
+15450
+15451) at 19:45:14 [STATUS] Stream Healthy (PID: 13716) at 19:45:15 [STATUS] Stream Healthy (PID: 13716) at 19:45:20 [STATUS] Stream Healthy (PID: 13716) at 19:45:20 [STATUS] Stream Healthy (PID: 13716
+15459
+15460
+15461) at 19:45:25 [STATUS] Stream Healthy (PID: 13716) at 19:45:25 [STATUS] Stream Healthy (PID: 13716
+15462
+15464
+15465) at 19:45:30 [STATUS] Stream Healthy (PID: 13716
+15462
+15463
+15464) at 19:45:30 [STATUS] Stream Healthy (PID: 13716
+15467
+15468
+15469) at 19:45:35 [STATUS] Stream Healthy (PID: 13716) at 19:45:35 [STATUS] Stream Healthy (PID: 13716
+15470) at 19:45:40 [STATUS] Stream Healthy (PID: 13716
+15472) at 19:45:40 [STATUS] Stream Healthy (PID: 13716
+15475) at 19:45:45 [STATUS] Stream Healthy (PID: 13716
+15476) at 19:45:45 [STATUS] Stream Healthy (PID: 13716) at 19:45:51 [STATUS] Stream Healthy (PID: 13716) at 19:45:51 [STATUS] Stream Healthy (PID: 13716
+15483) at 19:45:56 [STATUS] Stream Healthy (PID: 13716) at 19:45:56 [STATUS] Stream Healthy (PID: 13716
+15488
+15489) at 19:46:01 [STATUS] Stream Healthy (PID: 13716) at 19:46:01 [STATUS] Stream Healthy (PID: 13716
+15491
+15492) at 19:46:06 [STATUS] Stream Healthy (PID: 13716) at 19:46:06 [STATUS] Stream Healthy (PID: 13716
+15496
+15497) at 19:46:11 [STATUS] Stream Healthy (PID: 13716
+15496) at 19:46:11 [STATUS] Stream Healthy (PID: 13716
+15500) at 19:46:16 [STATUS] Stream Healthy (PID: 13716) at 19:46:16 [STATUS] Stream Healthy (PID: 13716) at 19:46:21 [STATUS] Stream Healthy (PID: 13716
+15504) at 19:46:22 [STATUS] Stream Healthy (PID: 13716
+15506) at 19:46:27 [STATUS] Stream Healthy (PID: 13716) at 19:46:27 [STATUS] Stream Healthy (PID: 13716
+15511) at 19:46:32 [STATUS] Stream Healthy (PID: 13716) at 19:46:32 [STATUS] Stream Healthy (PID: 13716) at 19:46:37 [STATUS] Stream Healthy (PID: 13716) at 19:46:37 [STATUS] Stream Healthy (PID: 13716
+15519) at 19:46:42 [STATUS] Stream Healthy (PID: 13716) at 19:46:42 [STATUS] Stream Healthy (PID: 13716) at 19:46:47 [STATUS] Stream Healthy (PID: 13716
+15525) at 19:46:47 [STATUS] Stream Healthy (PID: 13716) at 19:46:52 [STATUS] Stream Healthy (PID: 13716
+15529) at 19:46:52 [STATUS] Stream Healthy (PID: 13716
+15530) at 19:46:57 [STATUS] Stream Healthy (PID: 13716) at 19:46:58 [STATUS] Stream Healthy (PID: 13716) at 19:47:03 [STATUS] Stream Healthy (PID: 13716
+15536) at 19:47:03 [STATUS] Stream Healthy (PID: 13716) at 19:47:08 [STATUS] Stream Healthy (PID: 13716) at 19:47:08 [STATUS] Stream Healthy (PID: 13716
+15543) at 19:47:13 [STATUS] Stream Healthy (PID: 13716) at 19:47:13 [STATUS] Stream Healthy (PID: 13716
+15547
+15548) at 19:47:18 [STATUS] Stream Healthy (PID: 13716
+15548) at 19:47:18 [STATUS] Stream Healthy (PID: 13716
+15550
+15552
+15553) at 19:47:23 [STATUS] Stream Healthy (PID: 13716) at 19:47:23 [STATUS] Stream Healthy (PID: 13716) at 19:47:28 [STATUS] Stream Healthy (PID: 13716
+15557) at 19:47:28 [STATUS] Stream Healthy (PID: 13716
+15559) at 19:47:34 [STATUS] Stream Healthy (PID: 13716) at 19:47:34 [STATUS] Stream Healthy (PID: 13716
+15562
+15565) at 19:47:39 [STATUS] Stream Healthy (PID: 13716) at 19:47:39 [STATUS] Stream Healthy (PID: 13716
+15567
+15569) at 19:47:44 [STATUS] Stream Healthy (PID: 13716) at 19:47:44 [STATUS] Stream Healthy (PID: 13716
+15571
+15572) at 19:47:49 [STATUS] Stream Healthy (PID: 13716) at 19:47:49 [STATUS] Stream Healthy (PID: 13716
+15576
+15577) at 19:47:55 [STATUS] Stream Healthy (PID: 13716
+15576) at 19:47:55 [STATUS] Stream Healthy (PID: 13716) at 19:48:00 [STATUS] Stream Healthy (PID: 13716
+15581) at 19:48:00 [STATUS] Stream Healthy (PID: 13716
+15584
+15585) at 19:48:05 [STATUS] Stream Healthy (PID: 13716
+15584) at 19:48:05 [STATUS] Stream Healthy (PID: 13716
+15588) at 19:48:10 [STATUS] Stream Healthy (PID: 13716) at 19:48:10 [STATUS] Stream Healthy (PID: 13716
+15592) at 19:48:15 [STATUS] Stream Healthy (PID: 13716) at 19:48:15 [STATUS] Stream Healthy (PID: 13716
+15596) at 19:48:20 [STATUS] Stream Healthy (PID: 13716) at 19:48:20 [STATUS] Stream Healthy (PID: 13716
+15599
+15601) at 19:48:25 [STATUS] Stream Healthy (PID: 13716
+15601) at 19:48:25 [STATUS] Stream Healthy (PID: 13716
+15604) at 19:48:31 [STATUS] Stream Healthy (PID: 13716) at 19:48:31 [STATUS] Stream Healthy (PID: 13716
+15611) at 19:48:36 [STATUS] Stream Healthy (PID: 13716) at 19:48:36 [STATUS] Stream Healthy (PID: 13716
+15613) at 19:48:41 [STATUS] Stream Healthy (PID: 13716) at 19:48:41 [STATUS] Stream Healthy (PID: 13716
+15617) at 19:48:46 [STATUS] Stream Healthy (PID: 13716) at 19:48:46 [STATUS] Stream Healthy (PID: 13716
+15622
+15623) at 19:48:51 [STATUS] Stream Healthy (PID: 13716) at 19:48:51 [STATUS] Stream Healthy (PID: 13716
+15626
+15627) at 19:48:56 [STATUS] Stream Healthy (PID: 13716) at 19:48:56 [STATUS] Stream Healthy (PID: 13716
+15630) at 19:49:01 [STATUS] Stream Healthy (PID: 13716) at 19:49:02 [STATUS] Stream Healthy (PID: 13716) at 19:49:07 [STATUS] Stream Healthy (PID: 13716) at 19:49:07 [STATUS] Stream Healthy (PID: 13716) at 19:49:12 [STATUS] Stream Healthy (PID: 13716) at 19:49:12 [STATUS] Stream Healthy (PID: 13716
+15643) at 19:49:17 [STATUS] Stream Healthy (PID: 13716) at 19:49:17 [STATUS] Stream Healthy (PID: 13716
+15645
+15647) at 19:49:22 [STATUS] Stream Healthy (PID: 13716
+15645) at 19:49:22 [STATUS] Stream Healthy (PID: 13716
+15650
+15651) at 19:49:27 [STATUS] Stream Healthy (PID: 13716) at 19:49:27 [STATUS] Stream Healthy (PID: 13716
+15655
+15656) at 19:49:32 [STATUS] Stream Healthy (PID: 13716) at 19:49:32 [STATUS] Stream Healthy (PID: 13716
+15659
+15660) at 19:49:37 [STATUS] Stream Healthy (PID: 13716
+15659) at 19:49:37 [STATUS] Stream Healthy (PID: 13716
+15663
+15664) at 19:49:43 [STATUS] Stream Healthy (PID: 13716
+15664) at 19:49:43 [STATUS] Stream Healthy (PID: 13716
+15667
+15668) at 19:49:48 [STATUS] Stream Healthy (PID: 13716) at 19:49:48 [STATUS] Stream Healthy (PID: 13716
+15671
+15672) at 19:49:53 [STATUS] Stream Healthy (PID: 13716
+15672) at 19:49:53 [STATUS] Stream Healthy (PID: 13716
+15675
+15676) at 19:49:58 [STATUS] Stream Healthy (PID: 13716
+15676) at 19:49:58 [STATUS] Stream Healthy (PID: 13716
+15678
+15680) at 19:50:03 [STATUS] Stream Healthy (PID: 13716
+15680) at 19:50:03 [STATUS] Stream Healthy (PID: 13716
+15683
+15684) at 19:50:08 [STATUS] Stream Healthy (PID: 13716
+15684) at 19:50:08 [STATUS] Stream Healthy (PID: 13716
+15688) at 19:50:13 [STATUS] Stream Healthy (PID: 13716
+15689) at 19:50:13 [STATUS] Stream Healthy (PID: 13716
+15692
+15693) at 19:50:19 [STATUS] Stream Healthy (PID: 13716
+15693) at 19:50:19 [STATUS] Stream Healthy (PID: 13716
+15696
+15697) at 19:50:24 [STATUS] Stream Healthy (PID: 13716) at 19:50:24 [STATUS] Stream Healthy (PID: 13716
+15699) at 19:50:29 [STATUS] Stream Healthy (PID: 13716) at 19:50:29 [STATUS] Stream Healthy (PID: 13716
+15705) at 19:50:34 [STATUS] Stream Healthy (PID: 13716) at 19:50:34 [STATUS] Stream Healthy (PID: 13716
+15710) at 19:50:39 [STATUS] Stream Healthy (PID: 13716) at 19:50:39 [STATUS] Stream Healthy (PID: 13716
+15713
+15714) at 19:50:44 [STATUS] Stream Healthy (PID: 13716) at 19:50:44 [STATUS] Stream Healthy (PID: 13716
+15718) at 19:50:49 [STATUS] Stream Healthy (PID: 13716) at 19:50:49 [STATUS] Stream Healthy (PID: 13716
+15721) at 19:50:55 [STATUS] Stream Healthy (PID: 13716
+15722) at 19:50:55 [STATUS] Stream Healthy (PID: 13716
+15725
+15726) at 19:51:00 [STATUS] Stream Healthy (PID: 13716
+15726) at 19:51:00 [STATUS] Stream Healthy (PID: 13716
+15729) at 19:51:05 [STATUS] Stream Healthy (PID: 13716) at 19:51:05 [STATUS] Stream Healthy (PID: 13716
+15732
+15734) at 19:51:10 [STATUS] Stream Healthy (PID: 13716
+15733
+15734) at 19:51:10 [STATUS] Stream Healthy (PID: 13716
+15736
+15738) at 19:51:15 [STATUS] Stream Healthy (PID: 13716) at 19:51:15 [STATUS] Stream Healthy (PID: 13716
+15741) at 19:51:20 [STATUS] Stream Healthy (PID: 13716) at 19:51:20 [STATUS] Stream Healthy (PID: 13716) at 19:51:25 [STATUS] Stream Healthy (PID: 13716) at 19:51:25 [STATUS] Stream Healthy (PID: 13716) at 19:51:31 [STATUS] Stream Healthy (PID: 13716) at 19:51:31 
