@@ -1,189 +1,134 @@
 import React, { useState } from 'react';
 
-// --- Reusable Setting Components ---
-
-interface SettingSectionProps {
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}
-
-const SettingSection: React.FC<SettingSectionProps> = ({ title, description, children }) => (
-    <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
-        <h3 className="text-base font-bold text-gcs-text-dark dark:text-white">{title}</h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 mb-4">{description}</p>
-        <div className="space-y-3">
-            {children}
-        </div>
-    </div>
-);
-
-interface ToggleSettingProps {
-    label: string;
-    description: string;
-    enabled: boolean;
-    onToggle: () => void;
-}
-
-const ToggleSetting: React.FC<ToggleSettingProps> = ({ label, description, enabled, onToggle }) => (
-    <div className="flex items-center justify-between border-t pt-3 first:border-t-0 first:pt-0 dark:border-gray-700">
-        <div>
-            <p className="font-semibold text-sm text-gcs-text-dark dark:text-gray-200">{label}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
-        </div>
-        <button 
-            onClick={onToggle}
-            className={`relative inline-flex items-center h-5 rounded-full w-10 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 gcs-primary ${enabled ? 'bg-gcs-orange' : 'bg-gray-300'}`}
-        >
-            <span className={`inline-block w-3.5 h-3.5 transform bg-white rounded-full transition-transform duration-300 ${enabled ? 'translate-x-5' : 'translate-x-1'}`} />
-        </button>
-    </div>
-);
-
-interface SelectSettingProps {
-    label: string;
-    description: string;
-    options: string[];
-    value: string;
-    onChange: (value: string) => void;
-}
-
-const SelectSetting: React.FC<SelectSettingProps> = ({ label, description, options, value, onChange }) => (
-     <div className="flex items-center justify-between border-t pt-3 first:border-t-0 first:pt-0 dark:border-gray-700">
-        <div>
-            <p className="font-semibold text-sm text-gcs-text-dark dark:text-gray-200">{label}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
-        </div>
-        <select value={value} onChange={e => onChange(e.target.value)} className="w-44 bg-white border border-gray-300 rounded-lg py-1.5 px-2.5 text-xs focus:outline-none focus:ring-2 gcs-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-            {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-        </select>
-    </div>
-);
-
-
-// --- Main Settings Panel ---
 interface SettingsPanelProps {
-    isDarkMode: boolean;
-    onToggleDarkMode: () => void;
-    mapStyle: string;
-    setMapStyle: (style: string) => void;
-    theme: string;
-    setTheme: (theme: string) => void;
+  currentDarkMode: boolean;
+  currentMapStyle: string;
+  currentTheme: string;
+  onSave: (settings: { isDarkMode: boolean; mapStyle: string; theme: string }) => void;
 }
 
-const SettingsPanel: React.FC<SettingsPanelProps> = ({ isDarkMode, onToggleDarkMode, mapStyle, setMapStyle, theme, setTheme }) => {
-    // Dummy state for other settings
-    const [units, setUnits] = useState('Metric');
-    const [hudColor, setHudColor] = useState('Orange');
-    const [autoSync, setAutoSync] = useState(true);
-    const [showSaveMessage, setShowSaveMessage] = useState(false);
+const SettingsPanel: React.FC<SettingsPanelProps> = ({ 
+  currentDarkMode, 
+  currentMapStyle, 
+  currentTheme,
+  onSave
+}) => {
+  // Local state for pending changes
+  const [pendingDarkMode, setPendingDarkMode] = useState(currentDarkMode);
+  const [pendingMapStyle, setPendingMapStyle] = useState(currentMapStyle);
+  const [pendingTheme, setPendingTheme] = useState(currentTheme);
 
-    // Effect to hide the message after a few seconds
-    React.useEffect(() => {
-        if (showSaveMessage) {
-            const timer = setTimeout(() => {
-                setShowSaveMessage(false);
-            }, 3000); // Hide after 3 seconds
-            return () => clearTimeout(timer);
-        }
-    }, [showSaveMessage]);
+  const themes = [
+    { id: 'red', name: 'NEO_RED', class: 'bg-red-500' },
+    { id: 'blue', name: 'CYBER_BLUE', class: 'bg-blue-500' },
+    { id: 'amber', name: 'AMBER_WARM', class: 'bg-amber-500' },
+    { id: 'emerald', name: 'EMERALD_TOX', class: 'bg-emerald-500' },
+    { id: 'purple', name: 'VOID_PURPLE', class: 'bg-purple-500' },
+  ];
 
-    const handleSaveSettings = () => {
-        // In a real application, you'd save these settings to a backend or more robust storage.
-        // For now, they are already being saved/applied immediately (dark mode, map style).
-        // This button will just provide visual feedback.
-        setShowSaveMessage(true);
-    };
+  const hasChanges = 
+    pendingDarkMode !== currentDarkMode || 
+    pendingMapStyle !== currentMapStyle || 
+    pendingTheme !== currentTheme;
 
-    return (
-        <div className="space-y-4 animate-fade-in h-full overflow-y-auto">
-            <SettingSection title="General Settings" description="Customize the overall look and feel of the application.">
-                <ToggleSetting 
-                    label="Dark Mode"
-                    description="Enable a darker theme for better viewing in low-light conditions."
-                    enabled={isDarkMode}
-                    onToggle={onToggleDarkMode}
-                />
-                <SelectSetting
-                    label="Unit System"
-                    description="Choose between Metric (m, m/s) and Imperial (ft, mph) units."
-                    options={['Metric', 'Imperial']}
-                    value={units}
-                    onChange={setUnits}
-                />
-                <SelectSetting
-                    label="GUI Color Theme"
-                    description="Select the color theme for the application."
-                    options={['purple', 'orange', 'blue', 'green', 'black']}
-                    value={theme}
-                    onChange={setTheme}
-                />
-            </SettingSection>
-
-            <SettingSection title="Map & Flight Log Settings" description="Adjust preferences for the flight map and mission log views.">
-                 <SelectSetting
-                    label="Default Map Style"
-                    description="Select the default map style for viewing GPS tracks."
-                    options={['Default', 'Satellite', 'Streets', 'Topographic']}
-                    value={mapStyle}
-                    onChange={setMapStyle}
-                />
-                <SelectSetting
-                    label="GPS Track Color"
-                    description="Set the color of the drone's flight path on the map."
-                    options={['Orange', 'Cyan', 'Lime Green', 'Yellow']}
-                    value={'Orange'} // Placeholder
-                    onChange={() => {}} // Placeholder
-                />
-            </SettingSection>
-
-             <SettingSection title="Live Mission Settings" description="Configure the live telemetry and heads-up display.">
-                <SelectSetting
-                    label="HUD Color"
-                    description="Change the color of the text overlay on the live camera feed."
-                    options={['Orange', 'Green', 'White']}
-                    value={hudColor}
-                    onChange={setHudColor}
-                />
-                <div className="flex items-center justify-between border-t pt-3 first:border-t-0 first:pt-0 dark:border-gray-700">
-                     <div>
-                        <p className="font-semibold text-sm text-gcs-text-dark dark:text-gray-200">Low Battery Warning</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Set the threshold for low battery alerts (10-50%).</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                         <input type="number" defaultValue="20" min="10" max="50" className="w-16 text-center bg-white border border-gray-300 rounded-lg py-1.5 px-2 text-xs focus:outline-none focus:ring-2 gcs-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-                         <span className="text-xs dark:text-gray-300">%</span>
-                    </div>
-                </div>
-            </SettingSection>
-
-             <SettingSection title="Data & Privacy" description="Manage your mission data and application settings.">
-                <ToggleSetting 
-                    label="Cloud Sync"
-                    description="Automatically back up mission logs and settings to the cloud."
-                    enabled={autoSync}
-                    onToggle={() => setAutoSync(!autoSync)}
-                />
-            </SettingSection>
-            
-            <div className="flex justify-end gap-3 pb-4">
-                 <button className="text-gray-600 font-bold text-sm py-2 px-6 rounded-lg transition-all duration-200 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white">
-                    Reset to Defaults
-                </button>
-                 <button className="text-white font-bold text-sm py-2 px-6 rounded-lg transition-all duration-200 bg-gcs-orange hover:opacity-90 shadow-lg shadow-gcs-orange/30 focus:outline-none focus:ring-2 focus:ring-offset-2 gcs-primary"
-                    onClick={handleSaveSettings}
-                >
-                    Save Settings
-                </button>
-            </div>
-
-            {showSaveMessage && (
-                <div className="absolute bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg animate-fade-in-fast">
-                    Settings saved successfully!
-                </div>
-            )}
+  return (
+    <div className="flex flex-col h-full gap-6 animate-fade-in font-mono">
+      <div className="flex items-center justify-between px-1">
+        <div>
+          <h2 className="text-2xl font-black text-main uppercase tracking-[0.2em] italic">SYSTEM_CONFIG_</h2>
+          <div className="h-[2px] w-16 bg-gcs-primary mt-1 shadow-[0_0_10px_var(--neon-glow)]" />
         </div>
-    );
+        
+        <button
+          onClick={() => onSave({ isDarkMode: pendingDarkMode, mapStyle: pendingMapStyle, theme: pendingTheme })}
+          disabled={!hasChanges}
+          className={`px-8 py-3 rounded font-black text-[10px] tracking-[0.3em] uppercase transition-all shadow-xl ${
+            hasChanges 
+            ? 'bg-gcs-primary text-slate-100 neon-glow active:scale-95' 
+            : 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-50'
+          }`}
+        >
+          {hasChanges ? 'SAVE_CHANGES_' : 'CONFIG_SYNCHRONIZED'}
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+        {/* Appearance & Mode */}
+        <div className="bg-gcs-panel border border-main rounded-lg p-8 shadow-2xl flex flex-col gap-10">
+          <section>
+            <h3 className="text-xs font-black text-dim uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+              <span className="w-2 h-2 rounded-full bg-gcs-primary" />
+              LUMINANCE_PROTOCOL
+            </h3>
+            <div className="flex items-center justify-between p-6 bg-gcs-card/30 border border-main rounded-xl">
+              <div>
+                <p className="text-sm font-black text-main uppercase tracking-wider">Tactical_Dark_Mode</p>
+                <p className="text-[10px] text-dim mt-1 uppercase">Toggle between Dark and Light interface cores</p>
+              </div>
+              <button
+                onClick={() => setPendingDarkMode(!pendingDarkMode)}
+                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-all focus:outline-none border-2 ${pendingDarkMode ? 'bg-slate-800 border-gcs-primary' : 'bg-white border-slate-300'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full transition-transform ${pendingDarkMode ? 'translate-x-8 bg-gcs-primary' : 'translate-x-1 bg-slate-400'}`} />
+              </button>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="text-xs font-black text-dim uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+              <span className="w-2 h-2 rounded-full bg-gcs-primary" />
+              MAP_TERRAIN_RENDER
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              {['Satellite', 'Light', 'Dark', 'Outdoors'].map((style) => (
+                <button
+                  key={style}
+                  onClick={() => setPendingMapStyle(style)}
+                  className={`py-4 rounded font-black text-[10px] uppercase tracking-widest border-2 transition-all ${
+                    pendingMapStyle === style 
+                    ? 'bg-gcs-primary/10 border-gcs-primary text-main' 
+                    : 'bg-gcs-card/30 border-main text-dim hover:border-slate-600'
+                  }`}
+                >
+                  {style}_VIEW
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* Theme Palette */}
+        <div className="bg-gcs-panel border border-main rounded-lg p-8 shadow-2xl flex flex-col gap-8">
+          <section>
+            <h3 className="text-xs font-black text-dim uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+              <span className="w-2 h-2 rounded-full bg-gcs-primary" />
+              NEURAL_LINK_PALETTE
+            </h3>
+            <div className="grid grid-cols-1 gap-2">
+              {themes.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setPendingTheme(t.id)}
+                  className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300 ${pendingTheme === t.id ? 'bg-gcs-primary/10 border-gcs-primary shadow-[0_0_15px_var(--neon-glow)]' : 'bg-gcs-card/20 border-transparent hover:border-main'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-4 h-4 rounded-full ${t.class}`} />
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${pendingTheme === t.id ? 'text-main' : 'text-dim'}`}>{t.name}</span>
+                  </div>
+                  {pendingTheme === t.id && <span className="text-[8px] font-black text-gcs-primary">ACTIVE_SELECTION</span>}
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <style>{`
+        .animate-fade-in { animation: fadeIn 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
+    </div>
+  );
 };
 
 export default SettingsPanel;

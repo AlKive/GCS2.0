@@ -1,13 +1,31 @@
+import os
 import paramiko
 import time
 import socket
 import sys
+from supabase import create_client, Client
 
 # === Configuration ===
 PI_TARGET_IPS = ["192.168.7.2", "raspberrypi.local", "100.127.53.123"]
 USERNAME = "rpi3408"
 PASSWORD = "rpi3408"
 STREAM_PORT = 5600
+
+# --- Supabase Setup ---
+SUPABASE_URL = os.getenv("SUPABASE_URL", "your_project_url")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "your_service_role_key")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+def get_active_session():
+    """Fetches the currently active flight session from the database."""
+    try:
+        response = supabase.table("flight_sessions").select("id").eq("status", "active").order("start_time", desc=True).limit(1).execute()
+        if response.data:
+            return response.data[0]['id']
+    except Exception as e:
+        print(f"[ERROR] Failed to fetch active session: {e}")
+        pass
+    return None
 
 def get_laptop_ip_relative_to_pi(pi_ip):
     """
@@ -56,15 +74,31 @@ def monitor_stream(ssh, pi_ip, laptop_ip):
         try:
             stdin, stdout, stderr = ssh.exec_command("pgrep -f gst-launch-1.0")
             pid = stdout.read().decode().strip()
+            session_id = get_active_session()
             
             if pid:
                 ts = time.strftime('%H:%M:%S')
                 print(f"\r[STATUS] Stream Healthy (PID: {pid}) at {ts} ", end="", flush=True)
+                status = "Healthy"
             else:
                 print("\n[ALERT] Stream process missing! Attempting restart...")
                 ssh.exec_command(get_stream_command(laptop_ip))
                 time.sleep(2)
+                status = "Missing/Restarting"
             
+            # SUPABASE LOGGING
+            if session_id:
+                try:
+                    supabase.table("stream_health").insert({
+                        "session_id": session_id,
+                        "pi_ip": pi_ip,
+                        "laptop_ip": laptop_ip,
+                        "stream_pid": pid if pid else None,
+                        "status": status
+                    }).execute()
+                except Exception as e:
+                    print(f"\n[DB ERROR] Failed to log stream health: {e}")
+                
             time.sleep(5)
         except KeyboardInterrupt:
             print("\n\n[STOP] Monitoring stopped by user.")

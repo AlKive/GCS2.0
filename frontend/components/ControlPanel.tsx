@@ -1,31 +1,43 @@
 import React from 'react';
 
 const Logo = () => (
-    <div className="w-24 h-24 mx-auto mb-2">
-        <img src="/logo.png?v=1" alt="Mosquito Control Drone Logo" className="w-full h-full object-contain" />
+    <div className="w-24 h-24 mx-auto mb-4 relative group">
+        <div className="absolute inset-0 bg-gcs-primary/10 rounded-full blur-xl group-hover:bg-gcs-primary/20 transition-all duration-700" />
+        <img src="/logo.png" alt="Mosquito Control Drone Logo" className="w-full h-full object-contain relative z-10 filter drop-shadow-[0_0_8px_var(--neon-glow)]" />
     </div>
 );
-const DashboardIcon = () => <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>;
-const AnalyticsIcon = () => <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24" fill="currentColor"><path d="M16,11V3H8v8H2v2h2v2H2v2h6v-2h2v2h8v-2h-2v-2h2V11H16z M10,5h2v6h-2V5z M6,13H4v-2h2V13z M6,17H4v-2h2V17z M14,13h-2v6h2V13z M20,13h-2v-2h2V13z M20,17h-2v-2h2V17z"/></svg>;
-const LogsIcon = () => <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>;
-const DroneStreamIcon = () => <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24" fill="currentColor"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>;
-const SettingsIcon = () => <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59 1.69.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>;
-const GuideIcon = () => <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h12v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>;
-const AboutIcon = () => <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" ></path></svg>;
+
+const DashboardIcon = () => <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
+const AnalyticsIcon = () => <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>;
+const LogsIcon = () => <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>;
+const DroneStreamIcon = () => <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>;
+const SettingsIcon = () => <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>;
+const GuideIcon = () => <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>;
 
 export type View = 'dashboard' | 'analytics' | 'flightLogs' | 'settings' | 'guide' | 'about' | 'droneStream';
 
 interface NavItemProps {
     icon: React.ReactNode;
     label: string;
-    view: View;
     active: boolean;
     onClick: () => void;
 }
 
 const NavItem: React.FC<NavItemProps> = ({ icon, label, active, onClick }) => (
-  <button onClick={onClick} className={`flex w-full items-center px-4 py-3 text-lg rounded-xl transition-colors duration-200 ${active ? 'bg-white text-gcs-text-dark shadow-lg' : 'text-gcs-text-light hover:bg-gray-700/50'}`}>
-    {icon}
+  <button 
+    onClick={onClick} 
+    className={`group flex w-full items-center px-6 py-4 text-[10px] font-black font-mono uppercase tracking-[0.2em] transition-all duration-300 relative ${
+        active 
+        ? 'text-gcs-primary bg-white/5 shadow-2xl' 
+        : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'
+    }`}
+  >
+    {active && (
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gcs-primary shadow-[0_0_10px_var(--neon-glow)]" />
+    )}
+    <span className={`${active ? 'text-gcs-primary' : ''} transition-all`}>
+        {icon}
+    </span>
     <span>{label}</span>
   </button>
 );
@@ -37,23 +49,34 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate }) => {
   return (
-    <aside className="w-80 bg-gcs-dark text-white flex-col p-6 hidden lg:flex">
-      <div className="text-center mb-10">
+    <aside className="w-72 bg-black/40 backdrop-blur-xl flex flex-col hidden lg:flex border-r border-white/5 z-20 shadow-2xl transition-colors duration-300">
+      <div className="p-10 text-center border-b border-white/5 bg-white/5">
         <Logo />
-        <h1 className="text-xl font-semibold mt-4 text-gray-300">Ground Control System</h1>
+        <div className="mt-6">
+            <h1 className="text-white font-black text-sm tracking-[0.3em] font-mono italic uppercase">LIPAD_GCS</h1>
+            <p className="text-gcs-primary text-[8px] font-mono font-bold uppercase tracking-[0.4em] mt-1 opacity-60">TAC_NET_V4.0</p>
+        </div>
       </div>
-      <nav className="flex flex-col space-y-3">
-        <NavItem icon={<DashboardIcon />} label="Dashboard" view="dashboard" active={currentView === 'dashboard'} onClick={() => onNavigate('dashboard')} />
-        <NavItem icon={<DroneStreamIcon />} label="Drone Stream" view="droneStream" active={currentView === 'droneStream'} onClick={() => onNavigate('droneStream')} />
-        <NavItem icon={<AnalyticsIcon />} label="Analytics" view="analytics" active={currentView === 'analytics'} onClick={() => onNavigate('analytics')} />
-        <NavItem icon={<LogsIcon />} label="Flight Logs" view="flightLogs" active={currentView === 'flightLogs'} onClick={() => onNavigate('flightLogs')} />
-        <NavItem icon={<SettingsIcon />} label="Settings" view="settings" active={currentView === 'settings'} onClick={() => onNavigate('settings')} />
-        <NavItem icon={<GuideIcon />} label="Guide" view="guide" active={currentView === 'guide'} onClick={() => onNavigate('guide')} />
+
+      <nav className="flex-1 pt-6 flex flex-col">
+        <NavItem icon={<DashboardIcon />} label="DASHBOARD" active={currentView === 'dashboard'} onClick={() => onNavigate('dashboard')} />
+        <NavItem icon={<DroneStreamIcon />} label="DRONE STREAM" active={currentView === 'droneStream'} onClick={() => onNavigate('droneStream')} />
+        <NavItem icon={<AnalyticsIcon />} label="ANALYTICS" active={currentView === 'analytics'} onClick={() => onNavigate('analytics')} />
+        <NavItem icon={<LogsIcon />} label="FLIGHT LOGS" active={currentView === 'flightLogs'} onClick={() => onNavigate('flightLogs')} />
+        <NavItem icon={<SettingsIcon />} label="SETTINGS" active={currentView === 'settings'} onClick={() => onNavigate('settings')} />
+        <NavItem icon={<GuideIcon />} label="GUIDE" active={currentView === 'guide'} onClick={() => onNavigate('guide')} />
       </nav>
-      <div className="mt-auto">
-        <button onClick={() => onNavigate('about')} className={`flex w-full items-center justify-center px-4 py-2 rounded-lg transition-colors duration-200 ${currentView === 'about' ? 'text-gcs-primary font-semibold' : 'text-gray-400 hover:text-gcs-primary'}`}>
-          <AboutIcon />
-          <span>About Project</span>
+
+      <div className="p-6 border-t border-white/5">
+        <button 
+            onClick={() => onNavigate('about')} 
+            className={`flex w-full items-center justify-center py-3 border border-white/10 rounded font-mono transition-all duration-300 ${
+                currentView === 'about' 
+                ? 'bg-gcs-primary text-slate-100 border-gcs-primary font-black shadow-[0_0_15px_var(--neon-glow)]' 
+                : 'text-slate-600 hover:border-slate-600 hover:text-slate-300'
+            }`}
+        >
+          <span className="text-[10px] font-black uppercase tracking-widest">ABOUT PROJECT</span>
         </button>
       </div>
     </aside>

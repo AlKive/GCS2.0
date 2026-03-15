@@ -1,17 +1,15 @@
 import Fastify from 'fastify';
 import websocketPlugin from '@fastify/websocket';
 import { supabase } from './supabaseClient.js';
-import type { Mission, LiveTelemetry, MissionPlan } from './types.js'; 
+import type { LiveTelemetry } from './types.js'; 
 
 // child_process for launching external Python scripts
-import { spawn, execSync } from 'child_process';
+import { spawn, execSync, SpawnOptions } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import http from 'http';
 
 // --- CONFIGURATION ---
-// Set this to the Tailscale IP of the machine running ai_engine.py
-// It defaults to the IP found in your SSH script, but can be overridden by an environment variable.
 const AI_ENGINE_IP = process.env.TAILSCALE_IP || '100.127.53.123';
 const AI_ENGINE_PORT = 5000;
 
@@ -28,7 +26,6 @@ fastify.register(async function (server) {
     connection.on('message', async (message: any) => {
       try {
         const payload = typeof message === 'string' ? JSON.parse(message) : JSON.parse(message.toString());
-        // console.log('Received telemetry:', payload.gps);
       } catch (err) {
         fastify.log.error('Telemetry parse error: ' + String(err));
       }
@@ -39,7 +36,6 @@ fastify.register(async function (server) {
       clearInterval(interval);
     });
 
-    // Keep sending test telemetry to connected clients (simulator)
     const interval = setInterval(async () => {
       const elapsedMilliseconds = Date.now() - missionStartTime;
       const totalSeconds = Math.floor(elapsedMilliseconds / 1000);
@@ -48,7 +44,6 @@ fastify.register(async function (server) {
       const formattedFlightTime = `${minutes}:${seconds}`;
       currentBattery -= 0.01;
 
-      // Poll AI Status from Python AI Engine over Tailscale
       let aiData = {
         sharpnessScore: 0,
         isSharpEnough: false,
@@ -63,9 +58,7 @@ fastify.register(async function (server) {
         if (response.ok) {
           aiData = await response.json() as any;
         }
-      } catch (e) {
-        // AI Engine might not be running yet, fail silently to keep stream alive
-      }
+      } catch (e) {}
 
       const testTelemetry: LiveTelemetry = {
         gps: { lat: 14.531120 + (Math.random() - 0.5) * 0.001, lon: 121.057442 + (Math.random() - 0.5) * 0.001 },
@@ -95,22 +88,21 @@ fastify.register(async function (server) {
           headingHold: false,
           airmode: true,
           surface: true,
-          mcBraking: aiData.waterConfirmed, // Using as proxy for pump active
+          mcBraking: aiData.waterConfirmed,
           beeper: false,
         }
       };
       
-      if (connection.readyState === 1) { // 1 means 'OPEN'
+      if (connection.readyState === 1) {
         connection.send(JSON.stringify(testTelemetry));
       } else {
         clearInterval(interval);
       }
-    }, 1000); // Send data 1x per second
+    }, 1000);
   });
 });
 
 // --- Proxy Route for Camera Feed ---
-// This forwards /camera_feed requests to the Flask app over Tailscale
 fastify.get('/camera_feed', (request, reply) => {
   const proxyRequest = http.request({
     host: AI_ENGINE_IP,
@@ -138,38 +130,25 @@ fastify.post('/api/drone/spray', async (request, reply) => {
     return result;
   } catch (err) {
     fastify.log.error('Manual spray error: ' + String(err));
-    reply.code(500).send({ error: 'Failed to communicate with AI Engine over Tailscale' });
+    reply.code(500).send({ error: 'Failed to communicate with AI Engine' });
   }
 });
 
-// --- REST API Routes ---
+// --- NEW SCHEMA ENDPOINTS ---
 
-// Root endpoint with API information
-fastify.get('/', async (request, reply) => {
-  return {
-    name: 'GCS Backend API',
-    version: '1.0.0',
-    endpoints: {
-      missions: {
-        'GET /api/missions': 'Get all missions',
-        'GET /api/missions/stats': 'Get mission statistics',
-        'POST /api/missions': 'Create a new mission'
-      },
-      websocket: {
-        'WS /ws/live': 'Live telemetry WebSocket'
-      }
-    }
-  };
-});
-
-// GET all missions (for Flight Logs)
-fastify.get('/api/missions', async (request, reply) => {
+// 1. Flight Sessions
+fastify.post('/api/sessions', async (request, reply) => {
   try {
+    const body = request.body as any;
     const { data, error } = await supabase
-      .from('mission_logs')
-      .select('*')
-      .order('id', { ascending: false });
-
+      .from('flight_sessions')
+      .insert([{ 
+        pilot_id: body.pilot_id, 
+        location_id: body.location_id, 
+        status: body.status || 'active' 
+      }])
+      .select()
+      .single();
     if (error) throw error;
     return data;
   } catch (err) {
@@ -178,14 +157,20 @@ fastify.get('/api/missions', async (request, reply) => {
   }
 });
 
-// GET a single mission by id
-fastify.get('/api/missions/:id', async (request, reply) => {
+fastify.patch('/api/sessions/:id', async (request, reply) => {
   try {
     const { id } = request.params as { id: string };
-    const { data, error } = await supabase.from('mission_logs').select('*').eq('id', parseInt(id, 10)).single();
-    if (error) {
-      return reply.code(404).send({ error: 'Mission not found' });
-    }
+    const body = request.body as any;
+    const { data, error } = await supabase
+      .from('flight_sessions')
+      .update({ 
+        status: body.status, 
+        end_time: body.end_time || (body.status === 'completed' || body.status === 'aborted' ? new Date().toISOString() : null)
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
     return data;
   } catch (err) {
     fastify.log.error(err);
@@ -193,36 +178,165 @@ fastify.get('/api/missions/:id', async (request, reply) => {
   }
 });
 
-// POST a new mission (for Flight Logs)
-fastify.post('/api/missions', async (request, reply) => {
+fastify.get('/api/sessions', async (request, reply) => {
   try {
-    const mission = request.body as { duration: number } & Omit<Mission, 'id' | 'duration'>;
-    const { name, date, duration, status, location, gpsTrack, detectedSites } = mission;
-    const durationString = String(duration); 
+    const { data, error } = await supabase.from('flight_sessions').select('*, locations(*), users(*)').order('start_time', { ascending: false });
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    fastify.log.error(err);
+    reply.code(500).send({ error: 'Database error' });
+  }
+});
+
+fastify.get('/api/sessions/stats', async (request, reply) => {
+  try {
     const { data, error } = await supabase
-      .from('mission_logs')
-      .insert([{ name, date, duration: durationString, status, location, gps_track: gpsTrack, detected_sites: detectedSites }])
+      .from('flight_sessions')
+      .select('id, start_time, end_time');
+
+    if (error) throw error;
+
+    const totalFlights = data.length;
+    let totalSeconds = 0;
+
+    data.forEach(s => {
+      if (s.start_time && s.end_time) {
+        const diff = new Date(s.end_time).getTime() - new Date(s.start_time).getTime();
+        if (diff > 0) totalSeconds += diff / 1000;
+      }
+    });
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+
+    return {
+      totalFlights,
+      totalFlightTime: `${hours} Hours ${mins} Mins`
+    };
+  } catch (err) {
+    fastify.log.error(err);
+    reply.code(500).send({ error: 'Database error' });
+  }
+});
+
+// 2. Telemetry (Hardware)
+fastify.post('/api/telemetry/hardware', async (request, reply) => {
+  try {
+    const body = request.body as any;
+    const { error } = await supabase.from('hardware_telemetry').insert([body]);
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    fastify.log.error(err);
+    reply.code(500).send({ error: 'Database error' });
+  }
+});
+
+// 3. Telemetry (AI)
+fastify.post('/api/telemetry/ai', async (request, reply) => {
+  try {
+    const body = request.body as any;
+    const { error } = await supabase.from('ai_telemetry').insert([body]);
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    fastify.log.error(err);
+    reply.code(500).send({ error: 'Database error' });
+  }
+});
+
+// 4. Target Detections
+fastify.post('/api/detections', async (request, reply) => {
+  try {
+    const body = request.body as any;
+    const { data, error } = await supabase.from('target_detections').insert([body]).select().single();
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err) {
+    fastify.log.error(err);
+    reply.code(500).send({ error: 'Database error' });
+  }
+});
+
+// 5. Spray Logs
+fastify.post('/api/spray-logs', async (request, reply) => {
+  try {
+    const body = request.body as any;
+    const { error } = await supabase.from('spray_logs').insert([body]);
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    fastify.log.error(err);
+    reply.code(500).send({ error: 'Database error' });
+  }
+});
+
+// 6. Stream Health
+fastify.post('/api/stream-health', async (request, reply) => {
+  try {
+    const body = request.body as any;
+    const { error } = await supabase.from('stream_health').insert([body]);
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    fastify.log.error(err);
+    reply.code(500).send({ error: 'Database error' });
+  }
+});
+
+// 7. Reference Data
+fastify.get('/api/locations', async (request, reply) => {
+  try {
+    const { data, error } = await supabase.from('locations').select('*');
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    fastify.log.error(err);
+    reply.code(500).send({ error: 'Database error' });
+  }
+});
+
+fastify.get('/api/users', async (request, reply) => {
+  try {
+    const { data, error } = await supabase.from('users').select('*');
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    fastify.log.error(err);
+    reply.code(500).send({ error: 'Database error' });
+  }
+});
+
+// Helper for starting Python processes
+fastify.post('/api/system/start', async (request, reply) => {
+  try {
+    const body = request.body as { pilot_id?: string, location_id?: number };
+
+    // 1. Create a flight session first
+    const { data: session, error: sessionError } = await supabase
+      .from('flight_sessions')
+      .insert([{ 
+        pilot_id: body.pilot_id || null, 
+        location_id: body.location_id || null, 
+        status: 'active' 
+      }])
       .select()
       .single();
 
-    if (error) throw error;
-    return data;
-  } catch (err) {
-    fastify.log.error(err);
-    reply.code(500).send({ error: 'Database error' });
-  }
-});
+    if (sessionError) {
+      fastify.log.error({ err: sessionError }, 'Failed to create flight session');
+      throw sessionError;
+    }
 
-// launch helper endpoint
-fastify.post('/api/mission/start', async (request, reply) => {
-  try {
+    const sessionId = session.id;
+
     try {
        if (process.platform === 'win32') {
          execSync('taskkill /F /IM python.exe /T', { stdio: 'ignore' });
        } else {
          execSync('pkill -f python', { stdio: 'ignore' });
        }
-       console.log('🧹 Cleaned up old python processes');
     } catch (e) {}
 
     const pythonExec = process.env.PYTHON_PATH || 'python';
@@ -233,24 +347,44 @@ fastify.post('/api/mission/start', async (request, reply) => {
     const log1 = fs.openSync(path.join(scriptsDir, 'p1.log'), 'a');
     const log2 = fs.openSync(path.join(scriptsDir, 'p2.log'), 'a');
 
-    console.log('⏳ launching helper scripts using', pythonExec);
-    
-    const spawnOptions1 = { detached: true, stdio: ['ignore', log1, log1], windowsHide: true };
-    const spawnOptions2 = { detached: true, stdio: ['ignore', log2, log2], windowsHide: true };
+    const spawnOptions: SpawnOptions = { 
+      detached: true, 
+      stdio: ['ignore', log1, log2], 
+      windowsHide: true 
+    };
 
-    const p1 = spawn(pythonExec, [script1], spawnOptions1);
+    // Note: We could pass the sessionId as an environment variable or argument if the scripts support it
+    const p1 = spawn(pythonExec, [script1], spawnOptions);
     p1.unref();
-    const p2 = spawn(pythonExec, [script2], spawnOptions2);
+    const p2 = spawn(pythonExec, [script2], spawnOptions);
     p2.unref();
 
-    return { success: true, message: 'Python helper scripts launched' };
+    // Give the AI Engine a moment to start, then try to set the session ID
+    // Note: This is best-effort. In a production app, you might want a retry loop.
+    setTimeout(async () => {
+      try {
+        await fetch(`http://${AI_ENGINE_IP}:${AI_ENGINE_PORT}/api/set_session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId })
+        });
+        console.log(`[INFO] Sent session_id ${sessionId} to AI Engine`);
+      } catch (e) {
+        console.error(`[WARN] Could not set session_id on AI Engine: ${e}`);
+      }
+    }, 5000); // 5 second delay to let Flask start
+
+    return { 
+      success: true, 
+      session_id: sessionId,
+      message: 'System processes launched and flight session started' 
+    };
   } catch (err) {
-    fastify.log.error('Error starting mission helper scripts: ' + String(err));
-    reply.code(500).send({ error: 'Failed to launch helper scripts' });
+    fastify.log.error('Error starting system: ' + String(err));
+    reply.code(500).send({ error: 'Failed to launch system processes or create session' });
   }
 });
 
-// --- Start Server ---
 const start = async () => {
   try {
     const port = process.env.PORT ? parseInt(process.env.PORT) : 8080;

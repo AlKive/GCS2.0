@@ -2,41 +2,34 @@ import React from 'react';
 import OverviewCard from './AttitudeIndicator';
 import MissionHistory from './MissionHistory';
 import PreFlightPanel from './ActionButtons';
-import type { OverviewStat, Mission, LiveTelemetry } from '../types';
+import type { OverviewStat, FlightSession, LiveTelemetry } from '../types';
 
-// SVG Icons for Overview Cards
+// --- Tactical SVG Icons with Dynamic Neon Glow ---
 const DroneIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gcs-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5,9A7.5,7.5,0,1,1,12,1.5,7.5,7.5,0,0,1,19.5,9Z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9 L12 22.5" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9 L1.5 9" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9 L22.5 9" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9 L6.3 3.3" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9 L17.7 3.3" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9 L6.3 14.7" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9 L17.7 14.7" />
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gcs-primary neon-glow" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
     </svg>
 );
 const ClockIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gcs-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gcs-primary neon-glow" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
 );
 const BatteryIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gcs-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gcs-primary neon-glow" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
     </svg>
 );
 
 interface DashboardViewProps {
     overviewStats: Omit<OverviewStat, 'icon'>[];
-    missions: Mission[];
+    sessions: FlightSession[];
     onMissionSetup: () => void;
     telemetry: LiveTelemetry;
     setArmedState: (isArmed: boolean) => void;
 }
 
-const DashboardView: React.FC<DashboardViewProps> = ({ overviewStats: rawStats, missions, onMissionSetup, telemetry, setArmedState }) => {
+const DashboardView: React.FC<DashboardViewProps> = ({ overviewStats: rawStats, sessions, onMissionSetup, telemetry, setArmedState }) => {
     const icons: { [key: string]: React.ReactNode } = {
         flights: <DroneIcon />,
         flightTime: <ClockIcon />,
@@ -45,24 +38,45 @@ const DashboardView: React.FC<DashboardViewProps> = ({ overviewStats: rawStats, 
     const overviewStats: OverviewStat[] = rawStats.map(stat => ({ ...stat, icon: icons[stat.id] || <div /> }));
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full gap-6 animate-fade-in">
+            {/* Top Row: Tactical Metrics */}
             <div className="flex-shrink-0">
-                <h2 className="text-lg font-bold text-gcs-text-dark dark:text-white">Overview</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mt-2">
+                <div className="flex items-center justify-between mb-4 px-1">
+                    <div>
+                        <h2 className="text-xl font-black text-main uppercase tracking-[0.2em] font-mono italic">SYSTEM_OVERVIEW_</h2>
+                        <div className="h-[2px] w-12 bg-gcs-primary mt-1 neon-glow" />
+                    </div>
+                    <div className="text-[10px] font-mono text-dim uppercase tracking-widest bg-gcs-card/50 px-3 py-1 rounded border border-main">
+                        OP_STATUS: <span className="text-gcs-success">NOMINAL</span>
+                    </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {overviewStats.map(stat => (
                         <OverviewCard key={stat.id} {...stat} />
                     ))}
                 </div>
             </div>
 
-            <div className="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-3 flex-1 min-h-0">
+            {/* Bottom Row: HUD Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 pb-2">
                 <div className="lg:col-span-2 min-h-0">
-                    <MissionHistory missions={missions} />
+                    <MissionHistory sessions={sessions} />
                 </div>
                 <div className="flex flex-col min-h-0">
                     <PreFlightPanel onMissionSetup={onMissionSetup} telemetry={telemetry} setArmedState={setArmedState} />
                 </div>
             </div>
+
+            <style>{`
+                .animate-fade-in {
+                    animation: fadeIn 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `}</style>
         </div>
     );
 };

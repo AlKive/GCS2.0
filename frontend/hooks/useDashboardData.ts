@@ -84,7 +84,7 @@ export const useDashboardData = (isMissionActive: boolean) => {
     // 1. Fetch the dashboard stats from the API
     const fetchStats = async () => {
       try {
-        const response = await fetch('/api/missions/stats');
+        const response = await fetch('/api/sessions/stats');
         const data = await response.json();
         setStats(data);
       } catch (error) {

@@ -20,6 +20,19 @@ export interface Mission {
   detectedSites?: BreedingSiteInfo[];
 }
 
+export interface FlightSession {
+  id: string;
+  start_time: string;
+  end_time: string | null;
+  status: 'active' | 'completed' | 'aborted';
+  // Joined data from locations table
+  location: { barangay_name: string; city: string } | null; 
+  // Joined arrays from your telemetry and logs
+  hardware_telemetry?: { latitude: number; longitude: number; altitude_lidar_m: number }[];
+  target_detections?: { id: string; target_class: string; detected_at: string; image_url?: string }[];
+  spray_logs?: { id: string; trigger_type: string; spray_duration_seconds: number; triggered_at: string }[];
+}
+
 export interface OverviewStat {
   id:string;
   icon: React.ReactNode;
@@ -44,7 +57,7 @@ export interface LiveTelemetry {
         percentage: number;
     };
     satellites: number;
-    flightTime: string; // This will be sent by the backend, but we'll ignore it
+    flightTime: string;
     distanceFromHome: number;
     flightMode: string;
     armed: boolean;
@@ -64,8 +77,6 @@ export interface LiveTelemetry {
       totalPipelineSpeedMs: number;
     };
 
-    // --- THIS IS THE NEW PART ---
-    // This will hold the status for your new 10-mode panel
     modes: {
       angle: boolean;
       positionHold: boolean;
@@ -77,5 +88,4 @@ export interface LiveTelemetry {
       mcBraking: boolean;
       beeper: boolean;
     }
-    // --- END OF NEW PART ---
-    }
+}

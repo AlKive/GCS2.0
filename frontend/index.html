@@ -11,88 +11,78 @@
       theme: {
         extend: {
           colors: {
-            'gcs-dark': '#111827',
-            'gcs-background': '#F9F4F1',
-            'gcs-primary': 'var(--gcs-primary)',
-            'gcs-primary-light': 'var(--gcs-primary-light)',
-            'gcs-primary-dark': 'var(--gcs-primary-dark)',
-            'gcs-text-on-primary': 'var(--gcs-text-on-primary)',
-            'gcs-orange': 'var(--gcs-primary)', // Keep gcs-orange for compatibility
-            'gcs-text-dark': '#1F2937',
-            'gcs-text-light': '#D1D5DB',
-            'gcs-card': '#FFFFFF',
+            'gcs-dark': 'var(--bg-main)',
+            'gcs-panel': 'var(--bg-panel)',
+            'gcs-card': 'var(--bg-card)',
+            'gcs-primary': 'var(--neon-primary)',
+            'gcs-success': '#10b981',
+            'gcs-warning': '#f59e0b',
+            'gcs-error': '#ef4444',
           },
           fontFamily: {
             sans: ['Inter', 'sans-serif'],
-          },
-          // --- ADD THIS KEYFRAMES/ANIMATION BLOCK ---
-          keyframes: {
-            'fade-in-fast': {
-              '0%': { opacity: '0', transform: 'translateY(-10px)' },
-              '100%': { opacity: '1', transform: 'translateY(0)' },
-            }
-          },
-          animation: {
-            'fade-in-fast': 'fade-in-fast 0.2s ease-out forwards',
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
           }
-          // --- END OF ADDITION ---
         }
       }
     }
     </script>
-    <link rel="preconnect" href="https://rsms.me/">
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
     <style>
-      .leaflet-control-attribution {
-        font-size: 0.6rem !important; /* Smaller font size for attribution */
-      }
       :root {
-        --gcs-primary: #F97316;
-        --gcs-primary-light: #FB923C;
-        --gcs-primary-dark: #EA580C;
-        --gcs-text-on-primary: #FFFFFF;
+        /* Tactical Dark (Cyber Red Neo) */
+        --bg-main: #0f111a;
+        --bg-panel: #1a1d2d;
+        --bg-card: #131521;
+        --text-main: #f1f5f9;
+        --text-dim: #64748b;
+        --neon-primary: #ef4444;
+        --neon-glow: rgba(239, 68, 68, 0.8);
+        --border-main: rgba(255, 255, 255, 0.05);
       }
-      .theme-purple {
-        --gcs-primary: #8B5CF6;
-        --gcs-primary-light: #A78BFA;
-        --gcs-primary-dark: #7C3AED;
-        --gcs-text-on-primary: #FFFFFF;
+
+      .light {
+        /* Beige Architectural (Light) */
+        --bg-main: #f5f5dc;
+        --bg-panel: #ffffff;
+        --bg-card: #f1f1e6;
+        --text-main: #1a202c;
+        --text-dim: #718096;
+        --neon-primary: #f97316;
+        --neon-glow: rgba(249, 115, 22, 0.4);
+        --border-main: rgba(0, 0, 0, 0.08);
       }
-      .theme-orange {
-        --gcs-primary: #F97316;
-        --gcs-primary-light: #FB923C;
-        --gcs-primary-dark: #EA580C;
-        --gcs-text-on-primary: #FFFFFF;
+
+      body {
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        transition: background-color 0.3s ease, color 0.3s ease;
       }
-      .theme-blue {
-        --gcs-primary: #3B82F6;
-        --gcs-primary-light: #60A5FA;
-        --gcs-primary-dark: #2563EB;
-        --gcs-text-on-primary: #FFFFFF;
+
+      .text-main { color: var(--text-main); }
+      .text-dim { color: var(--text-dim); }
+      .border-main { border-color: var(--border-main); }
+      .bg-main { background-color: var(--bg-main); }
+      .bg-panel { background-color: var(--bg-panel); }
+      .bg-card-inner { background-color: var(--bg-card); }
+
+      .neon-glow {
+        filter: drop-shadow(0 0 8px var(--neon-glow));
       }
-      .theme-green {
-        --gcs-primary: #10B981;
-        --gcs-primary-light: #34D399;
-        --gcs-primary-dark: #059669;
-        --gcs-text-on-primary: #FFFFFF;
+      .neon-border {
+        border-color: var(--neon-primary);
+        box-shadow: 0 0 10px var(--neon-glow);
       }
-      .theme-black {
-        --gcs-primary: #1F2937;
-        --gcs-primary-light: #374151;
-        --gcs-primary-dark: #111827;
-        --gcs-text-on-primary: #FFFFFF;
+      .hud-grid {
+        background-image: 
+          linear-gradient(var(--border-main) 1px, transparent 1px),
+          linear-gradient(90deg, var(--border-main) 1px, transparent 1px);
+        background-size: 20px 20px;
       }
-    </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0"
-  }
-}
-</script>
-</head>
+      .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--text-dim); opacity: 0.2; border-radius: 10px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--neon-primary); }
+    </style>  </head>
   <body class="bg-gcs-background font-sans dark:bg-gcs-dark">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>

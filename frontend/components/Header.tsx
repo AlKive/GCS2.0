@@ -7,30 +7,43 @@ interface DashboardHeaderProps {
   batteryPercentage: number;
 }
 
-const BatteryStatusIcon: React.FC<{ percentage: number }> = ({ percentage }) => {
-    const level = Math.round(percentage / 25); // 0-4
-    const color = percentage > 50 ? 'text-green-500' : percentage > 20 ? 'text-yellow-500' : 'text-red-500';
-
-    return (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-gray-800 shadow-sm border dark:border-gray-700">
-            <svg className={`w-6 h-6 ${color}`} fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10.75 3.25V2a.75.75 0 00-1.5 0v1.25H9A2.75 2.75 0 006.25 6v10A2.75 2.75 0 009 18.75h2A2.75 2.75 0 0013.75 16V6A2.75 2.75 0 0011 3.25h-.25zM9 4.75h2a1.25 1.25 0 011.25 1.25v10a1.25 1.25 0 01-1.25 1.25H9A1.25 1.25 0 017.75 16V6A1.25 1.25 0 019 4.75z" clipRule="evenodd" />
-              {percentage > 10 && <rect x="8" y={15 - ((percentage-10)/90)*9} width="4" height={((percentage-10)/90)*9} rx="0.5" />}
-            </svg>
-            <span className={`font-semibold text-sm ${color}`}>{percentage.toFixed(1)}%</span>
-        </div>
-    )
-}
-
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ time, date, title, batteryPercentage }) => {
   return (
-    <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-      <div>
-        <h1 className="text-2xl font-bold text-gcs-text-dark dark:text-white">{title}</h1>
+    <header className="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4 mb-8 px-2">
+      <div className="relative">
+        <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gcs-primary shadow-[0_0_10px_var(--neon-glow)]" />
+        <h1 className="text-3xl font-black text-main uppercase tracking-tighter font-mono italic">
+          {title}_
+        </h1>
+        <div className="flex items-center gap-2 mt-1">
+            <span className="text-[9px] font-bold text-dim uppercase tracking-[0.3em] font-mono">SYS_PROTOCOL_ACTIVE</span>
+            <div className="h-px w-8 bg-main opacity-10" />
+        </div>
       </div>
-      <div className="text-right">
-        <p className="font-semibold text-base dark:text-gray-200">{time}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">{date}</p>
+
+      <div className="flex items-center gap-8">
+        {/* Tactical Battery Node */}
+        <div className="flex items-center gap-3 py-2 px-4 bg-gcs-card/50 border border-main rounded shadow-xl">
+            <div className="relative w-5 h-8 border border-dim opacity-50 rounded-sm p-0.5">
+                <div 
+                    className={`w-full absolute bottom-0 left-0 transition-all duration-1000 ${batteryPercentage > 20 ? 'bg-gcs-success' : 'bg-gcs-error'}`}
+                    style={{ height: `${batteryPercentage}%` }}
+                />
+                <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-1 bg-dim opacity-50 rounded-t-sm" />
+            </div>
+            <div>
+                <p className="text-[8px] font-black text-dim uppercase tracking-widest font-mono text-right">PWR_LVL</p>
+                <p className={`text-sm font-bold font-mono text-right ${batteryPercentage > 20 ? 'text-main' : 'text-gcs-error'}`}>
+                    {batteryPercentage.toFixed(1)}%
+                </p>
+            </div>
+        </div>
+
+        {/* Time Node */}
+        <div className="text-right border-l border-main pl-8">
+            <p className="text-xl font-black text-main tracking-tighter font-mono tabular-nums">{time}</p>
+            <p className="text-[9px] font-bold text-gcs-primary uppercase tracking-[0.2em] font-mono">{date}</p>
+        </div>
       </div>
     </header>
   );

@@ -15363,3 +15363,37 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://127.0.0.1:5000
  * Running on http://192.168.254.144:5000
 Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'ai_engine'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'ai_engine'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.254.144:5000
+Press CTRL+C to quit
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'ai_engine'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.5.45:5000
+Press CTRL+C to quit
+[ WARN:0@30.093] global cap_ffmpeg_impl.hpp:453 _opencv_ffmpeg_interrupt_callback Stream timeout triggered after 30087.726000 ms
+ * Tip: There are .env files present. Install python-dotenv to use them.
+ * Serving Flask app 'ai_engine'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.5.45:5000
+Press CTRL+C to quit
+[ WARN:0@30.047] global cap_ffmpeg_impl.hpp:453 _opencv_ffmpeg_interrupt_callback Stream timeout triggered after 30045.963000 ms
