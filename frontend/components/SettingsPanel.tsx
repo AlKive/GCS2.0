@@ -54,47 +54,82 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
         {/* Appearance & Mode */}
-        <div className="bg-gcs-panel border border-main rounded-lg p-8 shadow-2xl flex flex-col gap-10">
-          <section>
-            <h3 className="text-xs font-black text-dim uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
-              <span className="w-2 h-2 rounded-full bg-gcs-primary" />
-              LUMINANCE_PROTOCOL
-            </h3>
-            <div className="flex items-center justify-between p-6 bg-gcs-card/30 border border-main rounded-xl">
-              <div>
-                <p className="text-sm font-black text-main uppercase tracking-wider">Tactical_Dark_Mode</p>
-                <p className="text-[10px] text-dim mt-1 uppercase">Toggle between Dark and Light interface cores</p>
-              </div>
-              <button
-                onClick={() => setPendingDarkMode(!pendingDarkMode)}
-                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-all focus:outline-none border-2 ${pendingDarkMode ? 'bg-slate-800 border-gcs-primary' : 'bg-white border-slate-300'}`}
-              >
-                <span className={`inline-block h-4 w-4 transform rounded-full transition-transform ${pendingDarkMode ? 'translate-x-8 bg-gcs-primary' : 'translate-x-1 bg-slate-400'}`} />
-              </button>
-            </div>
-          </section>
+        <div className="flex flex-col gap-6 h-full">
+            <div className="bg-gcs-panel border border-main rounded-lg p-8 shadow-2xl flex flex-col gap-10">
+              <section>
+                <h3 className="text-xs font-black text-dim uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+                  <span className="w-2 h-2 rounded-full bg-gcs-primary" />
+                  LUMINANCE_PROTOCOL
+                </h3>
+                <div className="flex items-center justify-between p-6 bg-gcs-card/30 border border-main rounded-xl">
+                  <div>
+                    <p className="text-sm font-black text-main uppercase tracking-wider">Tactical_Dark_Mode</p>
+                    <p className="text-[10px] text-dim mt-1 uppercase">Toggle between Dark and Light interface cores</p>
+                  </div>
+                  <button
+                    onClick={() => setPendingDarkMode(!pendingDarkMode)}
+                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-all focus:outline-none border-2 ${pendingDarkMode ? 'bg-slate-800 border-gcs-primary' : 'bg-white border-slate-300'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full transition-transform ${pendingDarkMode ? 'translate-x-8 bg-gcs-primary' : 'translate-x-1 bg-slate-400'}`} />
+                  </button>
+                </div>
+              </section>
 
-          <section>
-            <h3 className="text-xs font-black text-dim uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
-              <span className="w-2 h-2 rounded-full bg-gcs-primary" />
-              MAP_TERRAIN_RENDER
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              {['Satellite', 'Light', 'Dark', 'Outdoors'].map((style) => (
-                <button
-                  key={style}
-                  onClick={() => setPendingMapStyle(style)}
-                  className={`py-4 rounded font-black text-[10px] uppercase tracking-widest border-2 transition-all ${
-                    pendingMapStyle === style 
-                    ? 'bg-gcs-primary/10 border-gcs-primary text-main' 
-                    : 'bg-gcs-card/30 border-main text-dim hover:border-slate-600'
-                  }`}
-                >
-                  {style}_VIEW
-                </button>
-              ))}
+              <section>
+                <h3 className="text-xs font-black text-dim uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+                  <span className="w-2 h-2 rounded-full bg-gcs-primary" />
+                  MAP_TERRAIN_RENDER
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {['Satellite', 'Light', 'Dark', 'Outdoors'].map((style) => (
+                    <button
+                      key={style}
+                      onClick={() => setPendingMapStyle(style)}
+                      className={`py-4 rounded font-black text-[10px] uppercase tracking-widest border-2 transition-all ${
+                        pendingMapStyle === style 
+                        ? 'bg-gcs-primary/10 border-gcs-primary text-main' 
+                        : 'bg-gcs-card/30 border-main text-dim hover:border-slate-600'
+                      }`}
+                    >
+                      {style}_VIEW
+                    </button>
+                  ))}
+                </div>
+              </section>
             </div>
-          </section>
+
+            {/* Advanced Settings */}
+            <div className="bg-gcs-panel border border-main rounded-lg p-8 shadow-2xl">
+                <section>
+                    <h3 className="text-xs font-black text-dim uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+                        <span className="w-2 h-2 rounded-full bg-gcs-primary shadow-[0_0_5px_#ef4444]" />
+                        ADVANCED_SYSTEM_CORE
+                    </h3>
+                    <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-xl flex flex-col gap-4">
+                        <div>
+                            <p className="text-sm font-black text-main uppercase tracking-wider">iNav_Configurator_Bundle</p>
+                            <p className="text-[9px] text-slate-500 mt-1 uppercase tracking-widest leading-relaxed">
+                                Download pre-configured iNav software for deep hardware tuning and flight controller optimization. 
+                                Recommended for advanced pilots only.
+                            </p>
+                        </div>
+                        <a 
+                            href="/downloads/INAV-Configurator_Win64_9.0.2.zip" 
+                            download="INAV-Configurator_Win64_9.0.2.zip"
+                            className="w-full py-4 rounded bg-slate-850 border border-slate-700 hover:border-gcs-primary text-slate-400 hover:text-gcs-primary font-black font-mono text-[10px] uppercase tracking-[0.3em] transition-all text-center flex items-center justify-center gap-3 group"
+                        >
+                            <svg className="w-4 h-4 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            DOWNLOAD_INAV_PACKAGE_
+                        </a>
+                        <div className="flex items-center gap-2 px-2">
+                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                           <span className="text-[8px] text-amber-500/80 font-black uppercase tracking-widest">REQUIRES_USB_CONNECTION</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
         </div>
 
         {/* Theme Palette */}
