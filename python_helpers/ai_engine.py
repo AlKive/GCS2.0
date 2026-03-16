@@ -55,8 +55,6 @@ telemetry_lock = threading.Lock()
 MIN_SHARPNESS = float(os.getenv("MIN_SHARPNESS", "30.0"))
 CONFIRM_AFTER = 5.0    # 5 seconds of continuous tracking
 PRUNE_AFTER = 2.0      # Drop target if unseen for 2 seconds
-
-# CHANGED: We now track by class presence, not by fragile YOLO IDs
 tracked_classes = {}   
 
 # --- Flight Session Endpoints ---
@@ -141,7 +139,7 @@ def video_feed():
                     frame = (50 * np.ones((480, 640, 3), dtype=np.uint8)).astype(np.uint8)
                     cv2.putText(frame, "[WAITING FOR PI STREAM]", (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 165, 255), 2)
                 else:
-                    frame = output_frame
+                    frame = output_frame.copy() # THREAD-SAFE COPY
                     
             ret, jpeg = cv2.imencode('.jpg', frame)
             if ret:
@@ -158,20 +156,20 @@ class SimpleSprayer:
         self.password = os.getenv("PI_PASSWORD", "rpi3408")
         try:
             self.ssh.connect(self.pi_ip, username=self.username, password=self.password, timeout=3)
+            self.ssh.exec_command("raspi-gpio set 18 op dl")
         except Exception as e: 
-            print(f"[WARN] Sprayer SSH failed to {self.pi_ip}: {e}")
+            print(f"[WARN] Sprayer SSH failed: {e}")
 
     def spray(self, area, obj_id):
         global ACTIVE_SESSION_ID
         duration = 2 if area < 5000 else 4 if area < 15000 else 6
         trigger_type = "Manual" if area == 20000 else "Auto"
         
-        cmd = f"raspi-gpio set 18 op dl && raspi-gpio set 18 dh && sleep {duration} && raspi-gpio set 18 dl"
+        cmd = f"raspi-gpio set 18 dh && sleep {duration} && raspi-gpio set 18 dl"
         try: 
             self.ssh.exec_command(f"nohup {cmd} > /dev/null 2>&1 &")
             print(f"[ACTION] Triggered spray for {duration} seconds.")
             
-            # SUPABASE LOGGING
             if ACTIVE_SESSION_ID:
                 def log_spray():
                     try:
@@ -188,8 +186,9 @@ class SimpleSprayer:
         except Exception as e: 
             print(f"[ERROR] Failed to execute spray command: {e}")
 
+# --- THE FIX: Thread-Safe Camera Producer ---
 def camera_producer(frame_queue, stop_event):
-    udp_stream_url = "udp://@0.0.0.0:5600?overrun_nonfatal=1&fifo_size=50000&buffer_size=1024000"
+    udp_stream_url = "udp://@0.0.0.0:5600?overrun_nonfatal=1&fifo_size=500000&buffer_size=1024000"
     cap = cv2.VideoCapture(udp_stream_url, cv2.CAP_FFMPEG)
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     
@@ -202,16 +201,33 @@ def camera_producer(frame_queue, stop_event):
     
     while not stop_event.is_set():
         ret, frame = cap.read()
+        
+        # 1. Automatic Reconnection if UDP packets drop
         if not ret:
             if time.time() - last_frame_time > 5:
+                print("\n[WARN] Video stream dropped! Reconnecting...")
+                cap.release()
+                time.sleep(1)
+                cap = cv2.VideoCapture(udp_stream_url, cv2.CAP_FFMPEG)
+                cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
                 last_frame_time = time.time()
             continue
         
         last_frame_time = time.time()
-        if frame_queue.full():
-            frame_queue.get_nowait()
-        frame_queue.put(frame)
         
+        # 2. Thread-Safe Queue Clearing (No more silent crashes)
+        while not frame_queue.empty():
+            try:
+                frame_queue.get_nowait()
+            except queue.Empty:
+                break
+                
+        # 3. Push the absolute freshest frame to YOLO
+        try:
+            frame_queue.put(frame, block=False)
+        except queue.Full:
+            pass
+            
     cap.release()
 
 def inference_consumer(frame_queue, stop_event):
@@ -245,7 +261,6 @@ def inference_consumer(frame_queue, stop_event):
         start_time = time.time()
         current_time = time.time()
         
-        # 1. Sharpness Calculation
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         sharpness = cv2.Laplacian(gray, cv2.CV_64F).var()
         is_sharp = sharpness > MIN_SHARPNESS
@@ -260,14 +275,12 @@ def inference_consumer(frame_queue, stop_event):
                 ai_telemetry["trackingProgress"] = 0
             continue
 
-        # 2. Run Models (Using predict instead of track to save Pi CPU since we don't need IDs)
         results_main = main_model.predict(frame, imgsz=416, conf=0.25, verbose=False)
         
         annotated_frame = frame.copy() 
         max_progress = 0
         active_target_name = None
 
-        # 3. Tracking & Dual-Box Visuals by Class
         if results_main[0].boxes is not None and len(results_main[0].boxes) > 0:
             boxes = results_main[0].boxes.xyxy.cpu().numpy()
             clss = results_main[0].boxes.cls.cpu().numpy()
@@ -276,7 +289,6 @@ def inference_consumer(frame_queue, stop_event):
             for box, cls, conf in zip(boxes, clss, confs):
                 cls_name = results_main[0].names[int(cls)]
                 
-                # Create a tracker for this specific class if it doesn't exist
                 if cls_name not in tracked_classes:
                     tracked_classes[cls_name] = {'first_seen': current_time, 'last_seen': current_time, 'db_logged': False}
                 else:
@@ -288,22 +300,16 @@ def inference_consumer(frame_queue, stop_event):
                 
                 x1, y1, x2, y2 = map(int, box)
 
-                # --- PRIMARY YOLO BOX ---
                 cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (255, 100, 0), 2) 
                 cv2.putText(annotated_frame, f"{cls_name} {conf:.2f}", (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 100, 0), 2)
 
-                # --- SECONDARY TRACKING BOX ---
                 offset = 6 
                 
                 if elapsed >= CONFIRM_AFTER:
                     active_target_name = cls_name
-                    
-                    # Custom LOCKED box (Thick Green)
                     cv2.rectangle(annotated_frame, (x1 - offset, y1 - offset), (x2 + offset, y2 + offset), (0, 255, 0), 3)
-                    # Text moved to BOTTOM to avoid overlapping with YOLO label
                     cv2.putText(annotated_frame, "TARGET LOCKED", (x1 - offset, y2 + offset + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                     
-                    # SUPABASE LOGGING
                     if not tracked_classes[cls_name].get('db_logged') and ACTIVE_SESSION_ID:
                         w, h = x2 - x1, y2 - y1
                         area = float(w * h)
@@ -317,20 +323,16 @@ def inference_consumer(frame_queue, stop_event):
                                     "bounding_box_area": b_area
                                 }).execute()
                             except Exception as e:
-                                print(f"[DB ERROR] Failed to log detection: {e}")
+                                pass
                                 
                         threading.Thread(target=log_detection, args=(ACTIVE_SESSION_ID, active_target_name, area), daemon=True).start()
                 else:
-                    # Custom SCANNING box (Thin Orange)
                     cv2.rectangle(annotated_frame, (x1 - offset, y1 - offset), (x2 + offset, y2 + offset), (0, 165, 255), 2)
-                    # Text moved to BOTTOM
                     cv2.putText(annotated_frame, f"TRACKING: {elapsed:.1f}s", (x1 - offset, y2 + offset + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 165, 255), 2)
 
-        # 4. Prune Lost Targets
         tracked_classes = {k: v for k, v in tracked_classes.items() if current_time - v['last_seen'] < PRUNE_AFTER}
         any_confirmed = any((current_time - obj['first_seen']) >= CONFIRM_AFTER for obj in tracked_classes.values())
 
-        # 5. Update Telemetry
         pipeline_ms = int((time.time() - start_time) * 1000)
         annotated_frame = cv2.resize(annotated_frame, (640, 480))
         

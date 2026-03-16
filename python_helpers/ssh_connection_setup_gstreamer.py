@@ -40,8 +40,21 @@ def get_active_session():
 def get_laptop_ip_relative_to_pi(pi_ip):
     """
     Determines the correct local IP of this laptop that the Pi can actually see.
-    Crucial for Tailscale/VPN setups.
+    Includes a strict Tailscale override to prevent routing video to the wrong adapter.
     """
+    # --- Strict Tailscale Override ---
+    if pi_ip.startswith("100."):
+        try:
+            # Force search through all adapters for the Tailscale IP
+            host_info = socket.getaddrinfo(socket.gethostname(), None)
+            for item in host_info:
+                ip = item[4][0]
+                if ip.startswith("100."):
+                    return ip
+        except Exception:
+            pass
+
+    # --- Standard Routing Detection ---
     try:
         # Create a dummy connection to the Pi's IP to see which local interface is used
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -64,9 +77,7 @@ def get_stream_command(destination_ip):
         f"gst-launch-1.0 -v libcamerasrc ! "
         f"video/x-raw,width=640,height=480,framerate=20/1 ! "
         f"videoconvert ! "
-        # ADDED: key-int-max=20 forces an I-frame (Keyframe) every 1 second
         f"x264enc threads=4 tune=zerolatency bitrate=1500 speed-preset=ultrafast key-int-max=20 ! "
-        # ADDED: config-interval=1 sends the SPS/PPS headers with every keyframe
         f"h264parse config-interval=1 ! mpegtsmux alignment=7 ! "
         f"udpsink host={destination_ip} port={STREAM_PORT} sync=false"
     )

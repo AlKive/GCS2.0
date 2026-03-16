@@ -115,13 +115,20 @@ const App: React.FC = () => {
   const [isAppLoading, setAppLoading] = useState(true);
   const [isMissionActive, setMissionActive] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const [isDarkMode, setDarkMode] = useState(false);
+  const [isDarkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('isDarkMode');
+    return saved === null ? true : saved === 'true';
+  });
   const [mapStyle, setMapStyle] = useState(() => {
     return localStorage.getItem('mapStyle') || 'Satellite';
   });
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'red';
   });
+
+  useEffect(() => {
+    localStorage.setItem('isDarkMode', isDarkMode.toString());
+  }, [isDarkMode]);
 
   useEffect(() => {
     localStorage.setItem('mapStyle', mapStyle);
