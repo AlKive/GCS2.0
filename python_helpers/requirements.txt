@@ -4,3 +4,4 @@ paramiko
 ultralytics
 supabase
 numpy
+python-dotenv

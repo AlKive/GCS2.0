@@ -1,12 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { OverviewStat, LiveTelemetry } from 'types'; 
 
-//
-// --- THIS IS THE FIX ---
-//
-// We must add the 'modes' object to the default telemetry
-// so the component doesn't crash before the websocket connects.
-//
 const defaultTelemetry: LiveTelemetry = {
     gps: { lat: 14.531120, lon: 121.057442 },
     altitude: 0,
@@ -25,7 +19,6 @@ const defaultTelemetry: LiveTelemetry = {
     breedingSiteDetected: false,
     detectedSites: [],
     gpsTrack: [],
-    // --- AI & Sprayer Info ---
     aiStatus: {
       sharpnessScore: 0,
       isSharpEnough: false,
@@ -34,7 +27,6 @@ const defaultTelemetry: LiveTelemetry = {
       activeTarget: undefined,
       totalPipelineSpeedMs: 0
     },
-    // --- ADDED THIS BLOCK ---
     modes: {
       angle: false,
       positionHold: false,
@@ -46,16 +38,19 @@ const defaultTelemetry: LiveTelemetry = {
       mcBraking: false,
       beeper: false,
     }
-    // --- END OF FIX ---
 };
 
 export const useDashboardData = (isMissionActive: boolean) => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // 1. Separate States for Hardware (WebSocket) vs. AI (Fast-Lane)
   const [liveTelemetry, setLiveTelemetry] = useState<LiveTelemetry>(defaultTelemetry);
+  const [fastLaneAi, setFastLaneAi] = useState(defaultTelemetry.aiStatus);
+  const [aiLastUpdated, setAiLastUpdated] = useState(0); 
+  
   const [stats, setStats] = useState({ totalFlights: 0, totalFlightTime: '0 Hours' });
-  const socketRef = useRef<WebSocket | null>(null); // Holds the WebSocket connection
+  const socketRef = useRef<WebSocket | null>(null);
 
-  // This function now SENDS a command to the backend
   const setArmedState = (shouldArm: boolean) => {
       if (isMissionActive && !shouldArm) {
           alert("Cannot disarm while a mission is active. Please end the mission first.");
@@ -63,7 +58,6 @@ export const useDashboardData = (isMissionActive: boolean) => {
       }
       
       if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-        // Send the "arm" command to the backend as a JSON string
         socketRef.current.send(JSON.stringify({
           type: 'SET_ARM',
           payload: shouldArm
@@ -73,15 +67,14 @@ export const useDashboardData = (isMissionActive: boolean) => {
       }
   };
 
-  // This effect just runs the clock
+  // Clock Effect
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
-  }, []); // Runs once
+  }, []);
 
-  // This effect runs ONCE to connect to the backend
+  // Hardware WebSocket & Initial Stats Effect
   useEffect(() => {
-    // 1. Fetch the dashboard stats from the API
     const fetchStats = async () => {
       try {
         const response = await fetch('/api/sessions/stats');
@@ -93,40 +86,53 @@ export const useDashboardData = (isMissionActive: boolean) => {
     };
     fetchStats();
 
-    // 2. Connect to the WebSocket for live data
-    // This calculates the correct ws:// or wss:// address
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsHost = `${wsProtocol}//${window.location.host}/ws/live`;
     
     const socket = new WebSocket(wsHost);
-    socketRef.current = socket; // Save the connection
+    socketRef.current = socket;
 
     socket.onopen = () => console.log('WebSocket connected!');
     socket.onclose = () => console.log('WebSocket disconnected.');
     socket.onerror = (err) => console.error('WebSocket error:', err);
 
-    // 3. This is where we receive live data from the backend
     socket.onmessage = (event) => {
       try {
-        // We receive the new telemetry data...
         const telemetryData: LiveTelemetry = JSON.parse(event.data);
-        // ...and use it to update the state, which updates the UI
         setLiveTelemetry(telemetryData); 
       } catch (error) {
         console.error("Failed to parse telemetry:", error);
       }
     };
 
-    // This function runs when the component is unmounted
     return () => {
-      socket.close(); // Clean up the connection
+      socket.close();
     };
-  }, []); // The empty array means this runs only once
+  }, []);
+
+  // --- THE AI FAST-LANE FIX ---
+  useEffect(() => {
+    const fetchAiStatus = async () => {
+      try {
+        // MUST use absolute URL to hit the Python engine on port 5000
+        const response = await fetch('http://127.0.0.1:5000/api/status');
+        if (!response.ok) throw new Error("API Offline");
+        
+        const aiData = await response.json();
+        setFastLaneAi(aiData);
+        setAiLastUpdated(Date.now()); 
+      } catch (error) {
+        // Silently fail if the Python engine isn't running
+      }
+    };
+
+    const aiInterval = setInterval(fetchAiStatus, 250); 
+    return () => clearInterval(aiInterval);
+  }, []);
 
   const formattedTime = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   const formattedDate = currentTime.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-  // The stats now come from the backend (live and fetched)
   const overviewStats: Omit<OverviewStat, 'icon'>[] = [
       { 
         id: 'flights', 
@@ -143,16 +149,25 @@ export const useDashboardData = (isMissionActive: boolean) => {
       { 
         id: 'battery', 
         label: 'System Battery', 
-        value: `${liveTelemetry.battery.percentage.toFixed(1)}%`, // From live data
+        value: `${liveTelemetry.battery.percentage.toFixed(1)}%`, 
         subtext: liveTelemetry.battery.percentage > 20 ? 'Healthy' : 'Low' 
       },
   ];
+
+  // --- FAULT-TOLERANT MERGE ---
+  // If the Fast-Lane is updated within 2s, use it. Otherwise, fallback to WebSocket data.
+  const isFastLaneHealthy = Date.now() - aiLastUpdated < 2000;
+  
+  const finalTelemetry = {
+      ...liveTelemetry,
+      aiStatus: isFastLaneHealthy ? fastLaneAi : liveTelemetry.aiStatus
+  };
 
   return {
     overviewStats, 
     time: formattedTime, 
     date: formattedDate,
-    liveTelemetry, // This is now live data from the backend
+    liveTelemetry: finalTelemetry, 
     setArmedState
   };
 };

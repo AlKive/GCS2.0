@@ -4,16 +4,26 @@ import time
 import socket
 import sys
 from supabase import create_client, Client
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # === Configuration ===
-PI_TARGET_IPS = ["192.168.7.2", "raspberrypi.local", "100.127.53.123"]
-USERNAME = "rpi3408"
-PASSWORD = "rpi3408"
+env_ips = os.getenv("PI_IPS")
+PI_TARGET_IPS = env_ips.split(",") if env_ips else ["192.168.7.2", "raspberrypi.local", "100.127.53.123"]
+USERNAME = os.getenv("PI_USERNAME", "rpi3408")
+PASSWORD = os.getenv("PI_PASSWORD", "rpi3408")
 STREAM_PORT = 5600
 
 # --- Supabase Setup ---
-SUPABASE_URL = os.getenv("SUPABASE_URL", "your_project_url")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "your_service_role_key")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    print("[ERROR] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env")
+    sys.exit(1)
+
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def get_active_session():
@@ -148,8 +158,17 @@ def main():
                 target_found = True
                 break # Exit the IP loop to restart the scan
 
+            except paramiko.AuthenticationException:
+                print(f"[AUTH ERROR] Invalid username or password for {pi_ip}")
+                continue
+            except paramiko.SSHException as ssh_err:
+                print(f"[SSH ERROR] Could not establish SSH connection to {pi_ip}: {ssh_err}")
+                continue
+            except socket.timeout:
+                print(f"[TIMEOUT] {pi_ip} did not respond within 4 seconds.")
+                continue
             except Exception as e:
-                print(f"[SKIP] {pi_ip} is unreachable or rejected connection.")
+                print(f"[SKIP] {pi_ip} connection failed: {e}")
                 continue
 
         if not target_found:

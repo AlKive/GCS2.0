@@ -192,13 +192,17 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
 
                 {/* Center HUD: Primary Optical Stream */}
                 <div className="col-span-2 flex flex-col gap-4 min-h-0">
-                    <div className="flex-1 bg-black border border-slate-700/50 relative overflow-hidden group rounded shadow-2xl">
-                        <iframe
+                    <div className="flex-1 bg-black border border-slate-700/50 relative overflow-hidden group rounded shadow-2xl flex items-center justify-center">
+                        <img
                             key={reloadKey}
                             src={`/camera_feed`}
-                            className="absolute inset-0 w-full h-full border-0 opacity-90 group-hover:opacity-100 transition-opacity"
-                            title="Live Tactical Stream"
-                            style={{ background: '#000' }}
+                            className="max-w-full max-h-full object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+                            alt="Live Tactical Stream"
+                            onError={(e) => {
+                                // Fallback if stream fails
+                                e.currentTarget.src = 'about:blank';
+                                e.currentTarget.style.display = 'none';
+                            }}
                         />
                         
                         {/* HUD Overlay Lines */}
@@ -297,12 +301,12 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                             </div>
                             
                             <button 
-                                onClick={() => fetch('/api/drone/spray', { method: 'POST' })}
+                                onClick={() => fetch('/api/manual_spray', { method: 'POST' })}
                                 disabled={!telemetry.aiStatus.waterConfirmed}
-                                className={`w-full py-4 rounded font-black font-mono text-xs tracking-[0.3em] transition-all border-2 ${
+                                className={`w-full py-4 rounded font-black font-mono text-xs tracking-[0.3em] transition-all border-2 shadow-xl ${
                                     telemetry.aiStatus.waterConfirmed 
-                                    ? 'bg-gcs-primary border-gcs-primary text-slate-100 neon-glow-red shadow-xl' 
-                                    : 'bg-transparent border-slate-800 text-slate-700 cursor-not-allowed'
+                                    ? 'bg-gcs-primary border-gcs-primary text-slate-100 neon-glow-red hover:bg-red-600 active:scale-95 cursor-pointer' 
+                                    : 'bg-slate-900/50 border-slate-800 text-slate-600 cursor-not-allowed opacity-50'
                                 }`}
                             >
                                 MANUAL SPRAY

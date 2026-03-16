@@ -9,13 +9,22 @@ from datetime import datetime
 from flask import Flask, Response, jsonify, request
 import queue
 from supabase import create_client, Client
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 
 # --- Supabase Setup ---
-SUPABASE_URL = os.getenv("SUPABASE_URL", "your_project_url")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "your_service_role_key")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    print("[ERROR] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env")
+    supabase = None
+else:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # --- Global Session State ---
 ACTIVE_SESSION_ID = None
@@ -43,10 +52,12 @@ ai_telemetry = {
 }
 telemetry_lock = threading.Lock()
 
-MIN_SHARPNESS = 100.0
+MIN_SHARPNESS = float(os.getenv("MIN_SHARPNESS", "30.0"))
 CONFIRM_AFTER = 5.0    # 5 seconds of continuous tracking
 PRUNE_AFTER = 2.0      # Drop target if unseen for 2 seconds
-tracked_objects = {}   # Stores ID tracking timers
+
+# CHANGED: We now track by class presence, not by fragile YOLO IDs
+tracked_classes = {}   
 
 # --- Flight Session Endpoints ---
 @app.route('/api/start_flight', methods=['POST', 'OPTIONS'])
@@ -54,7 +65,8 @@ def start_flight():
     if request.method == 'OPTIONS':
         return '', 200
     global ACTIVE_SESSION_ID
-    # Assuming location_id 1 is your default Sampaloc location in the DB
+    if not supabase:
+        return jsonify({"error": "Supabase not initialized"}), 500
     data = {"location_id": 1, "status": "active"}
     try:
         response = supabase.table("flight_sessions").insert(data).execute()
@@ -72,6 +84,8 @@ def end_flight():
     global ACTIVE_SESSION_ID
     if not ACTIVE_SESSION_ID:
         return jsonify({"error": "No active flight to end"}), 400
+    if not supabase:
+        return jsonify({"error": "Supabase not initialized"}), 500
     try:
         supabase.table("flight_sessions").update({
             "status": "completed", 
@@ -84,7 +98,6 @@ def end_flight():
         print(f"[ERROR] Failed to end flight: {e}")
         return jsonify({"error": str(e)}), 500
 
-# Legacy endpoint for compatibility with my previous change
 @app.route('/api/set_session', methods=['POST', 'OPTIONS'])
 def set_session():
     if request.method == 'OPTIONS':
@@ -111,7 +124,6 @@ def manual_spray():
         
     try:
         sprayer = SimpleSprayer()
-        # Passing an area of 20000 ensures it gets the max duration (6 seconds) based on your logic
         sprayer.spray(20000, 999) 
         return jsonify({"status": "success", "message": "Manual spray triggered"})
     except Exception as e:
@@ -125,7 +137,6 @@ def video_feed():
         global output_frame
         while True:
             with output_lock:
-                # Fallback blank frame if None
                 if output_frame is None:
                     frame = (50 * np.ones((480, 640, 3), dtype=np.uint8)).astype(np.uint8)
                     cv2.putText(frame, "[WAITING FOR PI STREAM]", (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 165, 255), 2)
@@ -142,10 +153,13 @@ class SimpleSprayer:
     def __init__(self):
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.pi_ip = os.getenv("PI_IP", "100.127.53.123")
+        self.username = os.getenv("PI_USERNAME", "rpi3408")
+        self.password = os.getenv("PI_PASSWORD", "rpi3408")
         try:
-            self.ssh.connect("100.127.53.123", username="rpi3408", password="rpi3408", timeout=3)
+            self.ssh.connect(self.pi_ip, username=self.username, password=self.password, timeout=3)
         except Exception as e: 
-            print(f"[WARN] Sprayer SSH failed: {e}")
+            print(f"[WARN] Sprayer SSH failed to {self.pi_ip}: {e}")
 
     def spray(self, area, obj_id):
         global ACTIVE_SESSION_ID
@@ -159,21 +173,22 @@ class SimpleSprayer:
             
             # SUPABASE LOGGING
             if ACTIVE_SESSION_ID:
-                try:
-                    supabase.table("spray_logs").insert({
-                        "session_id": ACTIVE_SESSION_ID,
-                        "trigger_type": trigger_type,
-                        "target_area": area,
-                        "spray_duration_seconds": duration
-                    }).execute()
-                except Exception as e:
-                    print(f"[DB ERROR] Failed to log spray: {e}")
+                def log_spray():
+                    try:
+                        supabase.table("spray_logs").insert({
+                            "session_id": ACTIVE_SESSION_ID,
+                            "trigger_type": trigger_type,
+                            "target_area": area,
+                            "spray_duration_seconds": duration
+                        }).execute()
+                    except Exception as e:
+                        print(f"[DB ERROR] Failed to log spray: {e}")
+                threading.Thread(target=log_spray, daemon=True).start()
                     
         except Exception as e: 
             print(f"[ERROR] Failed to execute spray command: {e}")
 
 def camera_producer(frame_queue, stop_event):
-    # buffer_size=1024000 to prevent UDP packet drops causing decode errors
     udp_stream_url = "udp://@0.0.0.0:5600?overrun_nonfatal=1&fifo_size=50000&buffer_size=1024000"
     cap = cv2.VideoCapture(udp_stream_url, cv2.CAP_FFMPEG)
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
@@ -200,14 +215,12 @@ def camera_producer(frame_queue, stop_event):
     cap.release()
 
 def inference_consumer(frame_queue, stop_event):
-    global output_frame, tracked_objects, ACTIVE_SESSION_ID
-    sprayer = SimpleSprayer()
+    global output_frame, tracked_classes, ACTIVE_SESSION_ID
     
     base_dir = os.path.dirname(__file__)
     main_model_path = os.path.join(base_dir, "main_classifier.pt")
-    water_model_path = os.path.join(base_dir, "water_classifier.pt")
     
-    if not os.path.exists(main_model_path) or not os.path.exists(water_model_path):
+    if not os.path.exists(main_model_path):
         print("[WARNING] Model files not found!")
         while not stop_event.is_set():
             if not frame_queue.empty():
@@ -219,7 +232,6 @@ def inference_consumer(frame_queue, stop_event):
         return
 
     main_model = YOLO(main_model_path)
-    water_model = YOLO(water_model_path)
     print("[INFO] AI Engine Ready.")
     
     telemetry_logged_this_sec = False
@@ -248,66 +260,80 @@ def inference_consumer(frame_queue, stop_event):
                 ai_telemetry["trackingProgress"] = 0
             continue
 
-        # 2. Run Models
-        results_main = main_model.track(frame, imgsz=416, conf=0.25, verbose=False, persist=True)
-        results_water = water_model(frame, verbose=False)
+        # 2. Run Models (Using predict instead of track to save Pi CPU since we don't need IDs)
+        results_main = main_model.predict(frame, imgsz=416, conf=0.25, verbose=False)
         
-        annotated_frame = results_main[0].plot()
+        annotated_frame = frame.copy() 
         max_progress = 0
-        any_confirmed = False
         active_target_name = None
 
-        # 3. Tracking & 5-Second Timer Logic
-        if results_main[0].boxes is not None and results_main[0].boxes.id is not None:
+        # 3. Tracking & Dual-Box Visuals by Class
+        if results_main[0].boxes is not None and len(results_main[0].boxes) > 0:
             boxes = results_main[0].boxes.xyxy.cpu().numpy()
-            track_ids = results_main[0].boxes.id.cpu().numpy()
             clss = results_main[0].boxes.cls.cpu().numpy()
+            confs = results_main[0].boxes.conf.cpu().numpy() 
 
-            for box, t_id, cls in zip(boxes, track_ids, clss):
-                t_id = int(t_id)
+            for box, cls, conf in zip(boxes, clss, confs):
+                cls_name = results_main[0].names[int(cls)]
                 
-                if t_id not in tracked_objects:
-                    tracked_objects[t_id] = {'first_seen': current_time, 'last_seen': current_time}
+                # Create a tracker for this specific class if it doesn't exist
+                if cls_name not in tracked_classes:
+                    tracked_classes[cls_name] = {'first_seen': current_time, 'last_seen': current_time, 'db_logged': False}
                 else:
-                    tracked_objects[t_id]['last_seen'] = current_time
+                    tracked_classes[cls_name]['last_seen'] = current_time
 
-                elapsed = current_time - tracked_objects[t_id]['first_seen']
+                elapsed = current_time - tracked_classes[cls_name]['first_seen']
                 progress = min(100, int((elapsed / CONFIRM_AFTER) * 100))
                 max_progress = max(max_progress, progress)
                 
                 x1, y1, x2, y2 = map(int, box)
 
+                # --- PRIMARY YOLO BOX ---
+                cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (255, 100, 0), 2) 
+                cv2.putText(annotated_frame, f"{cls_name} {conf:.2f}", (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 100, 0), 2)
+
+                # --- SECONDARY TRACKING BOX ---
+                offset = 6 
+                
                 if elapsed >= CONFIRM_AFTER:
-                    any_confirmed = True
-                    active_target_name = results_main[0].names[int(cls)]
+                    active_target_name = cls_name
                     
-                    cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 4)
-                    cv2.putText(annotated_frame, "TARGET LOCKED", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                    # Custom LOCKED box (Thick Green)
+                    cv2.rectangle(annotated_frame, (x1 - offset, y1 - offset), (x2 + offset, y2 + offset), (0, 255, 0), 3)
+                    # Text moved to BOTTOM to avoid overlapping with YOLO label
+                    cv2.putText(annotated_frame, "TARGET LOCKED", (x1 - offset, y2 + offset + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                     
-                    # SUPABASE LOGGING: Only log the detection ONCE per tracked object
-                    if not tracked_objects[t_id].get('db_logged') and ACTIVE_SESSION_ID:
+                    # SUPABASE LOGGING
+                    if not tracked_classes[cls_name].get('db_logged') and ACTIVE_SESSION_ID:
                         w, h = x2 - x1, y2 - y1
                         area = float(w * h)
-                        try:
-                            supabase.table("target_detections").insert({
-                                "session_id": ACTIVE_SESSION_ID,
-                                "target_class": active_target_name,
-                                "bounding_box_area": area
-                            }).execute()
-                            tracked_objects[t_id]['db_logged'] = True
-                            print(f"[DB] Logged detection: {active_target_name}")
-                            # Auto-trigger sprayer (Uncomment to activate)
-                            # sprayer.spray(area, t_id)
-                        except Exception as e:
-                            print(f"[DB ERROR] Failed to log detection: {e}")
+                        tracked_classes[cls_name]['db_logged'] = True
+                        
+                        def log_detection(session, t_class, b_area):
+                            try:
+                                supabase.table("target_detections").insert({
+                                    "session_id": session,
+                                    "target_class": t_class,
+                                    "bounding_box_area": b_area
+                                }).execute()
+                            except Exception as e:
+                                print(f"[DB ERROR] Failed to log detection: {e}")
+                                
+                        threading.Thread(target=log_detection, args=(ACTIVE_SESSION_ID, active_target_name, area), daemon=True).start()
                 else:
-                    cv2.putText(annotated_frame, f"TRACKING: {elapsed:.1f}s", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 165, 255), 2)
+                    # Custom SCANNING box (Thin Orange)
+                    cv2.rectangle(annotated_frame, (x1 - offset, y1 - offset), (x2 + offset, y2 + offset), (0, 165, 255), 2)
+                    # Text moved to BOTTOM
+                    cv2.putText(annotated_frame, f"TRACKING: {elapsed:.1f}s", (x1 - offset, y2 + offset + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 165, 255), 2)
 
         # 4. Prune Lost Targets
-        tracked_objects = {k: v for k, v in tracked_objects.items() if current_time - v['last_seen'] < PRUNE_AFTER}
+        tracked_classes = {k: v for k, v in tracked_classes.items() if current_time - v['last_seen'] < PRUNE_AFTER}
+        any_confirmed = any((current_time - obj['first_seen']) >= CONFIRM_AFTER for obj in tracked_classes.values())
 
-        # 5. Update Telemetry for React App
+        # 5. Update Telemetry
         pipeline_ms = int((time.time() - start_time) * 1000)
+        annotated_frame = cv2.resize(annotated_frame, (640, 480))
+        
         with telemetry_lock:
             ai_telemetry["sharpnessScore"] = int(sharpness)
             ai_telemetry["isSharpEnough"] = True
@@ -316,21 +342,23 @@ def inference_consumer(frame_queue, stop_event):
             ai_telemetry["activeTarget"] = active_target_name
             ai_telemetry["totalPipelineSpeedMs"] = pipeline_ms
 
-        # SUPABASE LOGGING: Push telemetry every ~1 second (throttle to save bandwidth)
         if ACTIVE_SESSION_ID and int(current_time) % 1 == 0 and not telemetry_logged_this_sec:
-             try:
-                 supabase.table("ai_telemetry").insert({
-                     "session_id": ACTIVE_SESSION_ID,
-                     "sharpness_score": int(sharpness),
-                     "is_sharp_enough": True,
-                     "tracking_progress_percent": max_progress,
-                     "water_confirmed": any_confirmed,
-                     "active_target": active_target_name,
-                     "pipeline_speed_ms": pipeline_ms
-                 }).execute()
-                 telemetry_logged_this_sec = True
-             except Exception as e:
-                 pass
+             def log_telemetry(session, sharp, max_prog, confirmed, target, speed):
+                 try:
+                     supabase.table("ai_telemetry").insert({
+                         "session_id": session,
+                         "sharpness_score": sharp,
+                         "is_sharp_enough": True,
+                         "tracking_progress_percent": max_prog,
+                         "water_confirmed": confirmed,
+                         "active_target": target,
+                         "pipeline_speed_ms": speed
+                     }).execute()
+                 except Exception:
+                     pass
+             
+             threading.Thread(target=log_telemetry, args=(ACTIVE_SESSION_ID, int(sharpness), max_progress, any_confirmed, active_target_name, pipeline_ms), daemon=True).start()
+             telemetry_logged_this_sec = True
         elif int(current_time) % 1 != 0:
              telemetry_logged_this_sec = False
 
