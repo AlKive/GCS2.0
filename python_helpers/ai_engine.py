@@ -1,4 +1,11 @@
 import os
+import sys
+
+# Force unbuffered output for real-time logging
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, line_buffering=True)
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, line_buffering=True)
+
 import cv2
 import time
 import threading

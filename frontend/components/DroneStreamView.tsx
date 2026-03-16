@@ -121,6 +121,25 @@ interface DroneStreamViewProps {
 const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, mapStyle }) => {
     const [reloadKey, setReloadKey] = useState(0);
     const [isReinitializing, setReinitializing] = useState(false);
+    const [pythonLogs, setPythonLogs] = useState<string[]>([]);
+    const [aiLogs, setAiLogs] = useState<string[]>([]);
+
+    useEffect(() => {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/logs`;
+        const ws = new WebSocket(wsUrl);
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'python') {
+                setPythonLogs(data.logs);
+            } else if (data.type === 'ai') {
+                setAiLogs(data.logs);
+            }
+        };
+
+        return () => ws.close();
+    }, []);
 
     return (
         <div className="fixed inset-0 bg-gcs-dark text-slate-300 font-sans z-[100] flex flex-col overflow-hidden animate-fade-in">
@@ -287,8 +306,8 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                         </div>
                     </Panel>
 
-                    <Panel title="PAYLOAD SYSTEM" className="flex-1 min-h-0">
-                        <div className="flex flex-col gap-4 h-full">
+                    <Panel title="PAYLOAD SYSTEM">
+                        <div className="flex flex-col gap-4">
                             <div className="bg-slate-900 p-3 rounded border border-slate-800">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-[8px] text-slate-500 uppercase font-black font-mono">STORAGE_TANK</span>
@@ -311,6 +330,28 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                             >
                                 MANUAL SPRAY
                             </button>
+                        </div>
+                    </Panel>
+
+                    <Panel title="PYTHON LOG" className="flex-1 min-h-0">
+                        <div className="bg-black/50 p-2 rounded font-mono text-[8px] overflow-y-auto h-32 flex flex-col gap-1 scrollbar-hide">
+                            {pythonLogs.map((log, i) => (
+                                <div key={i} className="text-slate-400 break-all border-l border-slate-800 pl-2">
+                                    <span className="text-gcs-primary mr-2">{'>'}</span>{log}
+                                </div>
+                            ))}
+                            {pythonLogs.length === 0 && <div className="text-slate-700 italic">WAITING_FOR_PYTHON_BOOT...</div>}
+                        </div>
+                    </Panel>
+
+                    <Panel title="AI DETECTION LOG" className="flex-1 min-h-0">
+                        <div className="bg-black/50 p-2 rounded font-mono text-[8px] overflow-y-auto h-32 flex flex-col gap-1 scrollbar-hide">
+                            {aiLogs.map((log, i) => (
+                                <div key={i} className={`${log.includes('[ACTION]') ? 'text-gcs-success' : log.includes('[ERROR]') ? 'text-gcs-error' : 'text-slate-400'} break-all border-l border-slate-800 pl-2`}>
+                                    <span className="text-gcs-primary mr-2">{'>'}</span>{log}
+                                </div>
+                            ))}
+                            {aiLogs.length === 0 && <div className="text-slate-700 italic">WAITING_FOR_AI_PIPELINE...</div>}
                         </div>
                     </Panel>
                 </div>

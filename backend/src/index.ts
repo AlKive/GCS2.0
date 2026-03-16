@@ -18,6 +18,30 @@ fastify.register(websocketPlugin);
 
 // --- WebSocket Route ---
 fastify.register(async function (server) {
+  server.get('/ws/logs', { websocket: true }, (connection, req) => {
+    const scriptsDir = process.env.SCRIPTS_DIR || path.join(process.cwd(), '..', 'python_helpers');
+    const p1Path = path.join(scriptsDir, 'p1.log');
+    const p2Path = path.join(scriptsDir, 'p2.log');
+
+    const sendLogs = () => {
+      try {
+        if (fs.existsSync(p1Path)) {
+          const p1Logs = fs.readFileSync(p1Path, 'utf8').split('\n').slice(-20);
+          connection.send(JSON.stringify({ type: 'python', logs: p1Logs }));
+        }
+        if (fs.existsSync(p2Path)) {
+          const p2Logs = fs.readFileSync(p2Path, 'utf8').split('\n').slice(-20);
+          connection.send(JSON.stringify({ type: 'ai', logs: p2Logs }));
+        }
+      } catch (err) {
+        fastify.log.error('Log streaming error: ' + String(err));
+      }
+    };
+
+    const interval = setInterval(sendLogs, 1000);
+    connection.on('close', () => clearInterval(interval));
+  });
+
   server.get('/ws/live', { websocket: true }, (connection, req) => {
     console.log('Client connected to live telemetry!');
     let currentBattery = 99.0;
@@ -180,7 +204,19 @@ fastify.patch('/api/sessions/:id', async (request, reply) => {
 
 fastify.get('/api/sessions', async (request, reply) => {
   try {
-    const { data, error } = await supabase.from('flight_sessions').select('*, locations(*), users(*)').order('start_time', { ascending: false });
+    const { data, error } = await supabase
+      .from('flight_sessions')
+      .select(`
+        *,
+        location:locations(*),
+        users:users(*),
+        ai_telemetry(*),
+        hardware_telemetry(*),
+        spray_logs(*),
+        stream_health(*),
+        target_detections(*)
+      `)
+      .order('start_time', { ascending: false });
     if (error) throw error;
     return data;
   } catch (err) {

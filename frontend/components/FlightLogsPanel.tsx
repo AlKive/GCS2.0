@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { FlightSession } from 'types'; 
+import type { FlightSession, HardwareTelemetry, AiTelemetry, SprayLog, TargetDetection, StreamHealth } from 'types'; 
 import MissionTrackMap from './MissionTrackMap';
 import { downloadMissionReport } from '../utils/downloadReport'; 
 
@@ -19,6 +19,7 @@ interface FlightLogsPanelProps {
 const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(sessions[0]?.id || null);
   const [filter, setFilter] = useState<'all' | 'completed' | 'active' | 'aborted'>('all');
+  const [activeTab, setActiveTab] = useState<'overview' | 'ai' | 'hardware' | 'health'>('overview');
 
   const filteredSessions = useMemo(() => {
     return sessions.filter(session => filter === 'all' || session.status === filter);
@@ -39,7 +40,8 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
     const diff = new Date(end).getTime() - new Date(start).getTime();
     const secs = Math.floor(diff / 1000);
     const mins = Math.floor(secs / 60);
-    return mins > 0 ? `${mins}M ${secs % 60}S` : `${secs}S`;
+    const hours = Math.floor(mins / 60);
+    return hours > 0 ? `${hours}H ${mins % 60}M` : mins > 0 ? `${mins}M ${secs % 60}S` : `${secs}S`;
   };
 
   return (
@@ -47,7 +49,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
       {/* Header HUD */}
       <div className="flex items-center justify-between px-1">
         <div>
-          <h2 className="text-2xl font-black text-slate-100 uppercase tracking-[0.2em] font-mono italic">REGISTRY_ARCHIVE_</h2>
+          <h2 className="text-2xl font-black text-slate-100 uppercase tracking-[0.2em] font-mono italic">FLIGHT_LOG_REGISTRY_</h2>
           <div className="h-[2px] w-16 bg-gcs-primary mt-1 shadow-[0_0_10px_#ef4444]" />
         </div>
         <div className="flex gap-3">
@@ -66,9 +68,9 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
 
       <div className="flex flex-1 gap-6 overflow-hidden min-h-0">
         {/* Sidebar: Tactical Record List */}
-        <div className="w-1/3 flex flex-col bg-gcs-panel border border-slate-700/50 rounded-lg overflow-hidden shadow-2xl">
+        <div className="w-80 flex flex-col bg-gcs-panel border border-slate-700/50 rounded-lg overflow-hidden shadow-2xl shrink-0">
           <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
-            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-bold">SECURE_DATABANK</span>
+            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-bold">LOG_ARCHIVE</span>
             <span className="text-[10px] font-mono text-gcs-primary">{filteredSessions.length} FILES</span>
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -76,14 +78,14 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
               <div 
                 key={session.id}
                 onClick={() => setSelectedSessionId(session.id)}
-                className={`p-5 border-b border-slate-800/50 cursor-pointer transition-all duration-300 relative group ${selectedSessionId === session.id ? 'bg-slate-800/50' : 'hover:bg-slate-800/20'}`}
+                className={`p-4 border-b border-slate-800/50 cursor-pointer transition-all duration-300 relative group ${selectedSessionId === session.id ? 'bg-slate-800/50' : 'hover:bg-slate-800/20'}`}
               >
                 {selectedSessionId === session.id && (
                   <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gcs-primary shadow-[0_0_10px_#ef4444]" />
                 )}
                 
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-mono text-xs font-bold text-slate-100 tracking-wider uppercase truncate pr-2">REC_{session.id.substring(0, 12)}</h3>
+                  <h3 className="font-mono text-[10px] font-bold text-slate-100 tracking-wider uppercase truncate pr-2">FLT_{session.id.substring(0, 8)}</h3>
                   <span className={`text-[8px] px-1.5 py-0.5 rounded font-black border ${
                     session.status === 'completed' ? 'border-gcs-success/30 text-gcs-success bg-gcs-success/5' : 
                     session.status === 'active' ? 'border-gcs-primary/30 text-gcs-primary bg-gcs-primary/5' :
@@ -94,10 +96,10 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                 </div>
                 
                 <div className="flex flex-col gap-1">
-                  <p className="text-[10px] text-slate-500 font-mono tracking-tight uppercase">TS: {new Date(session.start_time).toLocaleString()}</p>
-                  <p className="text-[10px] text-gcs-primary/60 font-mono flex items-center gap-2 uppercase font-bold">
+                  <p className="text-[9px] text-slate-500 font-mono tracking-tight uppercase">{new Date(session.start_time).toLocaleString()}</p>
+                  <p className="text-[9px] text-gcs-primary/60 font-mono flex items-center gap-2 uppercase font-bold truncate">
                     <span className="w-1 h-1 bg-gcs-primary/40 rounded-full" />
-                    LOC: {session.location?.barangay_name || 'NULL_ADDR'}
+                    {session.location?.barangay_name || 'UNKNOWN_SEC'}
                   </p>
                 </div>
               </div>
@@ -106,94 +108,197 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
         </div>
 
         {/* Detail HUD View */}
-        <div className="flex-1 flex flex-col bg-gcs-panel border border-slate-700/50 rounded-lg overflow-hidden shadow-2xl relative">
+        <div className="flex-1 flex flex-col bg-gcs-panel border border-slate-700/50 rounded-lg overflow-hidden shadow-2xl relative min-w-0">
           {selectedSession ? (
             <div className="flex flex-col h-full">
-              {/* Map Replay Header */}
-              <div className="h-1/2 relative border-b border-slate-800 group">
-                 <MissionTrackMap 
-                    telemetry={selectedSession.hardware_telemetry} 
-                    detections={selectedSession.target_detections}
-                    sprays={selectedSession.spray_logs}
-                 />
-                 {/* Map Overlay HUD Elements */}
-                 <div className="absolute top-4 left-4 z-10 pointer-events-none">
-                    <div className="bg-slate-900/80 border border-slate-700 backdrop-blur-sm p-3 rounded shadow-2xl">
-                        <span className="text-[8px] font-mono text-gcs-primary uppercase block mb-1 tracking-[0.2em] font-bold">TELEMETRY_REPLAY</span>
-                        <div className="flex gap-4">
-                            <div>
-                                <span className="text-[9px] text-slate-500 block uppercase font-mono tracking-widest">NODES</span>
-                                <span className="text-sm font-bold font-mono text-slate-100">{selectedSession.hardware_telemetry?.length || 0}</span>
-                            </div>
-                            <div className="w-[1px] bg-slate-700" />
-                            <div>
-                                <span className="text-[9px] text-slate-500 block uppercase font-mono tracking-widest">HITS</span>
-                                <span className="text-sm font-bold font-mono text-gcs-success">{selectedSession.spray_logs?.length || 0}</span>
-                            </div>
-                        </div>
-                    </div>
-                 </div>
+              {/* Tactical Tabs */}
+              <div className="bg-slate-900/80 border-b border-slate-800 flex overflow-x-auto scrollbar-hide shrink-0">
+                <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} label="OVERVIEW" />
+                <TabButton active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} label="AI_DATABANK" />
+                <TabButton active={activeTab === 'hardware'} onClick={() => setActiveTab('hardware')} label="HARDWARE_METRICS" />
+                <TabButton active={activeTab === 'health'} onClick={() => setActiveTab('health')} label="STREAM_HEALTH" />
               </div>
 
-              <div className="flex-1 p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6">
-                {/* Meta Grid HUD */}
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="p-4 bg-slate-900 border border-slate-800 rounded">
-                      <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest block mb-2 font-bold">SORTIE_METADATA</span>
-                      <InfoItem label="ELAPSED" value={getDuration(selectedSession.start_time, selectedSession.end_time)} />
-                      <InfoItem label="SECTOR" value={selectedSession.location?.barangay_name || 'NULL'} />
-                   </div>
-                   <div className="p-4 bg-slate-900 border border-slate-800 rounded">
-                      <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest block mb-2 font-bold">AI_LOG_STATS</span>
-                      <div className="flex justify-around items-center h-full pb-2">
-                        <div className="text-center">
-                            <p className="text-xl font-black font-mono text-slate-100 tracking-tighter">{selectedSession.target_detections?.length || 0}</p>
-                            <p className="text-[8px] font-mono text-gcs-primary uppercase font-bold tracking-widest">DETECTIONS</p>
-                        </div>
-                        <div className="w-px h-8 bg-slate-800" />
-                        <div className="text-center">
-                            <p className="text-xl font-black font-mono text-slate-100 tracking-tighter">{(selectedSession.spray_logs?.reduce((acc, curr) => acc + curr.spray_duration_seconds, 0) || 0) * 10}</p>
-                            <p className="text-[8px] font-mono text-gcs-success uppercase font-bold tracking-widest">ML_VOLUME</p>
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 flex flex-col gap-8">
+                {activeTab === 'overview' && (
+                  <>
+                    {/* Overview Header Stats */}
+                    <div className="grid grid-cols-4 gap-4 shrink-0">
+                      <StatCard label="PILOT" value={selectedSession.users?.full_name || 'N/A'} />
+                      <StatCard label="LOCATION" value={selectedSession.location?.barangay_name || 'N/A'} subValue={selectedSession.location?.city} />
+                      <StatCard label="DURATION" value={getDuration(selectedSession.start_time, selectedSession.end_time)} />
+                      <StatCard label="STATUS" value={selectedSession.status.toUpperCase()} />
+                    </div>
+
+                    {/* Map Section */}
+                    <div className="h-64 relative border border-slate-800 rounded overflow-hidden group">
+                      <MissionTrackMap 
+                          telemetry={selectedSession.hardware_telemetry || []} 
+                          detections={selectedSession.target_detections || []}
+                          sprays={selectedSession.spray_logs || []}
+                      />
+                      <div className="absolute top-2 left-2 z-10 pointer-events-none">
+                          <div className="bg-slate-900/90 border border-slate-700 p-2 rounded text-[8px] font-mono text-slate-400">
+                             SPATIAL_DATA: EPSG:4326 (WGS84)
+                          </div>
+                      </div>
+                    </div>
+
+                    {/* Quick Stats Grid */}
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-primary pl-3">MISSION_CHRONOLOGY</h4>
+                        <div className="space-y-2">
+                           <LogItem label="START_TIME" value={new Date(selectedSession.start_time).toLocaleString()} />
+                           <LogItem label="END_TIME" value={selectedSession.end_time ? new Date(selectedSession.end_time).toLocaleString() : 'LIVE'} />
+                           <LogItem label="SESSION_ID" value={selectedSession.id} />
                         </div>
                       </div>
-                   </div>
-                </div>
+                      <div className="space-y-4">
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-success pl-3">PAYLOAD_SUMMARY</h4>
+                        <div className="space-y-2">
+                           <LogItem label="DETECTIONS" value={selectedSession.target_detections?.length || 0} />
+                           <LogItem label="SPRAY_EVENTS" value={selectedSession.spray_logs?.length || 0} />
+                           <LogItem label="AVG_SPRAY_DUR" value={`${((selectedSession.spray_logs?.reduce((a,c) => a+c.spray_duration_seconds, 0) || 0) / (selectedSession.spray_logs?.length || 1)).toFixed(1)}S`} />
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
 
-                {/* Event Stack Log */}
-                <div className="flex-1 min-h-[200px]">
-                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-gcs-primary rounded-full shadow-[0_0_5px_#ef4444]" />
-                    CHRONOLOGICAL_EVENT_STACK
-                  </h4>
-                  {!selectedSession.target_detections || selectedSession.target_detections.length === 0 ? (
-                    <div className="h-full flex items-center justify-center opacity-20 border border-dashed border-slate-800 rounded">
-                        <p className="text-[10px] uppercase font-mono tracking-[0.3em]">NO_EVENTS_REGISTERED</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      {selectedSession.target_detections.map((det, idx) => {
-                        const spray = selectedSession.spray_logs?.find(s => s.id === det.id);
-                        return (
-                          <div key={idx} className="flex items-center justify-between p-3 bg-slate-900 hover:bg-slate-800/50 border border-slate-800 rounded transition-colors group/item">
-                            <div className="flex items-center gap-4">
-                                <span className="text-[9px] font-mono text-slate-600 font-bold group-hover/item:text-gcs-primary transition-colors">#{idx.toString().padStart(2, '0')}</span>
-                                <div>
-                                    <p className="text-[11px] font-bold text-slate-100 uppercase font-mono tracking-wider">{det.target_class}</p>
-                                    <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">{new Date(det.detected_at).toLocaleTimeString()}</p>
+                {activeTab === 'ai' && (
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-primary pl-3">AI_TELEMETRY_LOGS</h4>
+                    <div className="overflow-x-auto border border-slate-800 rounded">
+                      <table className="w-full text-left font-mono text-[9px]">
+                        <thead className="bg-slate-900 text-slate-500 uppercase tracking-widest border-b border-slate-800">
+                          <tr>
+                            <th className="p-3">LOGGED_AT</th>
+                            <th className="p-3">SHARPNESS</th>
+                            <th className="p-3">PROGRESS</th>
+                            <th className="p-3">CONFIRMED</th>
+                            <th className="p-3">TARGET</th>
+                            <th className="p-3">PIPELINE</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/50">
+                          {selectedSession.ai_telemetry?.map((log) => (
+                            <tr key={log.id} className="hover:bg-slate-800/30">
+                              <td className="p-3 text-slate-400">{new Date(log.logged_at).toLocaleTimeString()}</td>
+                              <td className="p-3 text-slate-100">{log.sharpness_score}</td>
+                              <td className="p-3">
+                                <div className="w-16 bg-slate-800 h-1 rounded overflow-hidden">
+                                  <div className="bg-gcs-primary h-full" style={{ width: `${log.tracking_progress_percent}%` }} />
                                 </div>
-                            </div>
-                            <span className={`text-[9px] font-black font-mono px-2 py-0.5 rounded border ${spray ? 'border-gcs-success/30 text-gcs-success bg-gcs-success/5 neon-glow-green' : 'border-gcs-primary/30 text-gcs-primary bg-gcs-primary/5'}`}>
-                              {spray ? `NEUTRALIZED_${spray.spray_duration_seconds}S` : 'LOGGED_ONLY'}
-                            </span>
-                          </div>
-                        )
-                      })}
+                              </td>
+                              <td className="p-3">
+                                <span className={log.water_confirmed ? 'text-gcs-success' : 'text-slate-600'}>{log.water_confirmed ? 'YES' : 'NO'}</span>
+                              </td>
+                              <td className="p-3 text-slate-300">{log.active_target || '---'}</td>
+                              <td className="p-3 text-slate-100">{log.pipeline_speed_ms}MS</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                  )}
-                </div>
+
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-primary pl-3">TARGET_DETECTION_STACK</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      {selectedSession.target_detections?.map((det) => (
+                        <div key={det.id} className="p-4 bg-slate-900 border border-slate-800 rounded flex gap-4 items-center">
+                           <div className="w-12 h-12 bg-slate-800 rounded border border-slate-700 flex items-center justify-center overflow-hidden">
+                              {det.image_url ? <img src={det.image_url} alt="Target" className="w-full h-full object-cover" /> : <span className="text-slate-600 text-[8px]">NO_IMG</span>}
+                           </div>
+                           <div className="flex-1">
+                              <p className="text-[10px] font-bold text-slate-100 uppercase tracking-widest">{det.target_class}</p>
+                              <p className="text-[8px] text-slate-500 font-mono">AREA: {det.bounding_box_area.toFixed(0)}PX² | {new Date(det.detected_at).toLocaleTimeString()}</p>
+                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'hardware' && (
+                   <div className="space-y-6">
+                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-primary pl-3">HARDWARE_TELEMETRY_DATABANK</h4>
+                      <div className="overflow-x-auto border border-slate-800 rounded">
+                        <table className="w-full text-left font-mono text-[9px]">
+                          <thead className="bg-slate-900 text-slate-500 uppercase tracking-widest border-b border-slate-800">
+                            <tr>
+                              <th className="p-3">LOGGED_AT</th>
+                              <th className="p-3">GPS_COORDS</th>
+                              <th className="p-3">ALT_LIDAR</th>
+                              <th className="p-3">VOLT</th>
+                              <th className="p-3">RSSI</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800/50">
+                            {selectedSession.hardware_telemetry?.map((log) => (
+                              <tr key={log.id} className="hover:bg-slate-800/30">
+                                <td className="p-3 text-slate-400">{new Date(log.logged_at).toLocaleTimeString()}</td>
+                                <td className="p-3 text-slate-100">{log.latitude.toFixed(6)}, {log.longitude.toFixed(6)}</td>
+                                <td className="p-3 text-slate-100">{log.altitude_lidar_m.toFixed(2)}M</td>
+                                <td className="p-3 text-gcs-success">{log.battery_voltage.toFixed(2)}V</td>
+                                <td className="p-3 text-slate-300">{log.signal_strength_dbm}DBM</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-success pl-3">SPRAY_LOG_EVENTS</h4>
+                      <div className="space-y-2">
+                        {selectedSession.spray_logs?.map((log) => (
+                          <div key={log.id} className="p-3 bg-slate-900 border border-slate-800 rounded flex justify-between items-center">
+                             <div>
+                                <p className="text-[10px] font-bold text-slate-100 uppercase">TRIGGER_{log.trigger_type}</p>
+                                <p className="text-[8px] text-slate-500 font-mono">{new Date(log.triggered_at).toLocaleTimeString()} | DUR: {log.spray_duration_seconds}S</p>
+                             </div>
+                             <div className="text-right">
+                                <p className="text-[10px] font-mono text-gcs-success font-black">{log.target_area.toFixed(0)}PX²</p>
+                                <p className="text-[7px] text-slate-600 uppercase font-mono font-bold tracking-widest">TARGET_AREA</p>
+                             </div>
+                          </div>
+                        ))}
+                      </div>
+                   </div>
+                )}
+
+                {activeTab === 'health' && (
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-primary pl-3">STREAM_SYSTEM_HEALTH</h4>
+                    <div className="grid grid-cols-1 gap-4">
+                      {selectedSession.stream_health?.map((log) => (
+                         <div key={log.id} className="p-4 bg-slate-900 border border-slate-800 rounded flex items-center justify-between">
+                            <div className="flex gap-8">
+                               <div>
+                                  <span className="text-[7px] text-slate-600 uppercase font-mono block">PI_IP</span>
+                                  <span className="text-[10px] font-mono text-slate-200">{log.pi_ip}</span>
+                               </div>
+                               <div>
+                                  <span className="text-[7px] text-slate-600 uppercase font-mono block">LAPTOP_IP</span>
+                                  <span className="text-[10px] font-mono text-slate-200">{log.laptop_ip}</span>
+                               </div>
+                               <div>
+                                  <span className="text-[7px] text-slate-600 uppercase font-mono block">PID</span>
+                                  <span className="text-[10px] font-mono text-slate-200">{log.stream_pid || '---'}</span>
+                               </div>
+                            </div>
+                            <div className="text-right">
+                               <span className={`text-[9px] font-black font-mono px-2 py-0.5 rounded border ${log.status === 'Healthy' ? 'border-gcs-success/30 text-gcs-success' : 'border-gcs-error/30 text-gcs-error'}`}>
+                                  {log.status.toUpperCase()}
+                               </span>
+                               <p className="text-[7px] text-slate-600 font-mono mt-1">{new Date(log.logged_at).toLocaleTimeString()}</p>
+                            </div>
+                         </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Secure Export Footer */}
-                <div className="flex justify-end pt-4 border-t border-slate-800 mt-auto">
+                <div className="flex justify-end pt-4 border-t border-slate-800 mt-auto shrink-0">
                   <button
                     onClick={handleDownloadReport}
                     disabled={!selectedSession || selectedSession.status === 'active'}
@@ -208,7 +313,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
           ) : (
             <div className="flex flex-col items-center justify-center h-full gap-4 opacity-30 grayscale border border-dashed border-slate-800 m-6 rounded">
                <svg className="w-16 h-16 text-slate-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" strokeWidth="1.5" strokeLinecap="round"/></svg>
-               <p className="text-xs font-black font-mono uppercase tracking-[0.4em] text-slate-500">SELECT_SESSION_FILE</p>
+               <p className="text-xs font-black font-mono uppercase tracking-[0.4em] text-slate-500">SELECT_FLIGHT_DATA_PACKET</p>
             </div>
           )}
         </div>
@@ -217,15 +322,36 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
       <style>{`
         .animate-fade-in { animation: fadeIn 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   );
 };
 
-const InfoItem: React.FC<{ label: string, value: string | number }> = ({ label, value }) => (
-  <div className="flex justify-between items-center py-1.5 border-b border-slate-800/50 last:border-0">
-    <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-[0.2em]">{label}_</span>
-    <span className="text-[10px] font-black font-mono text-slate-100 tracking-wider uppercase">{value}</span>
+const TabButton: React.FC<{ active: boolean, onClick: () => void, label: string }> = ({ active, onClick, label }) => (
+  <button 
+    onClick={onClick}
+    className={`px-6 py-3 text-[9px] font-mono font-black tracking-[0.2em] transition-all border-b-2 whitespace-nowrap ${
+      active ? 'text-gcs-primary border-gcs-primary bg-gcs-primary/5' : 'text-slate-500 border-transparent hover:text-slate-300 hover:bg-slate-800/30'
+    }`}
+  >
+    {label}_
+  </button>
+);
+
+const StatCard: React.FC<{ label: string, value: string | number, subValue?: string }> = ({ label, value, subValue }) => (
+  <div className="p-3 bg-slate-900/50 border border-slate-800 rounded">
+     <span className="text-[7px] text-slate-600 font-mono font-bold uppercase tracking-widest block mb-1">{label}</span>
+     <p className="text-xs font-black font-mono text-slate-100 truncate">{value}</p>
+     {subValue && <p className="text-[8px] text-slate-500 font-mono truncate">{subValue}</p>}
+  </div>
+);
+
+const LogItem: React.FC<{ label: string, value: string | number }> = ({ label, value }) => (
+  <div className="flex justify-between items-center py-1.5 border-b border-slate-800/30 last:border-0">
+    <span className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-[0.1em]">{label}_</span>
+    <span className="text-[9px] font-black font-mono text-slate-200 uppercase truncate ml-4">{value}</span>
   </div>
 );
 

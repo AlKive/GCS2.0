@@ -20,17 +20,87 @@ export interface Mission {
   detectedSites?: BreedingSiteInfo[];
 }
 
+export interface Location {
+  id: number;
+  barangay_name: string;
+  city: string;
+}
+
+export interface User {
+  id: string;
+  full_name: string;
+  role: string;
+  email: string;
+}
+
+export interface AiTelemetry {
+  id: number;
+  session_id: string;
+  logged_at: string;
+  sharpness_score: number;
+  is_sharp_enough: boolean;
+  tracking_progress_percent: number;
+  water_confirmed: boolean;
+  active_target: string | null;
+  pipeline_speed_ms: number;
+}
+
+export interface HardwareTelemetry {
+  id: number;
+  session_id: string;
+  logged_at: string;
+  latitude: number;
+  longitude: number;
+  altitude_lidar_m: number;
+  battery_voltage: number;
+  signal_strength_dbm: number;
+}
+
+export interface SprayLog {
+  id: number;
+  session_id: string;
+  triggered_at: string;
+  trigger_type: string;
+  target_area: number;
+  spray_duration_seconds: number;
+  detection_id: number | null;
+}
+
+export interface StreamHealth {
+  id: number;
+  session_id: string;
+  logged_at: string;
+  pi_ip: string;
+  laptop_ip: string;
+  stream_pid: number | null;
+  status: string;
+}
+
+export interface TargetDetection {
+  id: number;
+  session_id: string;
+  detected_at: string;
+  target_class: string;
+  bounding_box_area: number;
+  location: any; // postgis point or similar
+  image_url: string | null;
+}
+
 export interface FlightSession {
   id: string;
+  pilot_id: string | null;
+  location_id: number | null;
   start_time: string;
   end_time: string | null;
   status: 'active' | 'completed' | 'aborted';
-  // Joined data from locations table
-  location: { barangay_name: string; city: string } | null; 
-  // Joined arrays from your telemetry and logs
-  hardware_telemetry?: { latitude: number; longitude: number; altitude_lidar_m: number }[];
-  target_detections?: { id: string; target_class: string; detected_at: string; image_url?: string }[];
-  spray_logs?: { id: string; trigger_type: string; spray_duration_seconds: number; triggered_at: string }[];
+  // Joined data
+  location?: Location | null;
+  users?: User | null; // Note: Supabase often returns single objects if linked
+  ai_telemetry?: AiTelemetry[];
+  hardware_telemetry?: HardwareTelemetry[];
+  spray_logs?: SprayLog[];
+  stream_health?: StreamHealth[];
+  target_detections?: TargetDetection[];
 }
 
 export interface OverviewStat {
