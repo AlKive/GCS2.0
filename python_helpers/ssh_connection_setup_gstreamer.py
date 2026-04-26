@@ -10,6 +10,8 @@ import paramiko
 import time
 import socket
 import sys
+import json
+import urllib.request
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
@@ -22,6 +24,7 @@ PI_TARGET_IPS = env_ips.split(",") if env_ips else ["192.168.7.2", "raspberrypi.
 USERNAME = os.getenv("PI_USERNAME", "rpi3408")
 PASSWORD = os.getenv("PI_PASSWORD", "rpi3408")
 STREAM_PORT = 5600
+AI_ENGINE_URL = "http://localhost:5000"
 
 # --- Supabase Setup ---
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -32,6 +35,31 @@ if not SUPABASE_URL or not SUPABASE_KEY:
     sys.exit(1)
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+def start_flight_session():
+    """Creates a new flight session in Supabase and syncs it with the AI engine."""
+    try:
+        data = {
+            "barangay_id": 1,
+            "status": "active",
+            "start_time": datetime.utcnow().isoformat()
+        }
+        response = supabase.table("flight_sessions").insert(data).execute()
+        if response.data:
+            session_id = response.data[0]['id']
+            print(f"[DATABASE] Mission Started via SSH: {session_id}")
+            
+            # Sync with AI Engine
+            sync_data = json.dumps({"session_id": session_id}).encode('utf-8')
+            req = urllib.request.Request(f"{AI_ENGINE_URL}/api/set_session", data=sync_data, headers={'Content-Type': 'application/json'})
+            with urllib.request.urlopen(req) as f:
+                pass
+            return session_id
+    except Exception as e:
+        print(f"[ERROR] Failed to start/sync flight session: {e}")
+    return None
+
+from datetime import datetime
 
 def get_active_session():
     """Fetches the currently active flight session from the database."""
@@ -153,7 +181,10 @@ def main():
                 ssh.connect(pi_ip, username=USERNAME, password=PASSWORD, timeout=4)
                 print(f"[SUCCESS] Connected to Pi at {pi_ip}")
                 
-                # 2. Identify the return path (Laptop IP)
+                # 2. Start Flight Session (GCS Requirement: Log on SSH)
+                start_flight_session()
+
+                # 3. Identify the return path (Laptop IP)
                 laptop_ip = get_laptop_ip_relative_to_pi(pi_ip)
                 print(f"[INFO] Laptop identified as: {laptop_ip}")
 

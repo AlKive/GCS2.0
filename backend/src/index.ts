@@ -154,6 +154,24 @@ fastify.get('/camera_feed', (request, reply) => {
   proxyRequest.end();
 });
 
+// --- Tactical Tools Routes ---
+fastify.post('/api/tools/offline-analyzer', async (request, reply) => {
+  const { spawn } = require('child_process');
+  const path = require('path');
+  
+  const scriptPath = path.join(__dirname, '../../python_helpers/offline_analyzer.py');
+  const pythonPath = process.platform === 'win32' ? 'python' : 'python3';
+
+  // Launch the GUI application as a detached process
+  const child = spawn(pythonPath, [scriptPath], {
+    detached: true,
+    stdio: 'ignore'
+  });
+  
+  child.unref();
+  return { status: 'launched', message: 'Offline Analyzer GUI started' };
+});
+
 // --- Manual Spray Route ---
 fastify.post('/api/drone/spray', async (request, reply) => {
   try {
@@ -363,26 +381,7 @@ fastify.get('/api/users', async (request, reply) => {
 // Helper for starting Python processes
 fastify.post('/api/system/start', async (request, reply) => {
   try {
-    const body = request.body as { pilot_id?: string, location_id?: number };
-
-    // 1. Create a flight session first
-    const { data: session, error: sessionError } = await supabase
-      .from('flight_sessions')
-      .insert([{ 
-        pilot_id: body.pilot_id || null, 
-        location_id: body.location_id || null, 
-        status: 'active' 
-      }])
-      .select()
-      .single();
-
-    if (sessionError) {
-      fastify.log.error({ err: sessionError }, 'Failed to create flight session');
-      throw sessionError;
-    }
-
-    const sessionId = session.id;
-
+    // Kill existing processes
     try {
        if (process.platform === 'win32') {
          execSync('taskkill /F /IM python.exe /T', { stdio: 'ignore' });
@@ -405,35 +404,18 @@ fastify.post('/api/system/start', async (request, reply) => {
       windowsHide: true 
     };
 
-    // Note: We could pass the sessionId as an environment variable or argument if the scripts support it
     const p1 = spawn(pythonExec, [script1], spawnOptions);
     p1.unref();
     const p2 = spawn(pythonExec, [script2], spawnOptions);
     p2.unref();
 
-    // Give the AI Engine a moment to start, then try to set the session ID
-    // Note: This is best-effort. In a production app, you might want a retry loop.
-    setTimeout(async () => {
-      try {
-        await fetch(`http://${AI_ENGINE_IP}:${AI_ENGINE_PORT}/api/set_session`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_id: sessionId })
-        });
-        console.log(`[INFO] Sent session_id ${sessionId} to AI Engine`);
-      } catch (e) {
-        console.error(`[WARN] Could not set session_id on AI Engine: ${e}`);
-      }
-    }, 5000); // 5 second delay to let Flask start
-
     return { 
       success: true, 
-      session_id: sessionId,
-      message: 'System processes launched and flight session started' 
+      message: 'System processes launched. Session will start on SSH connection.' 
     };
   } catch (err) {
     fastify.log.error('Error starting system: ' + String(err));
-    reply.code(500).send({ error: 'Failed to launch system processes or create session' });
+    reply.code(500).send({ error: 'Failed to launch system processes' });
   }
 });
 

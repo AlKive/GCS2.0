@@ -202,13 +202,9 @@ const App: React.FC = () => {
   }, [theme]);
 
   const endMission = async () => {
-    if (!activeSessionId) return;
     try {
-      await fetch(`/api/sessions/${activeSessionId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'completed' })
-      });
+      // GCS Requirement: End AI engine flight session
+      await fetch('http://127.0.0.1:5000/api/end_flight', { method: 'POST' });
       await fetchSessions();
     } catch (error) {
       console.error("Failed to end session:", error);
@@ -219,16 +215,13 @@ const App: React.FC = () => {
   
   const launchPythonHelpers = async () => {
     try {
-      const response = await fetch('/api/system/start', { 
+      await fetch('/api/system/start', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ location_id: 1 })
       });
-      const data = await response.json();
-      if (data.success && data.session_id) {
-        setActiveSessionId(data.session_id);
-        setMissionActive(true);
-      }
+      // Session ID is now assigned by the SSH script and synced to AI engine
+      setMissionActive(true);
     } catch (err) {
       console.error('Failed to launch system processes:', err);
     }

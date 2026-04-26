@@ -89,7 +89,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between px-1">
           <div>
-            <h2 className="text-2xl font-black text-slate-100 uppercase tracking-[0.2em] font-mono italic">FLIGHT_LOG_REGISTRY_</h2>
+            <h2 className="text-2xl font-black text-main uppercase tracking-[0.2em] font-mono italic">FLIGHT_LOG_REGISTRY_</h2>
             <div className="h-[2px] w-16 bg-gcs-primary mt-1 shadow-[0_0_10px_#ef4444]" />
           </div>
         </div>
@@ -148,6 +148,20 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
             />
           </div>
 
+          <button 
+            onClick={async () => {
+              try {
+                await fetch('http://localhost:8080/api/tools/offline-analyzer', { method: 'POST' });
+              } catch (e) {
+                alert('Failed to launch Offline Analyzer. Is the GCS Backend running?');
+              }
+            }}
+            className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded text-[10px] font-mono font-black text-slate-400 hover:text-gcs-primary hover:border-gcs-primary transition-all group"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            OFFLINE_ANALYZER
+          </button>
+          
           <button 
             onClick={() => {
               setStatusFilter('all');

@@ -19,11 +19,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [pendingTheme, setPendingTheme] = useState(currentTheme);
 
   const themes = [
-    { id: 'red', name: 'NEO_RED', class: 'bg-red-500' },
-    { id: 'blue', name: 'CYBER_BLUE', class: 'bg-blue-500' },
-    { id: 'amber', name: 'AMBER_WARM', class: 'bg-amber-500' },
-    { id: 'emerald', name: 'EMERALD_TOX', class: 'bg-emerald-500' },
-    { id: 'purple', name: 'VOID_PURPLE', class: 'bg-purple-500' },
+    { id: 'red', name: 'NEO_RED', class: 'bg-red-500', color: '#ef4444', glow: 'rgba(239, 68, 68, 0.5)' },
+    { id: 'blue', name: 'CYBER_BLUE', class: 'bg-blue-500', color: '#3b82f6', glow: 'rgba(59, 130, 246, 0.5)' },
+    { id: 'amber', name: 'AMBER_WARM', class: 'bg-amber-500', color: '#f59e0b', glow: 'rgba(245, 158, 11, 0.5)' },
+    { id: 'emerald', name: 'EMERALD_TOX', class: 'bg-emerald-500', color: '#10b981', glow: 'rgba(16, 185, 129, 0.5)' },
+    { id: 'purple', name: 'VOID_PURPLE', class: 'bg-purple-500', color: '#a855f7', glow: 'rgba(168, 85, 247, 0.5)' },
   ];
 
   const hasChanges = 
@@ -47,6 +47,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             ? 'bg-gcs-primary text-slate-100 neon-glow active:scale-95' 
             : 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-50'
           }`}
+          style={hasChanges ? { backgroundColor: themes.find(t => t.id === pendingTheme)?.color } : {}}
         >
           {hasChanges ? 'SAVE_CHANGES_' : 'CONFIG_SYNCHRONIZED'}
         </button>
@@ -58,7 +59,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             <div className="bg-gcs-panel border border-main rounded-lg p-8 shadow-2xl flex flex-col gap-10">
               <section>
                 <h3 className="text-xs font-black text-dim uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
-                  <span className="w-2 h-2 rounded-full bg-gcs-primary" />
+                  <span className="w-2 h-2 rounded-full bg-gcs-primary" style={{ backgroundColor: themes.find(t => t.id === pendingTheme)?.color }} />
                   LUMINANCE_PROTOCOL
                 </h3>
                 <div className="flex items-center justify-between p-6 bg-gcs-card/30 border border-main rounded-xl">
@@ -69,15 +70,17 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   <button
                     onClick={() => setPendingDarkMode(!pendingDarkMode)}
                     className={`relative inline-flex h-7 w-14 items-center rounded-full transition-all focus:outline-none border-2 ${pendingDarkMode ? 'bg-slate-800 border-gcs-primary' : 'bg-white border-slate-300'}`}
+                    style={pendingDarkMode ? { borderColor: themes.find(t => t.id === pendingTheme)?.color } : {}}
                   >
-                    <span className={`inline-block h-4 w-4 transform rounded-full transition-transform ${pendingDarkMode ? 'translate-x-8 bg-gcs-primary' : 'translate-x-1 bg-slate-400'}`} />
+                    <span className={`inline-block h-4 w-4 transform rounded-full transition-transform ${pendingDarkMode ? 'translate-x-8 bg-gcs-primary' : 'translate-x-1 bg-slate-400'}`} 
+                          style={pendingDarkMode ? { backgroundColor: themes.find(t => t.id === pendingTheme)?.color } : {}} />
                   </button>
                 </div>
               </section>
 
               <section>
                 <h3 className="text-xs font-black text-dim uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
-                  <span className="w-2 h-2 rounded-full bg-gcs-primary" />
+                  <span className="w-2 h-2 rounded-full bg-gcs-primary" style={{ backgroundColor: themes.find(t => t.id === pendingTheme)?.color }} />
                   MAP_TERRAIN_RENDER
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -90,6 +93,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         ? 'bg-gcs-primary/10 border-gcs-primary text-main' 
                         : 'bg-gcs-card/30 border-main text-dim hover:border-slate-600'
                       }`}
+                      style={pendingMapStyle === style ? { borderColor: themes.find(t => t.id === pendingTheme)?.color, backgroundColor: `${themes.find(t => t.id === pendingTheme)?.color}1a` } : {}}
                     >
                       {style}_VIEW
                     </button>
@@ -102,7 +106,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             <div className="bg-gcs-panel border border-main rounded-lg p-8 shadow-2xl">
                 <section>
                     <h3 className="text-xs font-black text-dim uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
-                        <span className="w-2 h-2 rounded-full bg-gcs-primary shadow-[0_0_5px_#ef4444]" />
+                        <span className="w-2 h-2 rounded-full bg-gcs-primary shadow-[0_0_5px_#ef4444]" style={{ backgroundColor: themes.find(t => t.id === pendingTheme)?.color }} />
                         ADVANCED_SYSTEM_CORE
                     </h3>
                     <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-xl flex flex-col gap-4">
@@ -136,7 +140,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         <div className="bg-gcs-panel border border-main rounded-lg p-8 shadow-2xl flex flex-col gap-8">
           <section>
             <h3 className="text-xs font-black text-dim uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
-              <span className="w-2 h-2 rounded-full bg-gcs-primary" />
+              <span className="w-2 h-2 rounded-full bg-gcs-primary" style={{ backgroundColor: themes.find(t => t.id === pendingTheme)?.color }} />
               NEURAL_LINK_PALETTE
             </h3>
             <div className="grid grid-cols-1 gap-2">
@@ -144,13 +148,18 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 <button
                   key={t.id}
                   onClick={() => setPendingTheme(t.id)}
-                  className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300 ${pendingTheme === t.id ? 'bg-gcs-primary/10 border-gcs-primary shadow-[0_0_15px_var(--neon-glow)]' : 'bg-gcs-card/20 border-transparent hover:border-main'}`}
+                  className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300 ${pendingTheme === t.id ? 'border-gcs-primary' : 'bg-gcs-card/20 border-transparent hover:border-main'}`}
+                  style={pendingTheme === t.id ? { 
+                    borderColor: t.color, 
+                    backgroundColor: `${t.color}1a`,
+                    boxShadow: `0 0 15px ${t.glow}`
+                  } : {}}
                 >
                   <div className="flex items-center gap-4">
                     <div className={`w-4 h-4 rounded-full ${t.class}`} />
                     <span className={`text-[10px] font-black uppercase tracking-widest ${pendingTheme === t.id ? 'text-main' : 'text-dim'}`}>{t.name}</span>
                   </div>
-                  {pendingTheme === t.id && <span className="text-[8px] font-black text-gcs-primary">ACTIVE_SELECTION</span>}
+                  {pendingTheme === t.id && <span className="text-[8px] font-black" style={{ color: t.color }}>ACTIVE_SELECTION</span>}
                 </button>
               ))}
             </div>
