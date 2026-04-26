@@ -305,7 +305,7 @@ const App: React.FC = () => {
           </div>
         </main>
         
-        {isMissionActive && <LiveMissionViewNew telemetry={liveTelemetry} onEndMission={endMission} mapStyle={mapStyle} />}
+        {isMissionActive && currentView !== 'droneStream' && <LiveMissionViewNew telemetry={liveTelemetry} onEndMission={endMission} mapStyle={mapStyle} />}
       </div>
     </>
   );
