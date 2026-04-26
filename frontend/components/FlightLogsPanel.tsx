@@ -8,7 +8,7 @@ const ExportIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
     <polyline points="7 10 12 15 17 10"></polyline>
-    <line x1="12" y1="15" x2="12" y2="3"></line>
+    <line x1="12" x2="12" y1="15" x2="12" y2="3"></line>
   </svg>
 );
 
@@ -39,19 +39,19 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
     return sessions.filter(session => {
       // Status Filter
       if (statusFilter !== 'all' && session.status !== statusFilter) return false;
-      
+
       // Object Filter
       if (objectFilter !== 'all') {
         const hasObject = session.target_detections?.some(d => d.target_class?.toLowerCase() === objectFilter.toLowerCase());
         if (!hasObject) return false;
       }
-      
+
       // Date Filter
       if (dateFilter) {
         const sessionDate = new Date(session.start_time).toISOString().split('T')[0];
         if (sessionDate !== dateFilter) return false;
       }
-      
+
       // Duration Filter (in minutes)
       if (minDurationFilter > 0) {
         if (!session.end_time) return true;
@@ -59,7 +59,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
         const mins = diff / 1000 / 60;
         if (mins < minDurationFilter) return false;
       }
-      
+
       return true;
     });
   }, [sessions, statusFilter, objectFilter, dateFilter, minDurationFilter]);
@@ -89,7 +89,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between px-1">
           <div>
-            <h2 className="text-2xl font-black text-main uppercase tracking-[0.2em] font-mono italic">FLIGHT_LOG_REGISTRY_</h2>
+            <h2 className="text-2xl font-black text-slate-100 uppercase tracking-[0.2em] font-mono italic">FLIGHT_LOG_REGISTRY_</h2>
             <div className="h-[2px] w-16 bg-gcs-primary mt-1 shadow-[0_0_10px_#ef4444]" />
           </div>
         </div>
@@ -97,10 +97,10 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
         {/* Tactical Filter HUD */}
         <div className="bg-slate-900/50 border border-slate-800 p-4 rounded-lg flex flex-wrap gap-6 items-end shadow-inner relative overflow-hidden group">
           <div className="absolute top-0 left-0 w-1 h-full bg-gcs-primary/30" />
-          
+
           <div className="flex flex-col gap-2">
             <label className="text-[7px] font-mono font-black text-slate-500 uppercase tracking-[0.3em] pl-1">SORTIE_STATUS</label>
-            <select 
+            <select
               className="bg-slate-950 border border-slate-800 text-[10px] font-mono uppercase tracking-widest p-2 rounded focus:ring-1 focus:ring-gcs-primary outline-none text-slate-300 w-32 cursor-pointer hover:border-slate-700 transition-colors"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
@@ -114,7 +114,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
 
           <div className="flex flex-col gap-2">
             <label className="text-[7px] font-mono font-black text-slate-500 uppercase tracking-[0.3em] pl-1">OBJECT_TARGET</label>
-            <select 
+            <select
               className="bg-slate-950 border border-slate-800 text-[10px] font-mono uppercase tracking-widest p-2 rounded focus:ring-1 focus:ring-gcs-primary outline-none text-slate-300 w-40 cursor-pointer hover:border-slate-700 transition-colors"
               value={objectFilter}
               onChange={(e) => setObjectFilter(e.target.value)}
@@ -128,7 +128,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
 
           <div className="flex flex-col gap-2">
             <label className="text-[7px] font-mono font-black text-slate-500 uppercase tracking-[0.3em] pl-1">CHRONO_DATE</label>
-            <input 
+            <input
               type="date"
               className="bg-slate-950 border border-slate-800 text-[10px] font-mono uppercase p-2 rounded focus:ring-1 focus:ring-gcs-primary outline-none text-slate-300 w-40 cursor-pointer hover:border-slate-700 transition-colors [color-scheme:dark]"
               value={dateFilter}
@@ -138,7 +138,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
 
           <div className="flex flex-col gap-2">
             <label className="text-[7px] font-mono font-black text-slate-500 uppercase tracking-[0.3em] pl-1">MIN_DUR (MINS)</label>
-            <input 
+            <input
               type="number"
               min="0"
               placeholder="0"
@@ -148,21 +148,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
             />
           </div>
 
-          <button 
-            onClick={async () => {
-              try {
-                await fetch('http://localhost:8080/api/tools/offline-analyzer', { method: 'POST' });
-              } catch (e) {
-                alert('Failed to launch Offline Analyzer. Is the GCS Backend running?');
-              }
-            }}
-            className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded text-[10px] font-mono font-black text-slate-400 hover:text-gcs-primary hover:border-gcs-primary transition-all group"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-            OFFLINE_ANALYZER
-          </button>
-          
-          <button 
+          <button
             onClick={() => {
               setStatusFilter('all');
               setObjectFilter('all');
@@ -176,8 +162,8 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
           </button>
 
           <div className="ml-auto text-right">
-             <span className="text-[8px] font-mono text-slate-600 block tracking-widest">REGISTRY_MATCHES</span>
-             <span className="text-sm font-black font-mono text-gcs-primary">{filteredSessions.length}</span>
+             <span className="text-[8px] font-mono text-slate-600 block tracking-widest">REGISTRY_MATCHES</span>  
+             <span className="text-sm font-black font-mono text-gcs-primary">{filteredSessions.length}</span>     
           </div>
         </div>
       </div>
@@ -185,13 +171,13 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
       <div className="flex flex-1 gap-6 overflow-hidden min-h-0">
         {/* Sidebar: Tactical Record List */}
         <div className="w-80 flex flex-col bg-gcs-panel border border-slate-700/50 rounded-lg overflow-hidden shadow-2xl shrink-0">
-          <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
+          <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">       
             <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-bold">LOG_ARCHIVE</span>
-            <span className="text-[10px] font-mono text-gcs-primary">{filteredSessions.length} FILES</span>
+            <span className="text-[10px] font-mono text-gcs-primary">{filteredSessions.length} FILES</span>       
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar">
             {filteredSessions.map((session) => (
-              <div 
+              <div
                 key={session.id}
                 onClick={() => setSelectedSessionId(session.id)}
                 className={`p-4 border-b border-slate-800/50 cursor-pointer transition-all duration-300 relative group ${selectedSessionId === session.id ? 'bg-slate-800/50' : 'hover:bg-slate-800/20'}`}
@@ -199,18 +185,18 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                 {selectedSessionId === session.id && (
                   <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gcs-primary shadow-[0_0_10px_#ef4444]" />
                 )}
-                
+
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-mono text-[10px] font-bold text-slate-100 tracking-wider uppercase truncate pr-2">FLT_{session.id.substring(0, 8)}</h3>
                   <span className={`text-[8px] px-1.5 py-0.5 rounded font-black border ${
-                    session.status === 'completed' ? 'border-gcs-success/30 text-gcs-success bg-gcs-success/5' : 
-                    session.status === 'active' ? 'border-gcs-primary/30 text-gcs-primary bg-gcs-primary/5' :
+                    session.status === 'completed' ? 'border-gcs-success/30 text-gcs-success bg-gcs-success/5' :  
+                    session.status === 'active' ? 'border-gcs-primary/30 text-gcs-primary bg-gcs-primary/5' :     
                     'border-slate-700 text-slate-500'
                   }`}>
                     {session.status.toUpperCase()}
                   </span>
                 </div>
-                
+
                 <div className="flex flex-col gap-1">
                   <p className="text-[9px] text-slate-500 font-mono tracking-tight uppercase">{new Date(session.start_time).toLocaleString()}</p>
                   <p className="text-[9px] text-gcs-primary/60 font-mono flex items-center gap-2 uppercase font-bold truncate">
@@ -230,7 +216,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
               {/* Tactical Tabs */}
               <div className="bg-slate-900/80 border-b border-slate-800 flex overflow-x-auto scrollbar-hide shrink-0">
                 <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} label="OVERVIEW" />
-                <TabButton active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} label="AI_DATABANK" />
+                <TabButton active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} label="AI_DATABANK" />  
                 <TabButton active={activeTab === 'hardware'} onClick={() => setActiveTab('hardware')} label="HARDWARE_METRICS" />
                 <TabButton active={activeTab === 'health'} onClick={() => setActiveTab('health')} label="STREAM_HEALTH" />
               </div>
@@ -248,8 +234,8 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
 
                     {/* Map Section */}
                     <div className="h-64 relative border border-slate-800 rounded overflow-hidden group">
-                      <MissionTrackMap 
-                          telemetry={selectedSession.hardware_telemetry || []} 
+                      <MissionTrackMap
+                          telemetry={selectedSession.hardware_telemetry || []}
                           detections={selectedSession.target_detections || []}
                           sprays={selectedSession.spray_logs || []}
                       />
@@ -273,8 +259,8 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                       <div className="space-y-4">
                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-success pl-3">PAYLOAD_SUMMARY</h4>
                         <div className="space-y-2">
-                           <LogItem label="DETECTIONS" value={selectedSession.target_detections?.length || 0} />
-                           <LogItem label="SPRAY_EVENTS" value={selectedSession.spray_logs?.length || 0} />
+                           <LogItem label="DETECTIONS" value={selectedSession.target_detections?.length || 0} />  
+                           <LogItem label="SPRAY_EVENTS" value={selectedSession.spray_logs?.length || 0} />       
                            <LogItem label="AVG_SPRAY_DUR" value={`${((selectedSession.spray_logs?.reduce((a,c) => a+c.spray_duration_seconds, 0) || 0) / (selectedSession.spray_logs?.length || 1)).toFixed(1)}S`} />
                         </div>
                       </div>
@@ -354,8 +340,8 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                               <tr key={log.id} className="hover:bg-slate-800/30">
                                 <td className="p-3 text-slate-400">{new Date(log.logged_at).toLocaleTimeString()}</td>
                                 <td className="p-3 text-slate-100">{log.latitude.toFixed(6)}, {log.longitude.toFixed(6)}</td>
-                                <td className="p-3 text-slate-100">{log.altitude_lidar_m.toFixed(2)}M</td>
-                                <td className="p-3 text-gcs-success">{log.battery_voltage.toFixed(2)}V</td>
+                                <td className="p-3 text-slate-100">{log.altitude_lidar_m.toFixed(2)}M</td>        
+                                <td className="p-3 text-gcs-success">{log.battery_voltage.toFixed(2)}V</td>       
                                 <td className="p-3 text-slate-300">{log.signal_strength_dbm}DBM</td>
                               </tr>
                             ))}
@@ -390,11 +376,11 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                             <div className="flex gap-8">
                                <div>
                                   <span className="text-[7px] text-slate-600 uppercase font-mono block">PI_IP</span>
-                                  <span className="text-[10px] font-mono text-slate-200">{log.pi_ip}</span>
+                                  <span className="text-[10px] font-mono text-slate-200">{log.pi_ip}</span>       
                                </div>
                                <div>
                                   <span className="text-[7px] text-slate-600 uppercase font-mono block">LAPTOP_IP</span>
-                                  <span className="text-[10px] font-mono text-slate-200">{log.laptop_ip}</span>
+                                  <span className="text-[10px] font-mono text-slate-200">{log.laptop_ip}</span>   
                                </div>
                                <div>
                                   <span className="text-[7px] text-slate-600 uppercase font-mono block">PID</span>
@@ -402,7 +388,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                                </div>
                             </div>
                             <div className="text-right">
-                               <span className={`text-[9px] font-black font-mono px-2 py-0.5 rounded border ${log.status === 'Healthy' ? 'border-gcs-success/30 text-gcs-success' : 'border-gcs-error/30 text-gcs-error'}`}>
+                               <span className={`text-[9px] font-black font-mono px-2 py-0.5 rounded border ${log.status === 'Healthy' ? 'border-gcs-success/30 text-gcs-success' : 'border-gcs-error/30 text-gcs-error'}`}>        
                                   {log.status.toUpperCase()}
                                </span>
                                <p className="text-[7px] text-slate-600 font-mono mt-1">{new Date(log.logged_at).toLocaleTimeString()}</p>
@@ -446,7 +432,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
 };
 
 const TabButton: React.FC<{ active: boolean, onClick: () => void, label: string }> = ({ active, onClick, label }) => (
-  <button 
+  <button
     onClick={onClick}
     className={`px-6 py-3 text-[9px] font-mono font-black tracking-[0.2em] transition-all border-b-2 whitespace-nowrap ${
       active ? 'text-gcs-primary border-gcs-primary bg-gcs-primary/5' : 'text-slate-500 border-transparent hover:text-slate-300 hover:bg-slate-800/30'
@@ -466,8 +452,8 @@ const StatCard: React.FC<{ label: string, value: string | number, subValue?: str
 
 const LogItem: React.FC<{ label: string, value: string | number }> = ({ label, value }) => (
   <div className="flex justify-between items-center py-1.5 border-b border-slate-800/30 last:border-0">
-    <span className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-[0.1em]">{label}_</span>
-    <span className="text-[9px] font-black font-mono text-slate-200 uppercase truncate ml-4">{value}</span>
+    <span className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-[0.1em]">{label}_</span>    
+    <span className="text-[9px] font-black font-mono text-slate-200 uppercase truncate ml-4">{value}</span>       
   </div>
 );
 

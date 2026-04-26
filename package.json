@@ -1,5 +1,26 @@
 {
+  "name": "smart-mosquito-drone-gcs",
+  "version": "1.0.0",
+  "description": "Ground control system for direct Raspberry Pi live streaming",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win nsis"
+  },
+  "build": {
+    "appId": "com.drone.livestream",
+    "productName": "Drone GCS",
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.97.0"
+  },
+  "devDependencies": {
+    "electron": "^41.3.0",
+    "electron-builder": "^26.8.1"
   }
 }

@@ -29,18 +29,6 @@ const ModeIndicator: React.FC<{ label: string; active: boolean }> = ({ label, ac
     </div>
 );
 
-const SafetyStatus: React.FC<{ label: string; active: boolean; value: string; errorLabel: string }> = ({ label, active, value, errorLabel }) => (
-    <div className="flex items-center justify-between gap-4 py-1 border-b border-slate-800/30 last:border-0">
-        <span className="text-[7px] font-mono font-black text-slate-500 uppercase tracking-widest">{label}_</span>
-        <div className="flex items-center gap-2">
-            <span className={`text-[9px] font-mono font-black uppercase italic transition-all duration-300 ${active ? 'text-gcs-success' : 'text-gcs-primary animate-pulse'}`}>
-                {active ? `${value} OK` : errorLabel}
-            </span>
-            <div className={`w-1 h-1 rounded-full transition-all duration-300 ${active ? 'bg-gcs-success shadow-[0_0_5px_#10b981]' : 'bg-gcs-primary animate-pulse shadow-[0_0_5px_#ef4444]'}`} />
-        </div>
-    </div>
-);
-
 const GaugeWrapper: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
     <div className={`relative w-28 h-28 bg-slate-900 rounded-full border border-slate-800 flex items-center justify-center shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] ${className}`}>
         {children}
@@ -201,28 +189,13 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                     </div>
                 </div>
                 <div className="flex items-center gap-6">
-                    <button 
+                    <button
                         onClick={handleRestart}
                         disabled={isReinitializing}
                         className="bg-slate-850 border border-slate-700 hover:border-gcs-primary text-slate-400 hover:text-gcs-primary px-4 py-1.5 rounded font-mono text-[9px] font-black uppercase tracking-widest transition-all"
                     >
                         {isReinitializing ? 'SYSTEM_REINITIALIZING...' : 'RESTART_LIVE_STREAM'}
                     </button>
-                    <div className="h-8 w-px bg-slate-800" />
-                    <div className="flex gap-6 px-2">
-                        <div className="text-center">
-                            <span className="text-[7px] font-mono font-bold uppercase text-slate-600 tracking-widest block">DETECTIONS</span>
-                            <p className="text-[10px] font-black font-mono text-gcs-success italic">
-                                {String(telemetry.aiStatus.session_detections || 0).padStart(2, '0')}_
-                            </p>
-                        </div>
-                        <div className="text-center">
-                            <span className="text-[7px] font-mono font-bold uppercase text-slate-600 tracking-widest block">TREATMENTS</span>
-                            <p className="text-[10px] font-black font-mono text-gcs-primary italic">
-                                {String(telemetry.aiStatus.session_sprays || 0).padStart(2, '0')}_
-                            </p>
-                        </div>
-                    </div>
                     <div className="h-8 w-px bg-slate-800" />
                     <div className="text-right">
                         <span className="text-[7px] font-mono font-bold uppercase text-slate-600 tracking-widest">STATUS</span>
@@ -235,7 +208,7 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
 
             {/* Tactical 3-Column HUD */}
             <div className="flex-1 grid grid-cols-4 gap-4 p-4 min-h-0 bg-hud-grid">
-                
+
                 {/* Left Panel: Navigation & Core Sensors */}
                 <div className="col-span-1 flex flex-col gap-4 min-h-0">
                     <Panel title="SYSTEM STATUS" className="flex-none">
@@ -243,7 +216,7 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                             <div className={`py-1.5 rounded text-center font-black font-mono text-[9px] tracking-[0.3em] border transition-all ${telemetry.armed ? 'bg-gcs-primary/10 text-gcs-primary border-gcs-primary/50 neon-glow-red' : 'bg-slate-900/50 text-slate-600 border-slate-800'}`}>
                                 {telemetry.armed ? 'ARMED' : 'UNARMED'}
                             </div>
-                            
+
                             <div className="space-y-0.5">
                                 <StatusIndicator label="GYRO" active={true} />
                                 <StatusIndicator label="ACC" active={true} />
@@ -304,82 +277,14 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                                 onError={() => setStreamError(true)}
                             />
                         )}
-                        
-                        {/* --- HUD Overlay Lines --- */}
+
+                        {/* HUD Overlay Lines */}
                         <div className="absolute inset-0 pointer-events-none border-[20px] border-transparent">
                             <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-gcs-primary/40 rounded-tl-sm" />
                             <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-gcs-primary/40 rounded-tr-sm" />
                             <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-gcs-primary/40 rounded-bl-sm" />
                             <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-gcs-primary/40 rounded-br-sm" />
                         </div>
-
-                        {/* --- TACTICAL SAFETY INTERLOCK PANEL --- */}
-                        <div className="absolute top-10 left-10 flex flex-col gap-3 z-20 pointer-events-none">
-                            <div className="bg-slate-950/90 border border-slate-800 rounded shadow-2xl w-52 overflow-hidden backdrop-blur-sm">
-                                <div className="bg-slate-900/80 px-3 py-1 border-b border-slate-800 text-slate-500 text-[8px] font-black uppercase tracking-[0.3em] font-mono italic">
-                                    SAFETY_INTERLOCK_
-                                </div>
-                                <div className="p-3 flex flex-col gap-1.5">
-                                    <SafetyStatus 
-                                        label="ALT_GATE" 
-                                        active={telemetry.altitude <= 0.5} 
-                                        value={`${telemetry.altitude.toFixed(2)}M`} 
-                                        errorLabel="TOO_HIGH"
-                                    />
-                                    <SafetyStatus 
-                                        label="STR_STAB" 
-                                        active={telemetry.aiStatus.isSharpEnough} 
-                                        value={telemetry.aiStatus.sharpnessScore.toString()}
-                                        errorLabel="BLURRY/FROZEN"
-                                    />
-                                    <SafetyStatus 
-                                        label="AI_LOCK" 
-                                        active={telemetry.aiStatus.waterConfirmed} 
-                                        value={telemetry.aiStatus.trackingProgress > 0 ? `${telemetry.aiStatus.trackingProgress}%` : "---"}
-                                        errorLabel="SEARCHING"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* PIPELINE PERFORMANCE */}
-                            <div className="bg-slate-950/90 border border-slate-800 px-3 py-2 rounded flex items-center gap-3 w-52 backdrop-blur-sm">
-                                <div className={`w-1 h-1 rounded-full ${telemetry.aiStatus.totalPipelineSpeedMs < 150 ? 'bg-gcs-success shadow-[0_0_8px_#10b981]' : 'bg-gcs-primary shadow-[0_0_8px_#ef4444]'} animate-pulse`} />
-                                <div>
-                                    <span className="text-[6px] font-mono font-black text-slate-500 uppercase block">AI_PIPELINE</span>
-                                    <span className="text-[9px] font-mono font-black text-slate-100 uppercase italic tabular-nums">{telemetry.aiStatus.totalPipelineSpeedMs}MS_LATENCY</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* --- TARGET ANALYTICS HUD --- */}
-                        {telemetry.aiStatus.waterConfirmed && (
-                            <div className="absolute top-10 right-10 flex flex-col gap-3 z-20 pointer-events-none animate-in fade-in slide-in-from-right-4 duration-500">
-                                <div className="bg-slate-950/90 border border-gcs-success/30 rounded shadow-2xl w-52 overflow-hidden backdrop-blur-sm">
-                                    <div className="bg-gcs-success/10 px-3 py-1 border-b border-gcs-success/30 text-gcs-success text-[8px] font-black uppercase tracking-[0.3em] font-mono italic flex items-center justify-between">
-                                        TARGET_ANALYTICS_
-                                        <div className="w-1.5 h-1.5 bg-gcs-success rounded-full animate-pulse" />
-                                    </div>
-                                    <div className="p-3 flex flex-col gap-2">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-[7px] font-mono font-bold text-slate-500 uppercase tracking-widest">TYPE_</span>
-                                            <span className="text-[10px] font-mono font-black text-gcs-success uppercase italic">{telemetry.aiStatus.activeTarget || 'UNKNOWN'}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-[7px] font-mono font-bold text-slate-500 uppercase tracking-widest">EST_AREA_</span>
-                                            <span className="text-[10px] font-mono font-black text-slate-100 italic">
-                                                {(telemetry.aiStatus.activeTargetArea * (telemetry.altitude ** 2)).toFixed(1)} CM²
-                                            </span>
-                                        </div>
-                                        <div className="h-1 bg-slate-800 rounded-full overflow-hidden mt-1">
-                                            <div className="bg-gcs-success h-full animate-pulse" style={{ width: '100%' }} />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="bg-gcs-success/10 border border-gcs-success/30 px-3 py-1.5 rounded flex items-center justify-center gap-2">
-                                    <span className="text-[8px] font-mono font-black text-gcs-success uppercase tracking-[0.2em] animate-pulse">OPTIMAL_SPRAY_WINDOW</span>
-                                </div>
-                            </div>
-                        )}
 
                         {/* Centered Crosshair */}
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
@@ -441,7 +346,7 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                                     {telemetry.aiStatus?.waterConfirmed ? 'TARGET_LOCKED' : (telemetry.aiStatus?.trackingProgress || 0) > 0 ? 'ANALYZING...' : 'SCANNING_'}
                                 </span>
                             </div>
-                            
+
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="bg-slate-900 p-2 rounded border border-slate-800 text-center">
                                     <span className="text-[7px] text-slate-500 uppercase font-black font-mono">CONFIDENCE</span>
@@ -467,13 +372,13 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                                     <span className="absolute inset-0 flex items-center justify-center text-[8px] font-black text-slate-100 font-mono tracking-widest mix-blend-difference">CAPACITY_65%</span>
                                 </div>
                             </div>
-                            
-                            <button 
+
+                            <button
                                 onClick={() => fetch('/api/manual_spray', { method: 'POST' })}
                                 disabled={!telemetry.aiStatus?.waterConfirmed}
                                 className={`w-full py-4 rounded font-black font-mono text-xs tracking-[0.3em] transition-all border-2 shadow-xl ${
-                                    telemetry.aiStatus?.waterConfirmed 
-                                    ? 'bg-gcs-primary border-gcs-primary text-slate-100 neon-glow-red hover:bg-red-600 active:scale-95 cursor-pointer' 
+                                    telemetry.aiStatus?.waterConfirmed
+                                    ? 'bg-gcs-primary border-gcs-primary text-slate-100 neon-glow-red hover:bg-red-600 active:scale-95 cursor-pointer'
                                     : 'bg-slate-900/50 border-slate-800 text-slate-600 cursor-not-allowed opacity-50'
                                 }`}
                             >
