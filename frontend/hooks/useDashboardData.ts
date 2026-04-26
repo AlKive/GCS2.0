@@ -108,7 +108,7 @@ export const useDashboardData = (isMissionActive: boolean) => {
     return () => {
       socket.close();
     };
-  }, []);
+  }, [isMissionActive]);
 
   // --- THE AI FAST-LANE FIX ---
   useEffect(() => {

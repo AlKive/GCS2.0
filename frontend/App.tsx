@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 
 import Sidebar, { View } from './components/ControlPanel'; 
 import DashboardHeader from './components/Header'; 
-import LiveMissionViewNew from './components/LiveMissionViewNew';
 import DashboardView from './components/DashboardView';
 import AnalyticsPanel from './components/AnalyticsPanel';
 import FlightLogsPanel from './components/FlightLogsPanel';
@@ -113,8 +112,6 @@ const SplashScreen: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
 
 const App: React.FC = () => {
   const [isAppLoading, setAppLoading] = useState(true);
-  const [isMissionActive, setMissionActive] = useState(false);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [isDarkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('isDarkMode');
     return saved === null ? true : saved === 'true';
@@ -154,8 +151,8 @@ const App: React.FC = () => {
   }, [isDarkMode]);
 
   const [sessions, setSessions] = useState<FlightSession[]>([]); 
-  const { overviewStats, time, date, liveTelemetry, setArmedState } = useDashboardData(isMissionActive);
   const [currentView, setCurrentView] = useState<View>('dashboard');
+  const { overviewStats, time, date, liveTelemetry, setArmedState } = useDashboardData(currentView === 'droneStream');
 
   const fetchSessions = async () => {
     try {
@@ -200,18 +197,6 @@ const App: React.FC = () => {
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
-
-  const endMission = async () => {
-    try {
-      // GCS Requirement: End AI engine flight session
-      await fetch('http://127.0.0.1:5000/api/end_flight', { method: 'POST' });
-      await fetchSessions();
-    } catch (error) {
-      console.error("Failed to end session:", error);
-    }
-    setMissionActive(false);
-    setActiveSessionId(null);
-  };
   
   const launchPythonHelpers = async () => {
     try {
@@ -221,7 +206,6 @@ const App: React.FC = () => {
         body: JSON.stringify({ location_id: 1 })
       });
       // Session ID is now assigned by the SSH script and synced to AI engine
-      setMissionActive(true);
     } catch (err) {
       console.error('Failed to launch system processes:', err);
     }
@@ -261,7 +245,10 @@ const App: React.FC = () => {
       case 'droneStream':
         return <DroneStreamView 
           telemetry={liveTelemetry} 
-          onClose={() => setCurrentView('dashboard')} 
+          onClose={() => {
+              setCurrentView('dashboard');
+              fetchSessions();
+          }} 
           mapStyle={mapStyle} 
         />;
       case 'dashboard':
@@ -304,8 +291,6 @@ const App: React.FC = () => {
             {renderView()}
           </div>
         </main>
-        
-        {isMissionActive && currentView !== 'droneStream' && <LiveMissionViewNew telemetry={liveTelemetry} onEndMission={endMission} mapStyle={mapStyle} />}
       </div>
     </>
   );
