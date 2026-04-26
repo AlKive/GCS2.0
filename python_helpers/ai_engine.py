@@ -11,6 +11,8 @@ import time
 import threading
 import paramiko
 import numpy as np
+import socket
+import json
 from ultralytics import YOLO
 from datetime import datetime
 from flask import Flask, Response, jsonify, request
@@ -55,14 +57,78 @@ ai_telemetry = {
     "trackingProgress": 0,
     "waterConfirmed": False,
     "activeTarget": None,
-    "totalPipelineSpeedMs": 0
+    "activeDetectionId": None,
+    "activeTargetArea": 0,
+    "totalPipelineSpeedMs": 0,
+    "gps_lat": 0.0,
+    "gps_lon": 0.0,
+    "lidar_m": 0.0,
+    "heading": 0.0,
+    "battery_voltage": 0.0
 }
 telemetry_lock = threading.Lock()
+
+class TelemetryReceiver:
+    def __init__(self, port=5005):
+        self.port = port
+        self.latest_data = {}
+        self.lock = threading.Lock()
+        self.stopped = False
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.settimeout(1.0) 
+        try:
+            self.sock.bind(("0.0.0.0", self.port))
+            print(f"[TELEMETRY] Listening for drone data on port {self.port}...")
+        except Exception as e:
+            print(f"[ERROR] Telemetry socket bind failed: {e}")
+
+    def start(self):
+        threading.Thread(target=self.update, args=(), daemon=True).start()
+        return self
+
+    def update(self):
+        while not self.stopped:
+            try:
+                data, _ = self.sock.recvfrom(1024)
+                decoded = json.loads(data.decode('utf-8'))
+                with self.lock:
+                    self.latest_data = decoded
+                # Also update global ai_telemetry for convenience
+                with telemetry_lock:
+                    ai_telemetry["gps_lat"] = decoded.get("gps_lat", 0.0)
+                    ai_telemetry["gps_lon"] = decoded.get("gps_lon", 0.0)
+                    ai_telemetry["lidar_m"] = decoded.get("lidar_m", 0.0)
+                    ai_telemetry["heading"] = decoded.get("heading", 0.0)
+                    ai_telemetry["battery_voltage"] = decoded.get("voltage", 0.0)
+            except Exception:
+                continue
+
+    def get_data(self):
+        with self.lock:
+            return self.latest_data.copy()
+
+    def stop(self):
+        self.stopped = True
+        self.sock.close()
 
 MIN_SHARPNESS = float(os.getenv("MIN_SHARPNESS", "30.0"))
 CONFIRM_AFTER = 5.0    # 5 seconds of continuous tracking
 PRUNE_AFTER = 2.0      # Drop target if unseen for 2 seconds
 tracked_classes = {}   
+
+# --- 3NF Schema Mapping ---
+TARGET_TYPE_MAP = {} # Label -> ID
+
+def fetch_target_types():
+    global TARGET_TYPE_MAP
+    if not supabase: return
+    try:
+        # Fetch target_types to map string labels to DB IDs
+        res = supabase.table("target_types").select("id, label").execute()
+        TARGET_TYPE_MAP = {item['label'].lower(): item['id'] for item in res.data}
+        print(f"[INFO] 3NF Target Types Loaded: {TARGET_TYPE_MAP}")
+    except Exception as e:
+        print(f"[WARN] Could not fetch target_types. Ensure table exists: {e}")
 
 # --- Flight Session Endpoints ---
 @app.route('/api/start_flight', methods=['POST', 'OPTIONS'])
@@ -72,7 +138,9 @@ def start_flight():
     global ACTIVE_SESSION_ID
     if not supabase:
         return jsonify({"error": "Supabase not initialized"}), 500
-    data = {"location_id": 1, "status": "active"}
+    
+    # 3NF Schema: barangay_id instead of location_id
+    data = {"barangay_id": 1, "status": "active"}
     try:
         response = supabase.table("flight_sessions").insert(data).execute()
         ACTIVE_SESSION_ID = response.data[0]['id']
@@ -167,7 +235,7 @@ class SimpleSprayer:
         except Exception as e: 
             print(f"[WARN] Sprayer SSH failed: {e}")
 
-    def spray(self, area, obj_id):
+    def spray(self, area, detection_id=None):
         global ACTIVE_SESSION_ID
         duration = 2 if area < 5000 else 4 if area < 15000 else 6
         trigger_type = "Manual" if area == 20000 else "Auto"
@@ -177,18 +245,21 @@ class SimpleSprayer:
             self.ssh.exec_command(f"nohup {cmd} > /dev/null 2>&1 &")
             print(f"[ACTION] Triggered spray for {duration} seconds.")
             
+            # 3NF Schema: Log to spray_operations
             if ACTIVE_SESSION_ID:
-                def log_spray():
+                def log_spray_op():
                     try:
-                        supabase.table("spray_logs").insert({
-                            "session_id": ACTIVE_SESSION_ID,
-                            "trigger_type": trigger_type,
-                            "target_area": area,
-                            "spray_duration_seconds": duration
-                        }).execute()
+                        # If we have a detection_id, link it. Otherwise, manual spray without target.
+                        if detection_id:
+                            supabase.table("spray_operations").insert({
+                                "detection_id": detection_id,
+                                "trigger_type": trigger_type,
+                                "duration_seconds": duration,
+                                "target_area_pixels": float(area)
+                            }).execute()
                     except Exception as e:
-                        print(f"[DB ERROR] Failed to log spray: {e}")
-                threading.Thread(target=log_spray, daemon=True).start()
+                        print(f"[DB ERROR] Failed to log spray operation: {e}")
+                threading.Thread(target=log_spray_op, daemon=True).start()
                     
         except Exception as e: 
             print(f"[ERROR] Failed to execute spray command: {e}")
@@ -241,9 +312,10 @@ def inference_consumer(frame_queue, stop_event):
     global output_frame, tracked_classes, ACTIVE_SESSION_ID
     
     base_dir = os.path.dirname(__file__)
-    main_model_path = os.path.join(base_dir, "main_classifier.pt")
+    main_model_path = os.path.join(base_dir, "main_classifier.pt") # YOLO model
+    water_model_path = os.path.join(base_dir, "water_classifier.pt") # Classifier
     
-    if not os.path.exists(main_model_path):
+    if not os.path.exists(main_model_path) or not os.path.exists(water_model_path):
         print("[WARNING] Model files not found!")
         while not stop_event.is_set():
             if not frame_queue.empty():
@@ -255,7 +327,8 @@ def inference_consumer(frame_queue, stop_event):
         return
 
     main_model = YOLO(main_model_path)
-    print("[INFO] AI Engine Ready.")
+    water_model = YOLO(water_model_path)
+    print("[INFO] AI Engine Ready with 2-Stage Perception.")
     
     telemetry_logged_this_sec = False
 
@@ -267,6 +340,12 @@ def inference_consumer(frame_queue, stop_event):
         frame = frame_queue.get()
         start_time = time.time()
         current_time = time.time()
+        
+        # Get latest telemetry
+        with telemetry_lock:
+            cur_lat = ai_telemetry["gps_lat"]
+            cur_lon = ai_telemetry["gps_lon"]
+            cur_lidar = ai_telemetry["lidar_m"]
         
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         sharpness = cv2.Laplacian(gray, cv2.CV_64F).var()
@@ -287,6 +366,7 @@ def inference_consumer(frame_queue, stop_event):
         annotated_frame = frame.copy() 
         max_progress = 0
         active_target_name = None
+        any_water_confirmed = False
 
         if results_main[0].boxes is not None and len(results_main[0].boxes) > 0:
             boxes = results_main[0].boxes.xyxy.cpu().numpy()
@@ -297,7 +377,7 @@ def inference_consumer(frame_queue, stop_event):
                 cls_name = results_main[0].names[int(cls)]
                 
                 if cls_name not in tracked_classes:
-                    tracked_classes[cls_name] = {'first_seen': current_time, 'last_seen': current_time, 'db_logged': False}
+                    tracked_classes[cls_name] = {'first_seen': current_time, 'last_seen': current_time, 'db_logged': False, 'water_confirmed': False}
                 else:
                     tracked_classes[cls_name]['last_seen'] = current_time
 
@@ -306,39 +386,71 @@ def inference_consumer(frame_queue, stop_event):
                 max_progress = max(max_progress, progress)
                 
                 x1, y1, x2, y2 = map(int, box)
-
                 cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (255, 100, 0), 2) 
-                cv2.putText(annotated_frame, f"{cls_name} {conf:.2f}", (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 100, 0), 2)
 
-                offset = 6 
-                
                 if elapsed >= CONFIRM_AFTER:
                     active_target_name = cls_name
-                    cv2.rectangle(annotated_frame, (x1 - offset, y1 - offset), (x2 + offset, y2 + offset), (0, 255, 0), 3)
-                    cv2.putText(annotated_frame, "TARGET LOCKED", (x1 - offset, y2 + offset + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                     
-                    if not tracked_classes[cls_name].get('db_logged') and ACTIVE_SESSION_ID:
-                        w, h = x2 - x1, y2 - y1
-                        area = float(w * h)
-                        tracked_classes[cls_name]['db_logged'] = True
-                        
-                        def log_detection(session, t_class, b_area):
+                    # Stage 2: Water Classification
+                    if not tracked_classes[cls_name]['water_confirmed']:
+                        crop = frame[y1:y2, x1:x2]
+                        if crop.size > 0:
+                            water_res = water_model(crop, verbose=False)
+                            w_conf = water_res[0].probs.top1conf.item() * 100
+                            w_label = water_model.names[water_res[0].probs.top1]
+                            
+                            if "water" in w_label.lower() and w_conf > 50:
+                                tracked_classes[cls_name]['water_confirmed'] = True
+                                tracked_classes[cls_name]['water_conf'] = w_conf
+                    
+                    if tracked_classes[cls_name]['water_confirmed']:
+                        any_water_confirmed = True
+                        cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
+                        cv2.putText(annotated_frame, "BREEDING SITE CONFIRMED", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+                    else:
+                        cv2.putText(annotated_frame, "CONFIRMING WATER...", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
+
+                        def log_to_db(t_type_label, t_conf, lat, lon, lidar, water, session_id, box_area):
                             try:
-                                supabase.table("target_detections").insert({
-                                    "session_id": session,
-                                    "target_class": t_class,
-                                    "bounding_box_area": b_area
+                                # 3NF Mapping: Get ID for label
+                                type_id = TARGET_TYPE_MAP.get(t_type_label.lower())
+                                if not type_id:
+                                    print(f"[WARN] Unknown target type: {t_type_label}")
+                                    return
+
+                                # Primary Record: detections (3NF Unified Table)
+                                res = supabase.table("detections").insert({
+                                    "session_id": session_id,
+                                    "target_type_id": type_id,
+                                    "confidence": float(t_conf),
+                                    "water_confirmed": water,
+                                    "latitude": float(lat),
+                                    "longitude": float(lon),
+                                    "lidar_m": float(lidar)
                                 }).execute()
-                            except Exception as e:
-                                pass
                                 
-                        threading.Thread(target=log_detection, args=(ACTIVE_SESSION_ID, active_target_name, area), daemon=True).start()
+                                # Store the detection ID in memory to link with potential spray operations
+                                if res.data:
+                                    tracked_classes[t_type_label]['last_db_id'] = res.data[0]['id']
+
+                            except Exception as e:
+                                print(f"[DB ERROR] Detection log failed: {e}")
+                                
+                        threading.Thread(target=log_to_db, args=(
+                            cls_name, conf, cur_lat, cur_lon, cur_lidar, 
+                            tracked_classes[cls_name]['water_confirmed'], ACTIVE_SESSION_ID, (x2-x1)*(y2-y1)
+                        ), daemon=True).start()
                 else:
-                    cv2.rectangle(annotated_frame, (x1 - offset, y1 - offset), (x2 + offset, y2 + offset), (0, 165, 255), 2)
-                    cv2.putText(annotated_frame, f"TRACKING: {elapsed:.1f}s", (x1 - offset, y2 + offset + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 165, 255), 2)
+                    cv2.putText(annotated_frame, f"TRACKING: {elapsed:.1f}s", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 165, 255), 2)
+
+                # TRIGGER SPRAYER IF LOCKED AND WATER CONFIRMED
+                if tracked_classes[cls_name].get('water_confirmed') and not tracked_classes[cls_name].get('sprayed'):
+                    tracked_classes[cls_name]['sprayed'] = True
+                    sprayer = SimpleSprayer()
+                    # Link spray to the specific detection record
+                    sprayer.spray((x2-x1)*(y2-y1), tracked_classes[cls_name].get('last_db_id'))
 
         tracked_classes = {k: v for k, v in tracked_classes.items() if current_time - v['last_seen'] < PRUNE_AFTER}
-        any_confirmed = any((current_time - obj['first_seen']) >= CONFIRM_AFTER for obj in tracked_classes.values())
 
         pipeline_ms = int((time.time() - start_time) * 1000)
         annotated_frame = cv2.resize(annotated_frame, (640, 480))
@@ -347,26 +459,51 @@ def inference_consumer(frame_queue, stop_event):
             ai_telemetry["sharpnessScore"] = int(sharpness)
             ai_telemetry["isSharpEnough"] = True
             ai_telemetry["trackingProgress"] = max_progress
-            ai_telemetry["waterConfirmed"] = any_confirmed
+            ai_telemetry["waterConfirmed"] = any_water_confirmed
             ai_telemetry["activeTarget"] = active_target_name
             ai_telemetry["totalPipelineSpeedMs"] = pipeline_ms
-
+            
+            # Populate active target info for manual GCS trigger
+            if any_water_confirmed and active_target_name:
+                ai_telemetry["activeDetectionId"] = tracked_classes[active_target_name].get('last_db_id')
+                # Area calculation for duration logic
+                for box, cls, conf in zip(boxes, clss, confs):
+                    if results_main[0].names[int(cls)] == active_target_name:
+                        x1, y1, x2, y2 = map(int, box)
+                        ai_telemetry["activeTargetArea"] = (x2 - x1) * (y2 - y1)
+                        break
+            else:
+                ai_telemetry["activeDetectionId"] = None
+                ai_telemetry["activeTargetArea"] = 0
         if ACTIVE_SESSION_ID and int(current_time) % 1 == 0 and not telemetry_logged_this_sec:
-             def log_telemetry(session, sharp, max_prog, confirmed, target, speed):
+             def log_telemetry_bg(session, sharp, max_prog, confirmed, target, speed, lat, lon, lidar, volt, head):
                  try:
-                     supabase.table("ai_telemetry").insert({
+                     # 1. Log AI Performance (3NF Table)
+                     supabase.table("ai_performance_logs").insert({
                          "session_id": session,
                          "sharpness_score": sharp,
-                         "is_sharp_enough": True,
                          "tracking_progress_percent": max_prog,
-                         "water_confirmed": confirmed,
-                         "active_target": target,
                          "pipeline_speed_ms": speed
                      }).execute()
-                 except Exception:
+
+                     # 2. Log Hardware Status (Flight Path)
+                     supabase.table("hardware_telemetry").insert({
+                         "session_id": session,
+                         "latitude": lat,
+                         "longitude": lon,
+                         "altitude_lidar_m": lidar,
+                         "battery_voltage": volt,
+                         "heading": head,
+                         "is_armed": True
+                     }).execute()
+                 except Exception as e:
                      pass
              
-             threading.Thread(target=log_telemetry, args=(ACTIVE_SESSION_ID, int(sharpness), max_progress, any_confirmed, active_target_name, pipeline_ms), daemon=True).start()
+             threading.Thread(target=log_telemetry_bg, args=(
+                 ACTIVE_SESSION_ID, int(sharpness), max_progress, any_water_confirmed, 
+                 active_target_name, pipeline_ms, cur_lat, cur_lon, cur_lidar,
+                 ai_telemetry["battery_voltage"], ai_telemetry["heading"]
+             ), daemon=True).start()
              telemetry_logged_this_sec = True
         elif int(current_time) % 1 != 0:
              telemetry_logged_this_sec = False
@@ -375,13 +512,22 @@ def inference_consumer(frame_queue, stop_event):
             output_frame = annotated_frame
 
 if __name__ == "__main__":
+    # Fetch 3NF Mapping on Startup
+    fetch_target_types()
+    
+    # Start Telemetry Receiver
+    tel_receiver = TelemetryReceiver().start()
+
     fq = queue.Queue(maxsize=1)
     se = threading.Event()
-    
+
     t1 = threading.Thread(target=camera_producer, args=(fq, se), daemon=True)
     t1.start()
-    
+
     t2 = threading.Thread(target=inference_consumer, args=(fq, se), daemon=True)
     t2.start()
-    
-    app.run(host='0.0.0.0', port=5000, threaded=True, debug=False)
+
+    try:
+        app.run(host='0.0.0.0', port=5000, threaded=True, debug=False)
+    finally:
+        tel_receiver.stop()

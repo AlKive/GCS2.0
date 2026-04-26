@@ -1,49 +1,103 @@
-// FIX: Import React to provide types like ReactNode.
+// Shared TypeScript types for GCS Application (3NF Normalized)
 import React from 'react';
 
-export type MissionStatus = 'Completed' | 'Interrupted' | 'In Progress';
+export type MissionStatus = 'active' | 'completed' | 'aborted';
 
-export interface BreedingSiteInfo {
-    type: 'Enclosed' | 'Open';
-    object: string; // e.g., 'Tires', 'Sewage', 'Pots'
-    bbox: [number, number, number, number];
-}
+// --- 3NF Reference Tables ---
 
-export interface Mission {
-  id: string | number;
-  name: string;
-  date: string;
-  duration: string; // This will store total seconds as a string
-  status: MissionStatus;
-  location: string;
-  gpsTrack?: { lat: number; lon: number }[];
-  detectedSites?: BreedingSiteInfo[];
-}
-
-export interface Location {
+export interface City {
   id: number;
-  barangay_name: string;
-  city: string;
+  name: string;
+}
+
+export interface Barangay {
+  id: number;
+  city_id: number;
+  name: string;
+  city?: City; // Joined data
+}
+
+export interface TargetType {
+  id: number;
+  label: string;
+  description?: string;
 }
 
 export interface User {
   id: string;
   full_name: string;
-  role: string;
+  role: 'Pilot' | 'LGU Personnel' | 'Sanitation Officer';
   email: string;
 }
 
-export interface AiTelemetry {
-  id: number;
-  session_id: string;
-  logged_at: string;
-  sharpness_score: number;
-  is_sharp_enough: boolean;
-  tracking_progress_percent: number;
-  water_confirmed: boolean;
-  active_target: string | null;
-  pipeline_speed_ms: number;
+// --- Core Transactional Entities ---
+
+export interface TargetDetection {
+    id: string;
+    session_id: string;
+    target_class: string;
+    confidence: number;
+    latitude: number;
+    longitude: number;
+    bounding_box_area: number;
+    image_url?: string;
+    detected_at: string;
 }
+
+export interface AiTelemetry {
+    id: string;
+    session_id: string;
+    logged_at: string;
+    sharpness_score: number;
+    tracking_progress_percent: number;
+    water_confirmed: boolean;
+    active_target?: string;
+    pipeline_speed_ms: number;
+}
+
+export interface SprayLog {
+    id: string;
+    session_id: string;
+    triggered_at: string;
+    trigger_type: 'Manual' | 'Auto';
+    spray_duration_seconds: number;
+    target_area: number;
+}
+
+export interface StreamHealth {
+    id: string;
+    session_id: string;
+    logged_at: string;
+    pi_ip: string;
+    laptop_ip: string;
+    stream_pid?: string;
+    status: 'Healthy' | 'Unstable' | 'Lost';
+}
+
+export interface Location {
+    id: number;
+    barangay_name: string;
+    city: string;
+}
+
+export interface FlightSession {
+  id: string;
+  pilot_id: string | null;
+  location_id: number | null;
+  start_time: string;
+  end_time: string | null;
+  status: MissionStatus;
+  // Joined data
+  location?: Location | null;
+  users?: User | null;
+  target_detections?: TargetDetection[];
+  hardware_telemetry?: HardwareTelemetry[];
+  ai_telemetry?: AiTelemetry[];
+  spray_logs?: SprayLog[];
+  stream_health?: StreamHealth[];
+}
+
+// --- Telemetry (Time-Series) ---
 
 export interface HardwareTelemetry {
   id: number;
@@ -53,63 +107,26 @@ export interface HardwareTelemetry {
   longitude: number;
   altitude_lidar_m: number;
   battery_voltage: number;
-  signal_strength_dbm: number;
+  heading: number;
+  is_armed: boolean;
 }
 
-export interface SprayLog {
-  id: number;
-  session_id: string;
-  triggered_at: string;
-  trigger_type: string;
-  target_area: number;
-  spray_duration_seconds: number;
-  detection_id: number | null;
-}
-
-export interface StreamHealth {
+export interface AiPerformanceLog {
   id: number;
   session_id: string;
   logged_at: string;
-  pi_ip: string;
-  laptop_ip: string;
-  stream_pid: number | null;
-  status: string;
+  sharpness_score: number;
+  tracking_progress_percent: number;
+  pipeline_speed_ms: number;
 }
 
-export interface TargetDetection {
-  id: number;
-  session_id: string;
-  detected_at: string;
-  target_class: string;
-  bounding_box_area: number;
-  location: any; // postgis point or similar
-  image_url: string | null;
+export interface BreedingSiteInfo {
+    type: 'Enclosed' | 'Open';
+    object: string; // e.g., 'Tires', 'Sewage', 'Pots'
+    bbox: [number, number, number, number];
 }
 
-export interface FlightSession {
-  id: string;
-  pilot_id: string | null;
-  location_id: number | null;
-  start_time: string;
-  end_time: string | null;
-  status: 'active' | 'completed' | 'aborted';
-  // Joined data
-  location?: Location | null;
-  users?: User | null; // Note: Supabase often returns single objects if linked
-  ai_telemetry?: AiTelemetry[];
-  hardware_telemetry?: HardwareTelemetry[];
-  spray_logs?: SprayLog[];
-  stream_health?: StreamHealth[];
-  target_detections?: TargetDetection[];
-}
-
-export interface OverviewStat {
-  id:string;
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  subtext: string;
-}
+// --- GCS UI Components ---
 
 export interface LiveTelemetry {
     gps: {
@@ -136,17 +153,19 @@ export interface LiveTelemetry {
     currentBreedingSite?: BreedingSiteInfo;
     detectedSites: BreedingSiteInfo[];
     gpsTrack: { lat: number; lon: number }[];
-    
-    // --- AI & Sprayer Info ---
     aiStatus: {
       sharpnessScore: number;
       isSharpEnough: boolean;
-      trackingProgress: number; // 0 to 5 seconds
+      trackingProgress: number; // 0 to 100
       waterConfirmed: boolean;
       activeTarget?: string;
       totalPipelineSpeedMs: number;
+      gps_lat?: number;
+      gps_lon?: number;
+      lidar_m?: number;
+      heading?: number;
+      battery_voltage?: number;
     };
-
     modes: {
       angle: boolean;
       positionHold: boolean;
@@ -158,4 +177,12 @@ export interface LiveTelemetry {
       mcBraking: boolean;
       beeper: boolean;
     }
+}
+
+export interface OverviewStat {
+  id: string;
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  subtext: string;
 }

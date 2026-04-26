@@ -74,7 +74,12 @@ fastify.register(async function (server) {
         trackingProgress: 0,
         waterConfirmed: false,
         activeTarget: undefined,
-        totalPipelineSpeedMs: 0
+        totalPipelineSpeedMs: 0,
+        gps_lat: 0,
+        gps_lon: 0,
+        lidar_m: 0,
+        heading: 0,
+        battery_voltage: 0
       };
 
       try {
@@ -85,20 +90,23 @@ fastify.register(async function (server) {
       } catch (e) {}
 
       const testTelemetry: LiveTelemetry = {
-        gps: { lat: 14.531120 + (Math.random() - 0.5) * 0.001, lon: 121.057442 + (Math.random() - 0.5) * 0.001 },
-        altitude: 47.9 + (Math.random() - 0.5) * 2,
-        speed: 11.3 + (Math.random() - 0.5),
-        roll: (Math.random() - 0.5) * 5,
-        pitch: -5 + (Math.random() - 0.5) * 3,
-        heading: 345 + (Math.random() - 0.5) * 5,
+        gps: { lat: aiData.gps_lat || 14.531120, lon: aiData.gps_lon || 121.057442 },
+        altitude: aiData.lidar_m || 47.9,
+        speed: 0, // AI Engine doesn't have ground speed yet
+        roll: 0,
+        pitch: 0,
+        heading: aiData.heading || 0,
         signalStrength: -55,
-        battery: { voltage: 16.8 * (currentBattery / 100), percentage: currentBattery < 0 ? 0 : currentBattery },
+        battery: { 
+          voltage: aiData.battery_voltage || 16.8, 
+          percentage: aiData.battery_voltage ? (aiData.battery_voltage / 25.2) * 100 : 99 
+        },
         satellites: 14,
         flightTime: formattedFlightTime,
         distanceFromHome: 4057 + totalSeconds,
         flightMode: 'Loiter',
         armed: true,
-        verticalSpeed: -6.8 + (Math.random() - 0.5) * 0.2,
+        verticalSpeed: 0,
         breedingSiteDetected: aiData.waterConfirmed,
         currentBreedingSite: undefined,
         detectedSites: [],
@@ -149,7 +157,15 @@ fastify.get('/camera_feed', (request, reply) => {
 // --- Manual Spray Route ---
 fastify.post('/api/drone/spray', async (request, reply) => {
   try {
-    const response = await fetch(`http://${AI_ENGINE_IP}:${AI_ENGINE_PORT}/api/manual_spray`, { method: 'POST' });
+    const body = request.body as any;
+    const response = await fetch(`http://${AI_ENGINE_IP}:${AI_ENGINE_PORT}/api/manual_spray`, { 
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        detection_id: body.detection_id,
+        area: body.area
+      })
+    });
     const result = await response.json();
     return result;
   } catch (err) {

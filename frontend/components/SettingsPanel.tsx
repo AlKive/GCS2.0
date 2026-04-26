@@ -81,7 +81,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   MAP_TERRAIN_RENDER
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
-                  {['Satellite', 'Light', 'Dark', 'Outdoors'].map((style) => (
+                  {['Default', 'Satellite', 'Topographic'].map((style) => (
                     <button
                       key={style}
                       onClick={() => setPendingMapStyle(style)}

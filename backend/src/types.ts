@@ -40,6 +40,11 @@ export interface LiveTelemetry {
       waterConfirmed: boolean;
       activeTarget?: string;
       totalPipelineSpeedMs: number;
+      gps_lat?: number;
+      gps_lon?: number;
+      lidar_m?: number;
+      heading?: number;
+      battery_voltage?: number;
     };
 
     modes: {

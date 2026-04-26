@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { FlightSession, HardwareTelemetry, AiTelemetry, SprayLog, TargetDetection, StreamHealth } from 'types'; 
 import MissionTrackMap from './MissionTrackMap';
 import { downloadMissionReport } from '../utils/downloadReport'; 
@@ -16,14 +16,53 @@ interface FlightLogsPanelProps {
   sessions: FlightSession[];
 }
 
+const YOLOV8_CLASSES = [
+  "tires", "pot", "bottle", "vase"
+].sort();
+
 const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(sessions[0]?.id || null);
-  const [filter, setFilter] = useState<'all' | 'completed' | 'active' | 'aborted'>('all');
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'active' | 'aborted'>('all');
+  const [objectFilter, setObjectFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('');
+  const [minDurationFilter, setMinDurationFilter] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'overview' | 'ai' | 'hardware' | 'health'>('overview');
 
+  // Auto-select first session on load
+  useEffect(() => {
+    if (sessions.length > 0 && !selectedSessionId) {
+      setSelectedSessionId(sessions[0].id);
+    }
+  }, [sessions, selectedSessionId]);
+
   const filteredSessions = useMemo(() => {
-    return sessions.filter(session => filter === 'all' || session.status === filter);
-  }, [sessions, filter]);
+    return sessions.filter(session => {
+      // Status Filter
+      if (statusFilter !== 'all' && session.status !== statusFilter) return false;
+      
+      // Object Filter
+      if (objectFilter !== 'all') {
+        const hasObject = session.target_detections?.some(d => d.target_class?.toLowerCase() === objectFilter.toLowerCase());
+        if (!hasObject) return false;
+      }
+      
+      // Date Filter
+      if (dateFilter) {
+        const sessionDate = new Date(session.start_time).toISOString().split('T')[0];
+        if (sessionDate !== dateFilter) return false;
+      }
+      
+      // Duration Filter (in minutes)
+      if (minDurationFilter > 0) {
+        if (!session.end_time) return true;
+        const diff = new Date(session.end_time).getTime() - new Date(session.start_time).getTime();
+        const mins = diff / 1000 / 60;
+        if (mins < minDurationFilter) return false;
+      }
+      
+      return true;
+    });
+  }, [sessions, statusFilter, objectFilter, dateFilter, minDurationFilter]);
 
   const selectedSession = useMemo(() => {
     return sessions.find(s => s.id === selectedSessionId) || null;
@@ -47,22 +86,85 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
   return (
     <div className="flex flex-col h-full gap-6 animate-fade-in">
       {/* Header HUD */}
-      <div className="flex items-center justify-between px-1">
-        <div>
-          <h2 className="text-2xl font-black text-slate-100 uppercase tracking-[0.2em] font-mono italic">FLIGHT_LOG_REGISTRY_</h2>
-          <div className="h-[2px] w-16 bg-gcs-primary mt-1 shadow-[0_0_10px_#ef4444]" />
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between px-1">
+          <div>
+            <h2 className="text-2xl font-black text-slate-100 uppercase tracking-[0.2em] font-mono italic">FLIGHT_LOG_REGISTRY_</h2>
+            <div className="h-[2px] w-16 bg-gcs-primary mt-1 shadow-[0_0_10px_#ef4444]" />
+          </div>
         </div>
-        <div className="flex gap-3">
-           <select 
-             className="bg-slate-900 border border-slate-800 text-[10px] font-mono uppercase tracking-widest p-2 rounded focus:ring-1 focus:ring-gcs-primary outline-none text-slate-300"
-             value={filter}
-             onChange={(e) => setFilter(e.target.value as any)}
-           >
-              <option value="all">SORTIE_ALL</option>
-              <option value="completed">STAT_COMP</option>
-              <option value="active">STAT_LIVE</option>
-              <option value="aborted">STAT_ABRT</option>
-           </select>
+
+        {/* Tactical Filter HUD */}
+        <div className="bg-slate-900/50 border border-slate-800 p-4 rounded-lg flex flex-wrap gap-6 items-end shadow-inner relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-1 h-full bg-gcs-primary/30" />
+          
+          <div className="flex flex-col gap-2">
+            <label className="text-[7px] font-mono font-black text-slate-500 uppercase tracking-[0.3em] pl-1">SORTIE_STATUS</label>
+            <select 
+              className="bg-slate-950 border border-slate-800 text-[10px] font-mono uppercase tracking-widest p-2 rounded focus:ring-1 focus:ring-gcs-primary outline-none text-slate-300 w-32 cursor-pointer hover:border-slate-700 transition-colors"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+            >
+                <option value="all">ALL_STATUS</option>
+                <option value="completed">COMPLETED</option>
+                <option value="active">ACTIVE</option>
+                <option value="aborted">ABORTED</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-[7px] font-mono font-black text-slate-500 uppercase tracking-[0.3em] pl-1">OBJECT_TARGET</label>
+            <select 
+              className="bg-slate-950 border border-slate-800 text-[10px] font-mono uppercase tracking-widest p-2 rounded focus:ring-1 focus:ring-gcs-primary outline-none text-slate-300 w-40 cursor-pointer hover:border-slate-700 transition-colors"
+              value={objectFilter}
+              onChange={(e) => setObjectFilter(e.target.value)}
+            >
+                <option value="all">ALL_OBJECTS</option>
+                {YOLOV8_CLASSES.map(obj => (
+                  <option key={obj} value={obj}>{obj.toUpperCase()}</option>
+                ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-[7px] font-mono font-black text-slate-500 uppercase tracking-[0.3em] pl-1">CHRONO_DATE</label>
+            <input 
+              type="date"
+              className="bg-slate-950 border border-slate-800 text-[10px] font-mono uppercase p-2 rounded focus:ring-1 focus:ring-gcs-primary outline-none text-slate-300 w-40 cursor-pointer hover:border-slate-700 transition-colors [color-scheme:dark]"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-[7px] font-mono font-black text-slate-500 uppercase tracking-[0.3em] pl-1">MIN_DUR (MINS)</label>
+            <input 
+              type="number"
+              min="0"
+              placeholder="0"
+              className="bg-slate-950 border border-slate-800 text-[10px] font-mono uppercase p-2 rounded focus:ring-1 focus:ring-gcs-primary outline-none text-slate-300 w-24 hover:border-slate-700 transition-colors"
+              value={minDurationFilter || ''}
+              onChange={(e) => setMinDurationFilter(parseInt(e.target.value) || 0)}
+            />
+          </div>
+
+          <button 
+            onClick={() => {
+              setStatusFilter('all');
+              setObjectFilter('all');
+              setDateFilter('');
+              setMinDurationFilter(0);
+            }}
+            className="p-2 border border-slate-800 hover:border-gcs-primary text-slate-600 hover:text-gcs-primary transition-all rounded bg-slate-950/50"
+            title="RESET_TACTICAL_FILTERS"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+
+          <div className="ml-auto text-right">
+             <span className="text-[8px] font-mono text-slate-600 block tracking-widest">REGISTRY_MATCHES</span>
+             <span className="text-sm font-black font-mono text-gcs-primary">{filteredSessions.length}</span>
+          </div>
         </div>
       </div>
 
