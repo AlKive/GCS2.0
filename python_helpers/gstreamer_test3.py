@@ -9,6 +9,10 @@ from ultralytics import YOLO
 from datetime import datetime
 from flask import Flask, Response, make_response
 import queue
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -52,10 +56,14 @@ class SimpleSprayer:
     def __init__(self):
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.pi_ip = os.getenv("PI_IP", "100.127.53.123")
+        self.username = os.getenv("PI_USERNAME", "rpi3408")
+        self.password = os.getenv("PI_PASSWORD", "rpi3408")
         try:
-            self.ssh.connect("100.127.53.123", username="rpi3408", password="rpi3408", timeout=5)
-            print("[INFO] SSH Connected for Sprayer")
-        except: print("[WARN] SSH Failed for Sprayer")
+            self.ssh.connect(self.pi_ip, username=self.username, password=self.password, timeout=5)
+            print(f"[INFO] SSH Connected to {self.pi_ip} for Sprayer")
+        except Exception as e:
+            print(f"[WARN] SSH Failed for Sprayer at {self.pi_ip}: {e}")
     def spray(self, area, obj_id):
         duration = 2 if area < 5000 else 4 if area < 15000 else 6
         cmd = f"raspi-gpio set 18 op dl && raspi-gpio set 18 dh && sleep {duration} && raspi-gpio set 18 dl"

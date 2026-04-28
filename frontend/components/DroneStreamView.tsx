@@ -152,7 +152,8 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
     }, []);
 
     const handleTerminate = () => {
-        fetch('http://127.0.0.1:5000/api/end_flight', { method: 'POST' })
+        const hostname = window.location.hostname;
+        fetch(`http://${hostname}:5000/api/end_flight`, { method: 'POST' })
             .catch(err => console.error("Failed to finalize mission log:", err))
             .finally(() => onClose());
     };
@@ -384,17 +385,25 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                                 </div>
                             </div>
                             
-                            <button 
-                                onClick={() => fetch('/api/manual_spray', { method: 'POST' })}
-                                disabled={!telemetry.aiStatus?.waterConfirmed}
-                                className={`w-full py-2.5 rounded font-black font-mono text-[9px] tracking-widest transition-all border shadow-lg ${
-                                    telemetry.aiStatus?.waterConfirmed 
-                                    ? 'bg-gcs-primary border-gcs-primary text-slate-100 neon-glow-red active:scale-95' 
-                                    : 'bg-slate-900/50 border-slate-800 text-slate-600 cursor-not-allowed opacity-50'
-                                }`}
-                            >
-                                MANUAL SPRAY
-                            </button>
+                            <div className="flex flex-col gap-1.5">
+                                <div className="flex justify-between items-center px-1">
+                                    <span className="text-[7px] text-slate-500 uppercase font-black font-mono">LIDAR_ALT</span>
+                                    <span className={`font-mono text-[8px] font-bold ${(telemetry.aiStatus?.lidar_m ?? 0) <= 1.0 ? 'text-gcs-success' : 'text-gcs-error'}`}>
+                                        {(telemetry.aiStatus?.lidar_m ?? 0).toFixed(2)}M
+                                    </span>
+                                </div>
+                                <button 
+                                    onClick={() => fetch(`http://${window.location.hostname}:5000/api/manual_spray`, { method: 'POST' })}
+                                    disabled={!telemetry.aiStatus?.waterConfirmed && (telemetry.aiStatus?.lidar_m ?? 0) > 1.0}
+                                    className={`w-full py-2.5 rounded font-black font-mono text-[9px] tracking-widest transition-all border shadow-lg ${
+                                        (telemetry.aiStatus?.waterConfirmed || (telemetry.aiStatus?.lidar_m ?? 0) <= 1.0)
+                                        ? 'bg-gcs-primary border-gcs-primary text-slate-100 neon-glow-red active:scale-95' 
+                                        : 'bg-slate-900/50 border-slate-800 text-slate-600 cursor-not-allowed opacity-50'
+                                    }`}
+                                >
+                                    MANUAL SPRAY
+                                </button>
+                            </div>
                         </div>
                     </Panel>
                 </div>

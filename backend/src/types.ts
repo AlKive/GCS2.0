@@ -36,7 +36,7 @@ export interface LiveTelemetry {
     aiStatus: {
       sharpnessScore: number;
       isSharpEnough: boolean;
-      trackingProgress: number; // 0 to 5 seconds
+      trackingProgress: number; // 0 to 3 seconds
       waterConfirmed: boolean;
       activeTarget?: string;
       totalPipelineSpeedMs: number;

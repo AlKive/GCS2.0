@@ -10,7 +10,7 @@ import fs from 'fs';
 import http from 'http';
 
 // --- CONFIGURATION ---
-const AI_ENGINE_IP = process.env.TAILSCALE_IP || '100.127.53.123';
+const AI_ENGINE_IP = process.env.TAILSCALE_IP || '127.0.0.1';
 const AI_ENGINE_PORT = 5000;
 
 const fastify = Fastify({ logger: true });

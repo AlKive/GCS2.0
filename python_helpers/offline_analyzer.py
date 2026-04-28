@@ -93,7 +93,7 @@ class OfflineAnalyzerApp(tk.Tk):
         self.hardware_data = []
         self.playing = True
         self.tracked_objects = {}
-        self.CONFIRM_AFTER = 5.0
+        self.CONFIRM_AFTER = 3.0
         
         # Load RPi Telemetry CSV
         video_dir = os.path.dirname(video_path)

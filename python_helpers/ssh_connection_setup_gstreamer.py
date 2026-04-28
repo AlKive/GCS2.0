@@ -20,7 +20,15 @@ load_dotenv()
 
 # === Configuration ===
 env_ips = os.getenv("PI_IPS")
+primary_pi_ip = os.getenv("PI_IP")
 PI_TARGET_IPS = env_ips.split(",") if env_ips else ["192.168.7.2", "raspberrypi.local", "100.127.53.123"]
+
+if primary_pi_ip and primary_pi_ip not in PI_TARGET_IPS:
+    PI_TARGET_IPS.insert(0, primary_pi_ip)
+elif primary_pi_ip and primary_pi_ip in PI_TARGET_IPS:
+    # Move it to the front
+    PI_TARGET_IPS.remove(primary_pi_ip)
+    PI_TARGET_IPS.insert(0, primary_pi_ip)
 USERNAME = os.getenv("PI_USERNAME", "rpi3408")
 PASSWORD = os.getenv("PI_PASSWORD", "rpi3408")
 STREAM_PORT = 5600
