@@ -3,8 +3,8 @@ import sys
 import io
 
 # Force unbuffered output for real-time logging
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, line_buffering=True)
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, line_buffering=True)
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', line_buffering=True)
 
 import paramiko
 import time

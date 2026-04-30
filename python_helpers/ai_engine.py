@@ -23,9 +23,9 @@ if sys.platform == 'win32':
     if os.path.exists(gst_bin):
         os.add_dll_directory(gst_bin)
 
-# Force unbuffered output for real-time logging
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, line_buffering=True)
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, line_buffering=True)
+# Force unbuffered output for real-time logging 
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', line_buffering=True)
 
 load_dotenv()
 app = Flask(__name__)
@@ -122,10 +122,35 @@ def sync_drone_time():
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         ssh.exec_command('sudo timedatectl set-timezone Asia/Manila')
         ssh.exec_command(f'sudo date -s "{now}"')
-        print(f"[INFO] ✅ Drone time synchronized to {now}")
+        print(f"[INFO] Drone time synchronized to {now}")
         ssh.close()
     except Exception as e: print(f"[WARN] Time sync failed: {e}")
 Thread(target=sync_drone_time, daemon=True).start()
+
+# --- Heartbeat Sender ---
+class HeartbeatSender:
+    def __init__(self, ip, port=5005):
+        self.ip = ip
+        self.port = port
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.stopped = False
+
+    def start(self):
+        Thread(target=self.update, args=(), daemon=True).start()
+        return self
+
+    def update(self):
+        print(f"[HEARTBEAT] Sending connection heartbeat to Pi at {self.ip}:{self.port}...")
+        while not self.stopped:
+            try:
+                self.sock.sendto(b"ALIVE", (self.ip, self.port))
+            except Exception as e:
+                pass
+            time.sleep(2) 
+
+    def stop(self):
+        self.stopped = True
+        print("[HEARTBEAT] Disconnected. Drone slot is now free.")
 
 # --- Telemetry Receiver ---
 class TelemetryReceiver:
@@ -197,6 +222,17 @@ def end_flight():
         ACTIVE_SESSION_ID = None
     return jsonify({"status": "success"})
 
+@app.route('/api/set_session', methods=['POST', 'OPTIONS'])
+def set_session():
+    if request.method == 'OPTIONS': 
+        return '', 200
+    global ACTIVE_SESSION_ID
+    data = request.json
+    if data and 'session_id' in data:
+        ACTIVE_SESSION_ID = data['session_id']
+        return jsonify({"status": "success", "session_id": ACTIVE_SESSION_ID})
+    return jsonify({"error": "No session_id provided"}), 400
+
 @app.route('/api/status')
 def get_status():
     hw_data = tel_receiver.get_data() 
@@ -243,8 +279,11 @@ def manual_spray():
         with telemetry_lock:
             water_confirmed = ai_telemetry_data.get("waterConfirmed", False)
             computed_area = ai_telemetry_data.get("activeTargetArea", 0)
+        
+        # Strict Altitude Gatekeeper 
         if not water_confirmed or cur_alt > 1.0:
-            return jsonify({"error": "Conditions not met"}), 403
+            return jsonify({"error": f"Conditions not met (Alt: {cur_alt}m)"}), 403
+            
         res = SimpleSprayer().spray(computed_area, None, cur_alt, trigger_type="Manual") 
         return jsonify(res)
     except Exception as e: return jsonify({"error": str(e)}), 500
@@ -301,15 +340,22 @@ class SimpleSprayer:
             if cls._instance is None:
                 cls._instance = super(SimpleSprayer, cls).__new__(cls); cls._instance.is_busy = False
             return cls._instance
+            
     def spray(self, area, detection_id=None, altitude=0.0, trigger_type="Manual"):
         global ACTIVE_SESSION_ID, session_sprays
         if self.is_busy: return {"error": "Busy"}
         
-        # Granule Math: Larger areas require more "shake" cycles
+        # Granule Math: True Area logging integration
         true_area = area * (altitude ** 2) if altitude > 0.05 else area
-        duration = 4 if true_area < 2500 else (7 if true_area < 7500 else 10)
         
-        # Granule Routine: High-speed jitter to prevent clogging in the dispenser
+        # Updated Calibration Durations
+        if true_area < 2500:
+            duration = 5
+        elif true_area < 7500:
+            duration = 10
+        else:
+            duration = 15
+        
         cmd = f"""python3 - << 'EOF'
 import pigpio, time
 pi = pigpio.pi()
@@ -337,7 +383,7 @@ EOF
                 now_iso = datetime.utcnow().isoformat()
                 if ACTIVE_SESSION_ID:
                     supabase_queue.put({"table": "spray_logs", "data": {"session_id": ACTIVE_SESSION_ID, "detection_id": detection_id, "trigger_type": trigger_type, "spray_duration_seconds": duration, "target_area": float(true_area), "triggered_at": now_iso}})
-                log_to_csv({"Timestamp": now_iso, "Type": "SPRAY", "Target": "Manual", "Area": true_area, "Duration": duration})
+                log_to_csv({"Timestamp": now_iso, "Type": "SPRAY", "Target": trigger_type, "Area": true_area, "Duration": duration})
                 time.sleep(duration + 1); ssh.close()
             finally: self.is_busy = False
         Thread(target=run_spray, daemon=True).start()
@@ -357,6 +403,7 @@ def inference_consumer(frame_queue, stop_event):
     model_water = YOLO(os.path.join(os.path.dirname(__file__), "water_classifier.pt"))
     validator = StreamValidator()
     telemetry_logged_this_sec = False
+    
     while not stop_event.is_set():
         if frame_queue.empty(): continue
         frame = frame_queue.get(); start_time = time.time()
@@ -366,24 +413,26 @@ def inference_consumer(frame_queue, stop_event):
             if ret:
                 with output_lock: global_jpeg_bytes = jpeg.tobytes()
             continue
+            
         results = model.track(frame, imgsz=416, conf=0.25, verbose=False, persist=True)
         annotated_frame = results[0].plot(); pipeline_ms = (time.time() - start_time) * 1000
         hw_data = tel_receiver.get_data(); cur_lidar = hw_data.get("lidar_m", 0.0); max_progress = 0
-        # Normalize fields for logging
         bat_volts = hw_data.get("battery_voltage", hw_data.get("voltage", 0.0))
         is_armed = hw_data.get("armed", hw_data.get("is_armed", False))
         
         if results[0].boxes.id is not None:
-            # ... rest of detection logic ...
             for box in results[0].boxes:
                 obj_id = int(box.id[0])
                 if obj_id not in tracked_classes: tracked_classes[obj_id] = {'start': time.time(), 'logged': False}
                 elapsed = time.time() - tracked_classes[obj_id]['start']
                 progress = min(100, int((elapsed / CONFIRM_AFTER) * 100)); max_progress = max(max_progress, progress)
-                det_area = float(box.xywh[0][2]*box.xywh[0][3]); det_class = model.names[int(box.cls[0])]
+                
+                # True Area Calculation Integration
+                pixel_area = float(box.xywh[0][2]*box.xywh[0][3])
+                true_area = pixel_area * (cur_lidar ** 2) if cur_lidar > 0.05 else pixel_area
+                det_class = model.names[int(box.cls[0])]
                 
                 if progress >= 100:
-                    # Stage 2: Definitively confirm water with classification model
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
                     crop = frame[max(0,y1):min(frame.shape[0],y2), max(0,x1):min(frame.shape[1],x2)]
                     
@@ -396,30 +445,42 @@ def inference_consumer(frame_queue, stop_event):
                             is_water_confirmed = True
 
                     with telemetry_lock:
-                        ai_telemetry_data["activeTarget"] = det_class; ai_telemetry_data["activeTargetArea"] = det_area
+                        ai_telemetry_data["activeTarget"] = det_class
+                        ai_telemetry_data["activeTargetArea"] = true_area
                         ai_telemetry_data["waterConfirmed"] = is_water_confirmed
                     
                     if is_water_confirmed and not tracked_classes[obj_id]['logged']:
                         tracked_classes[obj_id]['logged'] = True; session_detections += 1
                         now_iso = datetime.utcnow().isoformat()
                         if ACTIVE_SESSION_ID:
-                            supabase_queue.put({"table": "target_detections", "data": {"session_id": ACTIVE_SESSION_ID, "target_class": det_class, "confidence": float(box.conf[0]), "latitude": float(hw_data.get("gps_lat", 0.0)), "longitude": float(hw_data.get("gps_lon", 0.0)), "bounding_box_area": det_area, "detected_at": now_iso}})
-                        log_to_csv({"Timestamp": now_iso, "Type": "DETECTION", "Target": det_class, "Area": det_area})
+                            # Utilizing true_area for database logging
+                            supabase_queue.put({"table": "target_detections", "data": {"session_id": ACTIVE_SESSION_ID, "target_class": det_class, "confidence": float(box.conf[0]), "latitude": float(hw_data.get("gps_lat", 0.0)), "longitude": float(hw_data.get("gps_lon", 0.0)), "bounding_box_area": true_area, "detected_at": now_iso}})
+                        log_to_csv({"Timestamp": now_iso, "Type": "DETECTION", "Target": det_class, "Area": true_area})
         
         with telemetry_lock:
             ai_telemetry_data.update({"trackingProgress": max_progress, "totalPipelineSpeedMs": pipeline_ms})
+            
         if ACTIVE_SESSION_ID and int(time.time()) % 1 == 0 and not telemetry_logged_this_sec:
             now_iso = datetime.utcnow().isoformat()
             supabase_queue.put({"table": "hardware_telemetry", "data": {"session_id": ACTIVE_SESSION_ID, "logged_at": now_iso, "latitude": float(hw_data.get("gps_lat", 0.0)), "longitude": float(hw_data.get("gps_lon", 0.0)), "altitude_lidar_m": float(cur_lidar), "battery_voltage": float(bat_volts), "is_armed": is_armed, "heading": float(hw_data.get("heading", 0.0))}})
             supabase_queue.put({"table": "ai_telemetry", "data": {"session_id": ACTIVE_SESSION_ID, "logged_at": now_iso, "sharpness_score": 50, "tracking_progress_percent": max_progress, "water_confirmed": max_progress >= 100, "pipeline_speed_ms": pipeline_ms}})
             telemetry_logged_this_sec = True
         elif int(time.time()) % 1 != 0: telemetry_logged_this_sec = False
+        
         ret, jpeg = cv2.imencode('.jpg', cv2.resize(annotated_frame, (640, 480)))
         if ret:
             with output_lock: global_jpeg_bytes = jpeg.tobytes()
 
 if __name__ == "__main__":
     fq = queue.Queue(maxsize=1); se = Event()
+    
+    # Initialize connection dependencies before spinning up the Flask app
+    heartbeat = HeartbeatSender(ip=PI_IP).start()
+    
     Thread(target=camera_producer, args=(fq, se), daemon=True).start()
     Thread(target=inference_consumer, args=(fq, se), daemon=True).start()
-    app.run(host='0.0.0.0', port=5000)
+    
+    try:
+        app.run(host='0.0.0.0', port=5000)
+    finally:
+        heartbeat.stop()

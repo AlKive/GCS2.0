@@ -67323,3 +67323,2113 @@ Socket exception: An existing connection was forcibly closed by the remote host 
  * Serving Flask app 'ai_engine'
  * Debug mode: off
 [WARN] Time sync failed: timed out
+==================================================
+  DRONE GCS: PI CONNECTION & STREAM MANAGER  
+==================================================
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SUCCESS] Connected to Pi at 100.127.53.123
+[DATABASE] Mission Started via SSH: 3f234fda-f270-4111-8ec9-eb2a1ba7c805
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] 100.127.53.123 connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SUCCESS] Connected to Pi at raspberrypi4.local
+[DATABASE] Mission Started via SSH: a2a6bf03-c91d-48b0-a501-4f79dfdc5136
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] raspberrypi4.local connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[INFO] Syncing time with drone at 100.127.53.123...
+ * Serving Flask app 'ai_engine'
+ * Debug mode: off
+[WARN] Time sync failed: 'charmap' codec can't encode character '\u2705' in position 7: character maps to <undefined>
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SUCCESS] Connected to Pi at 100.127.53.123
+[DATABASE] Mission Started via SSH: f62fc157-51e7-45f2-a111-5cf469548084
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] 100.127.53.123 connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SUCCESS] Connected to Pi at raspberrypi4.local
+[DATABASE] Mission Started via SSH: b785fe5d-d213-440e-8c8a-b92dae70e5f3
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] raspberrypi4.local connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SUCCESS] Connected to Pi at 100.127.53.123
+[DATABASE] Mission Started via SSH: a0e9d900-2d2a-4836-929f-309a97f71f94
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] 100.127.53.123 connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SUCCESS] Connected to Pi at raspberrypi4.local
+[DATABASE] Mission Started via SSH: fcdef59c-0257-49db-a46f-3bb666707d6c
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] raspberrypi4.local connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SUCCESS] Connected to Pi at 100.127.53.123
+[DATABASE] Mission Started via SSH: 372ab53a-ad42-455a-8541-c2cca3897154
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] 100.127.53.123 connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SUCCESS] Connected to Pi at raspberrypi4.local
+[DATABASE] Mission Started via SSH: 7af0aade-a5cc-42e3-bb4f-0a35a1996617
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] raspberrypi4.local connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+==================================================
+  DRONE GCS: PI CONNECTION & STREAM MANAGER  
+==================================================
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[INFO] Syncing time with drone at 100.127.53.123...
+ * Serving Flask app 'ai_engine'
+ * Debug mode: off
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[WARN] Time sync failed: timed out
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+==================================================
+  DRONE GCS: PI CONNECTION & STREAM MANAGER  
+==================================================
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[INFO] Syncing time with drone at 100.127.53.123...
+ * Serving Flask app 'ai_engine'
+ * Debug mode: off
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[WARN] Time sync failed: timed out
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SUCCESS] Connected to Pi at raspberrypi4.local
+[DATABASE] Mission Started via SSH: 484fb767-4801-4475-a4e8-2510df8df33e
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[NETWORK] ✅ Updated Pi's target_ip.txt to: 192.168.254.144
+[CLEAN] Requesting clean termination of existing streams...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[LAUNCH] Kickstarting GStreamer -> 192.168.254.144:5600
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+
+[MONITOR] Streaming to 192.168.254.144:5600 | Pi: raspberrypi4.local
+[INFO] Press Ctrl+C to disconnect and try another IP.
+[STATUS] Stream Healthy (PID: 991) at 20:22:02 [SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[STATUS] Stream Healthy (PID: 1017
+1037) at 20:22:08 
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SUCCESS] Connected to Pi at 100.127.53.123
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[DATABASE] Mission Started via SSH: 780b7529-e485-457e-b1c8-8061638cbf33
+[SUCCESS] Connected to Pi at 100.127.53.123
+[DATABASE] Mission Started via SSH: 679c08e6-1716-46ef-b0ee-4b8a32e2ca8f
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[NETWORK] ✅ Updated Pi's target_ip.txt to: 100.112.119.23
+[CLEAN] Requesting clean termination of existing streams...
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] 100.127.53.123 connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SUCCESS] Connected to Pi at raspberrypi4.local
+[DATABASE] Mission Started via SSH: 09c14d04-1065-401a-8117-d74194b11643
+[STATUS] Stream Healthy (PID: 1072) at 20:22:13 [LAUNCH] Kickstarting GStreamer -> 100.112.119.23:5600
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] raspberrypi4.local connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+
+[MONITOR] Streaming to 100.112.119.23:5600 | Pi: 100.127.53.123
+[INFO] Press Ctrl+C to disconnect and try another IP.
+
+[ALERT] Stream process missing! Attempting restart...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[STATUS] Stream Healthy (PID: 1110
+1132) at 20:22:19 [TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[STATUS] Stream Healthy (PID: 1110) at 20:22:24 [STATUS] Stream Healthy (PID: 1110) at 20:22:24 [TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+==================================================
+  DRONE GCS: PI CONNECTION & STREAM MANAGER  
+==================================================
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SUCCESS] Connected to Pi at 100.127.53.123
+[STATUS] Stream Healthy (PID: 1110) at 20:22:29 [DATABASE] Mission Started via SSH: 2a722397-631c-49c9-a653-5f252c8ba304
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[STATUS] Stream Healthy (PID: 1110) at 20:22:30 [ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[NETWORK] ✅ Updated Pi's target_ip.txt to: 100.112.119.23
+[CLEAN] Requesting clean termination of existing streams...
+[LAUNCH] Kickstarting GStreamer -> 100.112.119.23:5600
+[STATUS] Stream Healthy (PID: 1164) at 20:22:34 
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SUCCESS] Connected to Pi at 100.127.53.123
+[DATABASE] Mission Started via SSH: 9bf5d3c4-4b95-470c-a26d-34d32d7fb9bf
+[STATUS] Stream Healthy (PID: 1164
+1186) at 20:22:35 
+[MONITOR] Streaming to 100.112.119.23:5600 | Pi: 100.127.53.123
+[INFO] Press Ctrl+C to disconnect and try another IP.
+[STATUS] Stream Healthy (PID: 1164
+1186) at 20:22:36 [ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] 100.127.53.123 connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[INFO] Syncing time with drone at 100.127.53.123...
+ * Serving Flask app 'ai_engine'
+ * Debug mode: off
+[WARN] Time sync failed: 'charmap' codec can't encode character '\u2705' in position 7: character maps to <undefined>
+[STATUS] Stream Healthy (PID: 1164) at 20:22:40 [SUCCESS] Connected to Pi at raspberrypi4.local
+[STATUS] Stream Healthy (PID: 1164) at 20:22:41 [DATABASE] Mission Started via SSH: 1cf084bf-1261-4d16-a317-0d1f73470904
+[STATUS] Stream Healthy (PID: 1164) at 20:22:41 [ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] raspberrypi4.local connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+
+[ALERT] Stream process missing! Attempting restart...
+[STATUS] Stream Healthy (PID: 1237) at 20:22:46 [STATUS] Stream Healthy (PID: 1237
+1257) at 20:22:47 [TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[STATUS] Stream Healthy (PID: 1237) at 20:22:52 [STATUS] Stream Healthy (PID: 1237) at 20:22:52 [STATUS] Stream Healthy (PID: 1237) at 20:22:53 [TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[STATUS] Stream Healthy (PID: 1237) at 20:22:57 [STATUS] Stream Healthy (PID: 1237) at 20:22:58 [SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[STATUS] Stream Healthy (PID: 1237) at 20:22:58 [STATUS] Stream Healthy (PID: 1237) at 20:23:02 
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[STATUS] Stream Healthy (PID: 1237) at 20:23:03 [SUCCESS] Connected to Pi at 100.127.53.123
+[DATABASE] Mission Started via SSH: 716e78ca-264c-44df-8e89-7a34387dcaf5
+[STATUS] Stream Healthy (PID: 1237) at 20:23:04 [ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] 100.127.53.123 connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SUCCESS] Connected to Pi at raspberrypi4.local
+[DATABASE] Mission Started via SSH: 2d38af9b-deb3-4e3a-9477-5bc44bbca456
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] raspberrypi4.local connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+
+[ALERT] Stream process missing! Attempting restart...
+[STATUS] Stream Healthy (PID: 1306
+1327) at 20:23:09 [STATUS] Stream Healthy (PID: 1306) at 20:23:09 [TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[STATUS] Stream Healthy (PID: 1306) at 20:23:15 [STATUS] Stream Healthy (PID: 1306) at 20:23:15 [STATUS] Stream Healthy (PID: 1306) at 20:23:16 [TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[STATUS] Stream Healthy (PID: 1306) at 20:23:20 [TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[STATUS] Stream Healthy (PID: 1306) at 20:23:21 [STATUS] Stream Healthy (PID: 1306) at 20:23:22 [SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[STATUS] Stream Healthy (PID: 1306) at 20:23:26 [STATUS] Stream Healthy (PID: 1306) at 20:23:27 [STATUS] Stream Healthy (PID: 1306) at 20:23:28 
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SUCCESS] Connected to Pi at 100.127.53.123
+[DATABASE] Mission Started via SSH: 9dcffaf6-0d78-4e08-b535-75e711527413
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] 100.127.53.123 connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[STATUS] Stream Healthy (PID: 1306) at 20:23:31 [SUCCESS] Connected to Pi at raspberrypi4.local
+[DATABASE] Mission Started via SSH: 812e8263-bcb5-4e6c-a3a3-548900ce9647
+[STATUS] Stream Healthy (PID: 1306) at 20:23:32 [STATUS] Stream Healthy (PID: 1306) at 20:23:33 [ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] raspberrypi4.local connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[STATUS] Stream Healthy (PID: 1395) at 20:23:37 [STATUS] Stream Healthy (PID: 1395) at 20:23:38 [TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[STATUS] Stream Healthy (PID: 1395) at 20:23:38 [TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[STATUS] Stream Healthy (PID: 1422) at 20:23:42 [STATUS] Stream Healthy (PID: 1422) at 20:23:43 [STATUS] Stream Healthy (PID: 1422) at 20:23:44 [TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[STATUS] Stream Healthy (PID: 1422) at 20:23:47 [STATUS] Stream Healthy (PID: 1422) at 20:23:48 [SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[STATUS] Stream Healthy (PID: 1422) at 20:23:49 [STATUS] Stream Healthy (PID: 1422) at 20:23:53 
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[STATUS] Stream Healthy (PID: 1422) at 20:23:54 [SUCCESS] Connected to Pi at 100.127.53.123
+[DATABASE] Mission Started via SSH: bf7f8880-92f4-4804-af2a-afc2d43a45ef
+[STATUS] Stream Healthy (PID: 1422) at 20:23:55 [ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] 100.127.53.123 connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SUCCESS] Connected to Pi at raspberrypi4.local
+[DATABASE] Mission Started via SSH: c8c4782e-3af9-4495-868f-9f6003395a62
+[STATUS] Stream Healthy (PID: 1422) at 20:23:58 [ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] raspberrypi4.local connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[STATUS] Stream Healthy (PID: 1422) at 20:23:59 [STATUS] Stream Healthy (PID: 1486) at 20:24:00 [TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[STATUS] Stream Healthy (PID: 1486) at 20:24:04 [STATUS] Stream Healthy (PID: 1511) at 20:24:05 [STATUS] Stream Healthy (PID: 1511) at 20:24:06 [TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[STATUS] Stream Healthy (PID: 1511) at 20:24:09 [STATUS] Stream Healthy (PID: 1511) at 20:24:10 [TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[STATUS] Stream Healthy (PID: 1511) at 20:24:12 [SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[STATUS] Stream Healthy (PID: 1511) at 20:24:15 [STATUS] Stream Healthy (PID: 1511) at 20:24:16 [STATUS] Stream Healthy (PID: 1511) at 20:24:17 
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SUCCESS] Connected to Pi at 100.127.53.123
+[DATABASE] Mission Started via SSH: 04497fd5-305d-45d9-9daa-955fb5a8b589
+[STATUS] Stream Healthy (PID: 1511) at 20:24:21 [STATUS] Stream Healthy (PID: 1511) at 20:24:21 [ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] 100.127.53.123 connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SUCCESS] Connected to Pi at raspberrypi4.local
+[DATABASE] Mission Started via SSH: b90ec0d5-3e3e-4650-a210-41e9a77d76c7
+[STATUS] Stream Healthy (PID: 1511) at 20:24:23 [ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] raspberrypi4.local connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[STATUS] Stream Healthy (PID: 1573) at 20:24:26 [STATUS] Stream Healthy (PID: 1573) at 20:24:26 [TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[STATUS] Stream Healthy (PID: 1573) at 20:24:28 [STATUS] Stream Healthy (PID: 1600) at 20:24:31 [STATUS] Stream Healthy (PID: 1600) at 20:24:32 [TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[STATUS] Stream Healthy (PID: 1600) at 20:24:33 [TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[STATUS] Stream Healthy (PID: 1600) at 20:24:37 [STATUS] Stream Healthy (PID: 1600) at 20:24:37 [SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[STATUS] Stream Healthy (PID: 1600) at 20:24:39 [STATUS] Stream Healthy (PID: 1600) at 20:24:42 [STATUS] Stream Healthy (PID: 1600) at 20:24:43 
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SUCCESS] Connected to Pi at 100.127.53.123
+[DATABASE] Mission Started via SSH: fd9f8bbe-4dbe-460e-b37b-c515bacd0cc3
+[STATUS] Stream Healthy (PID: 1600) at 20:24:44 [ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] 100.127.53.123 connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SUCCESS] Connected to Pi at raspberrypi4.local
+[DATABASE] Mission Started via SSH: 28ddb64a-cfc4-4658-9c38-d93c3958583f
+[STATUS] Stream Healthy (PID: 1600) at 20:24:48 [STATUS] Stream Healthy (PID: 1600) at 20:24:48 [ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] raspberrypi4.local connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[STATUS] Stream Healthy (PID: 1600) at 20:24:50 [STATUS] Stream Healthy (PID: 1663) at 20:24:53 [TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[STATUS] Stream Healthy (PID: 1663) at 20:24:54 [STATUS] Stream Healthy (PID: 1689) at 20:24:55 [TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[STATUS] Stream Healthy (PID: 1689) at 20:24:59 [STATUS] Stream Healthy (PID: 1689) at 20:24:59 [STATUS] Stream Healthy (PID: 1689) at 20:25:01 [TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[STATUS] Stream Healthy (PID: 1689) at 20:25:05 [STATUS] Stream Healthy (PID: 1689) at 20:25:06 [STATUS] Stream Healthy (PID: 1689) at 20:25:06 
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SUCCESS] Connected to Pi at 100.127.53.123
+[DATABASE] Mission Started via SSH: 6c9c965b-374e-4e7f-b2c7-399715f535c0
+[STATUS] Stream Healthy (PID: 1689) at 20:25:11 [STATUS] Stream Healthy (PID: 1689) at 20:25:11 [ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] 100.127.53.123 connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SUCCESS] Connected to Pi at raspberrypi4.local
+[STATUS] Stream Healthy (PID: 1689) at 20:25:12 [DATABASE] Mission Started via SSH: e35c9c98-c05c-4865-91a3-dac2b1ba2c0a
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] raspberrypi4.local connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[STATUS] Stream Healthy (PID: 1749) at 20:25:17 [STATUS] Stream Healthy (PID: 1749) at 20:25:17 [STATUS] Stream Healthy (PID: 1749) at 20:25:18 [TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[STATUS] Stream Healthy (PID: 1776) at 20:25:22 [STATUS] Stream Healthy (PID: 1776) at 20:25:22 [TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[STATUS] Stream Healthy (PID: 1776) at 20:25:23 [TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[STATUS] Stream Healthy (PID: 1776) at 20:25:28 [STATUS] Stream Healthy (PID: 1776) at 20:25:28 [STATUS] Stream Healthy (PID: 1776) at 20:25:29 [SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[STATUS] Stream Healthy (PID: 1776) at 20:25:33 [STATUS] Stream Healthy (PID: 1776) at 20:25:33 [STATUS] Stream Healthy (PID: 1776) at 20:25:34 
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SUCCESS] Connected to Pi at 100.127.53.123
+[DATABASE] Mission Started via SSH: 3fb5c051-4759-4d47-8e13-d0c38c26e16b
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] 100.127.53.123 connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SUCCESS] Connected to Pi at raspberrypi4.local
+[DATABASE] Mission Started via SSH: 0a60ea9c-1eef-4ace-b5df-65aab8087fd5
+[STATUS] Stream Healthy (PID: 1776) at 20:25:39 [STATUS] Stream Healthy (PID: 1776) at 20:25:39 [ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[STATUS] Stream Healthy (PID: 1776) at 20:25:40 [SKIP] raspberrypi4.local connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[STATUS] Stream Healthy (PID: 1838) at 20:25:44 [STATUS] Stream Healthy (PID: 1838) at 20:25:45 [STATUS] Stream Healthy (PID: 1838) at 20:25:45 [TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[STATUS] Stream Healthy (PID: 1868) at 20:25:49 [STATUS] Stream Healthy (PID: 1868) at 20:25:50 [TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[STATUS] Stream Healthy (PID: 1868) at 20:25:51 [TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[STATUS] Stream Healthy (PID: 1868) at 20:25:55 [STATUS] Stream Healthy (PID: 1868) at 20:25:56 [STATUS] Stream Healthy (PID: 1868) at 20:25:56 [SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[STATUS] Stream Healthy (PID: 1868) at 20:26:01 [STATUS] Stream Healthy (PID: 1868) at 20:26:01 
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[STATUS] Stream Healthy (PID: 1868) at 20:26:04 [SUCCESS] Connected to Pi at 100.127.53.123
+[DATABASE] Mission Started via SSH: 0f24c82e-8589-4992-bbd5-c53bf067c725
+[STATUS] Stream Healthy (PID: 1868
+1922) at 20:26:07 [STATUS] Stream Healthy (PID: 1868) at 20:26:07 [ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[SKIP] 100.127.53.123 connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SUCCESS] Connected to Pi at raspberrypi4.local
+[DATABASE] Mission Started via SSH: ce227998-00b2-4669-968a-b896c921f291
+
+[ERROR] Lost connection to Pi: 
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[ERROR] Failed to start/sync flight session: HTTP Error 404: NOT FOUND
+[WARN] IP auto-detection failed for raspberrypi4.local: [Errno 11001] getaddrinfo failed
+[SKIP] raspberrypi4.local connection failed: 'charmap' codec can't encode character '\u274c' in position 10: character maps to <undefined>
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+
+[ERROR] Lost connection to Pi: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[ERROR] Lost connection to Pi: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+==================================================
+  DRONE GCS: PI CONNECTION & STREAM MANAGER  
+==================================================
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SUCCESS] Connected to Pi at 100.127.53.123
+[DATABASE] Mission Started via SSH: 65fd6991-0292-4567-b773-2f46fedce868
+[NETWORK] ✅ Updated Pi's target_ip.txt to: 100.112.119.23
+[CLEAN] Requesting clean termination of existing streams...
+[LAUNCH] Kickstarting GStreamer -> 100.112.119.23:5600
+
+[MONITOR] Streaming to 100.112.119.23:5600 | Pi: 100.127.53.123
+[INFO] Press Ctrl+C to disconnect and try another IP.
+==================================================
+  DRONE GCS: PI CONNECTION & STREAM MANAGER  
+==================================================
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[SUCCESS] Connected to Pi at 100.127.53.123
+[STATUS] Stream Healthy (PID: 2108) at 20:56:30 [DATABASE] Mission Started via SSH: dce7ac51-ae66-479f-908b-70a441682974
+[INFO] Syncing time with drone at 100.127.53.123...
+[HEARTBEAT] Sending connection heartbeat to Pi at 100.127.53.123:5005...
+ * Serving Flask app 'ai_engine'
+ * Debug mode: off
+[NETWORK] ✅ Updated Pi's target_ip.txt to: 100.112.119.23
+[CLEAN] Requesting clean termination of existing streams...
+
+[ALERT] Stream process missing! Attempting restart...
+[LAUNCH] Kickstarting GStreamer -> 100.112.119.23:5600
+[INFO] Drone time synchronized to 2026-04-30 20:56:35
+
+[MONITOR] Streaming to 100.112.119.23:5600 | Pi: 100.127.53.123
+[INFO] Press Ctrl+C to disconnect and try another IP.
+[STATUS] Stream Healthy (PID: 2162) at 20:56:37 [INFO] Syncing time with drone at 100.127.53.123...
+[HEARTBEAT] Sending connection heartbeat to Pi at 100.127.53.123:5005...
+ * Serving Flask app 'ai_engine'
+ * Debug mode: off
+[INFO] Drone time synchronized to 2026-04-30 20:56:40
+[STATUS] Stream Healthy (PID: 2162) at 20:56:42 [STATUS] Stream Healthy (PID: 2162) at 20:56:43 [STATUS] Stream Healthy (PID: 2162) at 20:56:48 [STATUS] Stream Healthy (PID: 2162) at 20:56:48 [STATUS] Stream Healthy (PID: 2162) at 20:56:54 [STATUS] Stream Healthy (PID: 2162) at 20:56:55 [STATUS] Stream Healthy (PID: 2162) at 20:57:00 [STATUS] Stream Healthy (PID: 2162) at 20:57:00 [STATUS] Stream Healthy (PID: 2162) at 20:57:05 [STATUS] Stream Healthy (PID: 2162) at 20:57:06 [STATUS] Stream Healthy (PID: 2162) at 20:57:11 [STATUS] Stream Healthy (PID: 2162) at 20:57:11 [STATUS] Stream Healthy (PID: 2162) at 20:57:17 [STATUS] Stream Healthy (PID: 2162) at 20:57:17 [STATUS] Stream Healthy (PID: 2162) at 20:57:22 [STATUS] Stream Healthy (PID: 2162) at 20:57:23 [STATUS] Stream Healthy (PID: 2162) at 20:57:28 [STATUS] Stream Healthy (PID: 2162) at 20:57:28 [STATUS] Stream Healthy (PID: 2162) at 20:57:33 [STATUS] Stream Healthy (PID: 2162) at 20:57:34 [STATUS] Stream Healthy (PID: 2162) at 20:57:39 [STATUS] Stream Healthy (PID: 2162) at 20:57:39 [STATUS] Stream Healthy (PID: 2162) at 20:57:44 [STATUS] Stream Healthy (PID: 2162) at 20:57:45 [STATUS] Stream Healthy (PID: 2162) at 20:57:50 [STATUS] Stream Healthy (PID: 2162) at 20:57:50 [STATUS] Stream Healthy (PID: 2162) at 20:57:55 [STATUS] Stream Healthy (PID: 2162) at 20:57:56 [STATUS] Stream Healthy (PID: 2162) at 20:58:01 [STATUS] Stream Healthy (PID: 2162) at 20:58:01 [STATUS] Stream Healthy (PID: 2162) at 20:58:06 [STATUS] Stream Healthy (PID: 2162) at 20:58:07 [STATUS] Stream Healthy (PID: 2162) at 20:58:12 [STATUS] Stream Healthy (PID: 2162) at 20:58:13 [STATUS] Stream Healthy (PID: 2162) at 20:58:18 [STATUS] Stream Healthy (PID: 2162) at 20:58:19 [STATUS] Stream Healthy (PID: 2162) at 20:58:23 [STATUS] Stream Healthy (PID: 2162) at 20:58:25 [STATUS] Stream Healthy (PID: 2162) at 20:58:29 [STATUS] Stream Healthy (PID: 2162) at 20:58:30 [STATUS] Stream Healthy (PID: 2162) at 20:58:34 [STATUS] Stream Healthy (PID: 2162) at 20:58:36 [STATUS] Stream Healthy (PID: 2162) at 20:58:40 [STATUS] Stream Healthy (PID: 2162) at 20:58:42 [STATUS] Stream Healthy (PID: 2162) at 20:58:45 [STATUS] Stream Healthy (PID: 2162) at 20:58:47 [STATUS] Stream Healthy (PID: 2162) at 20:58:51 [STATUS] Stream Healthy (PID: 2162) at 20:58:53 [STATUS] Stream Healthy (PID: 2162) at 20:58:57 [STATUS] Stream Healthy (PID: 2162) at 20:58:58 [STATUS] Stream Healthy (PID: 2162) at 20:59:02 [STATUS] Stream Healthy (PID: 2162) at 20:59:04 [STATUS] Stream Healthy (PID: 2162
+2462) at 20:59:08 [STATUS] Stream Healthy (PID: 2162) at 20:59:09 [STATUS] Stream Healthy (PID: 2162) at 20:59:13 [STATUS] Stream Healthy (PID: 2162) at 20:59:15 [STATUS] Stream Healthy (PID: 2162) at 20:59:19 [STATUS] Stream Healthy (PID: 2162) at 20:59:20 [STATUS] Stream Healthy (PID: 2162) at 20:59:25 [STATUS] Stream Healthy (PID: 2162) at 20:59:26 [STATUS] Stream Healthy (PID: 2162
+2496) at 20:59:30 [STATUS] Stream Healthy (PID: 2162) at 20:59:31 [STATUS] Stream Healthy (PID: 2162) at 20:59:36 [STATUS] Stream Healthy (PID: 2162) at 20:59:36 [STATUS] Stream Healthy (PID: 2162) at 20:59:41 [STATUS] Stream Healthy (PID: 2162) at 20:59:42 [STATUS] Stream Healthy (PID: 2162) at 20:59:47 [STATUS] Stream Healthy (PID: 2162) at 20:59:47 [STATUS] Stream Healthy (PID: 2162) at 20:59:52 [STATUS] Stream Healthy (PID: 2162) at 20:59:55 [STATUS] Stream Healthy (PID: 2162) at 20:59:59 [STATUS] Stream Healthy (PID: 2162) at 21:00:01 [STATUS] Stream Healthy (PID: 2162) at 21:00:04 [STATUS] Stream Healthy (PID: 2162) at 21:00:07 [STATUS] Stream Healthy (PID: 2162) at 21:00:10 [STATUS] Stream Healthy (PID: 2162) at 21:00:12 [STATUS] Stream Healthy (PID: 2162) at 21:00:15 [STATUS] Stream Healthy (PID: 2162) at 21:00:19 [STATUS] Stream Healthy (PID: 2162) at 21:00:21 [STATUS] Stream Healthy (PID: 2162) at 21:00:24 [STATUS] Stream Healthy (PID: 2162) at 21:00:27 [STATUS] Stream Healthy (PID: 2162) at 21:00:30 [STATUS] Stream Healthy (PID: 2162) at 21:00:32 [STATUS] Stream Healthy (PID: 2162) at 21:00:36 [STATUS] Stream Healthy (PID: 2162) at 21:00:38 [STATUS] Stream Healthy (PID: 2162) at 21:00:41 [STATUS] Stream Healthy (PID: 2162) at 21:00:43 [STATUS] Stream Healthy (PID: 2162) at 21:00:47 [STATUS] Stream Healthy (PID: 2162) at 21:00:49 [STATUS] Stream Healthy (PID: 2162) at 21:00:52 [STATUS] Stream Healthy (PID: 2162) at 21:00:54 [STATUS] Stream Healthy (PID: 2162) at 21:00:58 [STATUS] Stream Healthy (PID: 2162) at 21:01:00 [STATUS] Stream Healthy (PID: 2162) at 21:01:03 [STATUS] Stream Healthy (PID: 2162) at 21:01:05 [STATUS] Stream Healthy (PID: 2162) at 21:01:09 [STATUS] Stream Healthy (PID: 2162) at 21:01:11 
+[ERROR] Lost connection to Pi: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[ERROR] Lost connection to Pi: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[TIMEOUT] 192.168.7.2 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi.local...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+[SKIP] raspberrypi.local connection failed: [Errno 11001] getaddrinfo failed
+
+[RETRY] No Pi found on known IPs. Sleeping 5s...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+
+[SCAN] Checking Pi availability at: 100.127.53.123...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[TIMEOUT] 100.127.53.123 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: raspberrypi4.local...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[SKIP] raspberrypi4.local connection failed: [Errno 11001] getaddrinfo failed
+
+[SCAN] Checking Pi availability at: 192.168.1.10...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.10 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.1.11...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
+[TIMEOUT] 192.168.1.11 did not respond within 4 seconds.
+
+[SCAN] Checking Pi availability at: 192.168.7.2...
