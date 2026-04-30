@@ -127,6 +127,16 @@ def get_stream_command(destination_ip):
     # Wrap in nohup to keep it running if SSH hiccups
     return f"nohup {pipeline} > /tmp/gstream.log 2>&1 &"
 
+def update_target_ip(ssh, laptop_ip):
+    """Pushes the laptop's IP to the Pi's target_ip.txt for autonomous routing."""
+    try:
+        ssh.exec_command(f"echo '{laptop_ip}' > /home/rpi3408/target_ip.txt")
+        print(f"[NETWORK] ✅ Updated Pi's target_ip.txt to: {laptop_ip}")
+        return True
+    except Exception as e:
+        print(f"[NETWORK] ❌ Failed to update target_ip.txt: {e}")
+        return False
+
 def monitor_stream(ssh, pi_ip, laptop_ip):
     """
     Checks every 5 seconds if the gstreamer process is still alive on the Pi.
@@ -194,17 +204,18 @@ def main():
 
                 # 3. Identify the return path (Laptop IP)
                 laptop_ip = get_laptop_ip_relative_to_pi(pi_ip)
-                print(f"[INFO] Laptop identified as: {laptop_ip}")
+                # Push IP to Pi for autonomous logic
+                update_target_ip(ssh, laptop_ip)
 
                 # 3. Clean and Launch
-                print("[CLEAN] Killing existing stream processes...")
-                ssh.exec_command("pkill -9 -f gst-launch-1.0")
-                time.sleep(1)
-                
-                print(f"[LAUNCH] Starting GStreamer -> {laptop_ip}:{STREAM_PORT}")
-                ssh.exec_command(get_stream_command(laptop_ip))
+                # Using SIGINT (-2) allows the Pi's auto-manager to cleanly close recordings
+                print("[CLEAN] Requesting clean termination of existing streams...")
+                ssh.exec_command("pkill -2 -f gst-launch-1.0")
                 time.sleep(2)
 
+                print(f"[LAUNCH] Kickstarting GStreamer -> {laptop_ip}:{STREAM_PORT}")
+                ssh.exec_command(get_stream_command(laptop_ip))
+                time.sleep(2)
                 # 4. Stay in monitor loop
                 should_retry = monitor_stream(ssh, pi_ip, laptop_ip)
                 ssh.close()

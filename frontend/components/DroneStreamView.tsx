@@ -198,6 +198,14 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                 </div>
             )}
 
+            {/* Connection Lost Overlay */}
+            {telemetry.aiStatus?.linkStatus === 'Lost' && (
+                <div className="absolute top-12 left-0 right-0 z-[150] bg-red-600 text-white py-2 px-4 flex items-center justify-center gap-3 animate-pulse shadow-2xl border-y border-red-400 font-mono text-[10px] font-black tracking-widest uppercase italic">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    CONNECTION LOST: Drone has switched to offline recording on SD Card.
+                </div>
+            )}
+
             {/* Tactical Top Bar */}
             <div className="bg-slate-900 border-b border-slate-800 px-4 py-1 flex justify-between items-center flex-shrink-0">
                 <div className="flex items-center gap-4">
@@ -394,14 +402,14 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                                 </div>
                                 <button 
                                     onClick={() => fetch(`http://${window.location.hostname}:5000/api/manual_spray`, { method: 'POST' })}
-                                    disabled={!telemetry.aiStatus?.waterConfirmed && (telemetry.aiStatus?.lidar_m ?? 0) > 1.0}
+                                    disabled={!telemetry.aiStatus?.waterConfirmed || (telemetry.aiStatus?.lidar_m ?? 0) > 1.0}
                                     className={`w-full py-2.5 rounded font-black font-mono text-[9px] tracking-widest transition-all border shadow-lg ${
-                                        (telemetry.aiStatus?.waterConfirmed || (telemetry.aiStatus?.lidar_m ?? 0) <= 1.0)
-                                        ? 'bg-gcs-primary border-gcs-primary text-slate-100 neon-glow-red active:scale-95' 
+                                        (telemetry.aiStatus?.waterConfirmed && (telemetry.aiStatus?.lidar_m ?? 0) <= 1.0)
+                                        ? 'bg-gcs-primary border-gcs-primary text-slate-100 neon-glow-red active:scale-95 animate-pulse' 
                                         : 'bg-slate-900/50 border-slate-800 text-slate-600 cursor-not-allowed opacity-50'
                                     }`}
                                 >
-                                    MANUAL SPRAY
+                                    {(telemetry.aiStatus?.waterConfirmed && (telemetry.aiStatus?.lidar_m ?? 0) <= 1.0) ? 'CONFIRMED: DISPENSE GRANULES' : 'WAITING FOR TARGET LOCK'}
                                 </button>
                             </div>
                         </div>

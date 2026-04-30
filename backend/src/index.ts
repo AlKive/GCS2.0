@@ -68,7 +68,7 @@ fastify.register(async function (server) {
       const formattedFlightTime = `${minutes}:${seconds}`;
       currentBattery -= 0.01;
 
-      let aiData = {
+      let aiData: any = {
         sharpnessScore: 0,
         isSharpEnough: false,
         trackingProgress: 0,
@@ -79,7 +79,14 @@ fastify.register(async function (server) {
         gps_lon: 0,
         lidar_m: 0,
         heading: 0,
-        battery_voltage: 0
+        battery_voltage: 0,
+        roll: 0,
+        pitch: 0,
+        verticalSpeed: 0,
+        speed: 0,
+        satellites: 0,
+        signalStrength: -99,
+        armed: false
       };
 
       try {
@@ -90,38 +97,41 @@ fastify.register(async function (server) {
       } catch (e) {}
 
       const testTelemetry: LiveTelemetry = {
-        gps: { lat: aiData.gps_lat || 14.531120, lon: aiData.gps_lon || 121.057442 },
-        altitude: aiData.lidar_m || 47.9,
-        speed: 0, // AI Engine doesn't have ground speed yet
-        roll: 0,
-        pitch: 0,
-        heading: aiData.heading || 0,
-        signalStrength: -55,
-        battery: { 
-          voltage: aiData.battery_voltage || 16.8, 
-          percentage: aiData.battery_voltage ? (aiData.battery_voltage / 25.2) * 100 : 99 
+        gps: { 
+          lat: aiData.gps_lat || 14.531120, 
+          lon: aiData.gps_lon || 121.057442 
         },
-        satellites: 14,
+        altitude: aiData.lidar_m || 0,
+        speed: aiData.speed || 0,
+        roll: aiData.roll || 0,
+        pitch: aiData.pitch || 0,
+        heading: aiData.heading || 0,
+        signalStrength: aiData.signalStrength || -55,
+        battery: { 
+          voltage: aiData.battery_voltage || 0, 
+          percentage: aiData.battery_voltage ? Math.max(0, Math.min(100, ((aiData.battery_voltage - 21.0) / (25.2 - 21.0)) * 100)) : 0
+        },
+        satellites: aiData.satellites || 0,
         flightTime: formattedFlightTime,
-        distanceFromHome: 4057 + totalSeconds,
+        distanceFromHome: 0,
         flightMode: 'Loiter',
-        armed: true,
-        verticalSpeed: 0,
+        armed: aiData.armed !== undefined ? aiData.armed : true,
+        verticalSpeed: aiData.verticalSpeed || 0,
         breedingSiteDetected: aiData.waterConfirmed,
         currentBreedingSite: undefined,
         detectedSites: [],
         gpsTrack: [],
         aiStatus: aiData,
         modes: {
-          angle: true,
-          positionHold: true,
-          returnToHome: false,
-          altitudeHold: true,
-          headingHold: false,
-          airmode: true,
-          surface: true,
-          mcBraking: aiData.waterConfirmed,
-          beeper: false,
+          angle: aiData.modes?.angle ?? false,
+          positionHold: aiData.modes?.positionHold ?? false,
+          returnToHome: aiData.modes?.returnToHome ?? false,
+          altitudeHold: aiData.modes?.altitudeHold ?? false,
+          headingHold: aiData.modes?.headingHold ?? false,
+          airmode: aiData.modes?.airmode ?? false,
+          surface: aiData.modes?.surface ?? false,
+          mcBraking: aiData.modes?.mcBraking ?? aiData.waterConfirmed,
+          beeper: aiData.modes?.beeper ?? false,
         }
       };
       

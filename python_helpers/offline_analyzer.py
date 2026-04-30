@@ -29,7 +29,7 @@ def sync_offline_to_db(detection_data, hardware_data):
         # 1. Create a flight session
         res = supabase.table("flight_sessions").insert({
             "status": "completed",
-            "barangay_id": 1, 
+            "location_id": 1, 
             "start_time": hardware_data[0]['Timestamp'] if hardware_data else datetime.now().isoformat(),
             "end_time": hardware_data[-1]['Timestamp'] if hardware_data else datetime.now().isoformat()
         }).execute()
@@ -52,26 +52,23 @@ def sync_offline_to_db(detection_data, hardware_data):
 
         # 3. Sync Detections
         for det in detection_data:
-            type_res = supabase.table("target_types").select("id").eq("label", det['target']).execute()
-            type_id = type_res.data[0]['id'] if type_res.data else 1
-
-            det_res = supabase.table("detections").insert({
+            det_res = supabase.table("target_detections").insert({
                 "session_id": session_id,
-                "target_type_id": type_id,
+                "target_class": det['target'],
                 "confidence": det['conf'],
-                "water_confirmed": det['water'],
                 "latitude": det['lat'],
                 "longitude": det['lon'],
-                "lidar_m": det['lidar']
+                "bounding_box_area": det['true_area']
             }).execute()
 
             if det['water']:
-                supabase.table("spray_operations").insert({
-                    "detection_id": det_res.data[0]['id'],
+                supabase.table("spray_logs").insert({
                     "session_id": session_id,
+                    "detection_id": det_res.data[0]['id'],
                     "trigger_type": "Auto",
-                    "duration_seconds": 5,
-                    "true_area_scaled": det['true_area']
+                    "triggered_at": datetime.now().isoformat(),
+                    "spray_duration_seconds": 5,
+                    "target_area": det['true_area']
                 }).execute()
         
         return True

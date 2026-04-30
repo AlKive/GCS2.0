@@ -1,37 +1,49 @@
 import os
 import sys
-
-# Force unbuffered output for real-time logging
 import io
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, line_buffering=True)
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, line_buffering=True)
-
 import cv2
 import time
+import subprocess
 from threading import Thread, Lock, Event
 import paramiko
 import numpy as np
 import socket
 import json
+import csv
 from ultralytics import YOLO
 from datetime import datetime
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify, request, send_file
 import queue
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
+# --- Windows GStreamer Support ---
+if sys.platform == 'win32':
+    gst_bin = r"C:\Program Files\gstreamer\1.0\msvc_x86_64\bin"
+    if os.path.exists(gst_bin):
+        os.add_dll_directory(gst_bin)
+
+# Force unbuffered output for real-time logging
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, line_buffering=True)
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, line_buffering=True)
+
 load_dotenv()
 app = Flask(__name__)
+
+# --- Configuration ---
+PI_IP = os.getenv("PI_IP", "100.127.53.123")
+USERNAME = os.getenv("PI_USERNAME", "rpi3408")
+PASSWORD = os.getenv("PI_PASSWORD", "rpi3408")
+REMOTE_VIDEO_DIR = "/home/rpi3408/offline_videos"
+LOCAL_VIDEO_DIR = os.path.join(os.path.expanduser("~"), "Downloads", "GCS_Data", "Drone_Offline_Videos")
+CSV_LOG_DIR = os.path.join(os.path.expanduser("~"), "Downloads", "GCS_Data", "Logs")
+os.makedirs(LOCAL_VIDEO_DIR, exist_ok=True)
+os.makedirs(CSV_LOG_DIR, exist_ok=True)
 
 # --- Supabase Setup ---
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-
-if not SUPABASE_URL or not SUPABASE_KEY:
-    print("[ERROR] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env")
-    supabase = None
-else:
-    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
 
 ACTIVE_SESSION_ID = None
 
@@ -42,26 +54,36 @@ def add_cors_headers(response):
     response.headers['Access-Control-Allow-Headers'] = '*'
     return response
 
-# --- Global State & Telemetry ---
+# --- Global State ---
 global_jpeg_bytes = None
 output_lock = Lock()
+session_detections = 0
+session_sprays = 0
+is_pi_connected = True
 
-# This dictionary NOW ONLY holds AI data. Hardware data comes from the new receiver.
-ai_telemetry = {
+ai_telemetry_data = {
     "sharpnessScore": 0,
     "isSharpEnough": False,
     "trackingProgress": 0,
     "waterConfirmed": False,
     "activeTarget": None,
-    "activeDetectionId": None,
     "activeTargetArea": 0,
-    "totalPipelineSpeedMs": 0
+    "totalPipelineSpeedMs": 0,
+    "linkStatus": "Healthy"
 }
 telemetry_lock = Lock()
 
+# --- Redundant CSV Logger ---
+def log_to_csv(data):
+    filename = os.path.join(CSV_LOG_DIR, f"mission_log_{datetime.now().strftime('%Y%m%d')}.csv")
+    file_exists = os.path.isfile(filename)
+    with open(filename, mode='a', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=data.keys())
+        if not file_exists: writer.writeheader()
+        writer.writerow(data)
+
 # --- Dedicated Supabase Background Worker ---
 supabase_queue = queue.Queue()
-
 def supabase_worker():
     while True:
         task = supabase_queue.get()
@@ -69,56 +91,73 @@ def supabase_worker():
         if supabase:
             try:
                 supabase.table(task['table']).insert(task['data']).execute()
-            except Exception as e:
-                print(f"[DB ERROR] {e}")
+            except Exception as e: print(f"[DB ERROR] {e}")
         supabase_queue.task_done()
-
 Thread(target=supabase_worker, daemon=True).start()
 
-# ====================================================================
-# TEAMMATE'S UPDATED TELEMETRY RECEIVER (Cleaned & Integrated)
-# ====================================================================
+# --- Connection Monitor ---
+def connection_monitor():
+    global is_pi_connected
+    while True:
+        try:
+            if sys.platform == 'win32':
+                cmd = f"ping -n 1 -w 1000 {PI_IP}"
+            else:
+                cmd = f"ping -c 1 -W 1 {PI_IP}"
+            output = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            is_pi_connected = (output.returncode == 0)
+        except Exception: is_pi_connected = False
+        with telemetry_lock:
+            ai_telemetry_data["linkStatus"] = "Healthy" if is_pi_connected else "Lost"
+        time.sleep(2)
+Thread(target=connection_monitor, daemon=True).start()
+
+# --- Time Sync ---
+def sync_drone_time():
+    print(f"[INFO] Syncing time with drone at {PI_IP}...")
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(PI_IP, username=USERNAME, password=PASSWORD, timeout=5)
+        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        ssh.exec_command('sudo timedatectl set-timezone Asia/Manila')
+        ssh.exec_command(f'sudo date -s "{now}"')
+        print(f"[INFO] ✅ Drone time synchronized to {now}")
+        ssh.close()
+    except Exception as e: print(f"[WARN] Time sync failed: {e}")
+Thread(target=sync_drone_time, daemon=True).start()
+
+# --- Telemetry Receiver ---
 class TelemetryReceiver:
     def __init__(self, port=5005):
         self.port = port
         self.latest_data = {}
         self.lock = Lock()
         self.stopped = False
-        
-        print(f"[TELEMETRY] Listening for incoming data on port {self.port}...")
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.settimeout(1.0) 
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind(("0.0.0.0", self.port))
-
     def start(self):
         Thread(target=self.update, args=(), daemon=True).start()
         return self
-
     def update(self):
         while not self.stopped:
             try:
                 data, _ = self.sock.recvfrom(1024)
-                with self.lock:
-                    self.latest_data = json.loads(data.decode('utf-8'))
-            except socket.timeout:
-                continue
-            except Exception as e:
-                pass
-
+                with self.lock: self.latest_data = json.loads(data.decode('utf-8'))
+            except Exception: pass
     def get_data(self):
-        with self.lock:
-            return self.latest_data.copy()
-
+        with self.lock: return self.latest_data.copy()
     def stop(self):
         self.stopped = True
         self.sock.close()
 
-# Instantiate the new receiver globally
-tel_receiver = TelemetryReceiver()
+tel_receiver = TelemetryReceiver().start()
 
-MIN_SHARPNESS = float(os.getenv("MIN_SHARPNESS", "30.0"))
+MIN_SHARPNESS = 40.0   
+MAX_SHARPNESS = 400.0  
 CONFIRM_AFTER = 3.0    
-PRUNE_AFTER = 2.0      
 MAX_SPRAY_ALTITUDE = 1.0 
 tracked_classes = {}   
 
@@ -129,323 +168,258 @@ class StreamValidator:
         if frame is None: return False, "NO FRAME"
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         if self.last_frame is not None:
-            diff = cv2.absdiff(gray, self.last_frame)
-            if np.mean(diff) < 0.5:
+            if np.mean(cv2.absdiff(gray, self.last_frame)) < 0.5:
                 return False, "STREAM FROZEN"
         self.last_frame = gray.copy()
         sharpness = cv2.Laplacian(gray, cv2.CV_64F).var()
-        if sharpness < MIN_SHARPNESS:
-            return False, f"TOO BLURRY ({int(sharpness)})"
+        if sharpness < MIN_SHARPNESS: return False, f"TOO BLURRY ({int(sharpness)})"
+        if sharpness > MAX_SHARPNESS: return False, f"PIXELATED ({int(sharpness)})"
         return True, f"READY ({int(sharpness)})"
 
-TARGET_TYPE_MAP = {} 
-def fetch_target_types():
-    global TARGET_TYPE_MAP
-    if not supabase: return
-    try:
-        res = supabase.table("target_types").select("id, label").execute()
-        TARGET_TYPE_MAP = {item['label'].lower(): item['id'] for item in res.data}
-    except Exception: pass
-
-# --- Flight Session Endpoints ---
-session_detections = 0
-session_sprays = 0
-
+# --- API Endpoints ---
 @app.route('/api/start_flight', methods=['POST', 'OPTIONS'])
 def start_flight():
     if request.method == 'OPTIONS': return '', 200
     global ACTIVE_SESSION_ID, session_detections, session_sprays
-    session_detections = 0
-    session_sprays = 0
+    session_detections = 0; session_sprays = 0
     try:
-        res = supabase.table("flight_sessions").insert({"barangay_id": 1, "status": "active"}).execute()
+        res = supabase.table("flight_sessions").insert({"location_id": 1, "status": "active", "start_time": datetime.utcnow().isoformat()}).execute()
         ACTIVE_SESSION_ID = res.data[0]['id']
         return jsonify({"status": "success", "session_id": ACTIVE_SESSION_ID})
-    except Exception: return jsonify({"error": "Failed"}), 500
+    except Exception as e: return jsonify({"error": str(e)}), 500
 
 @app.route('/api/end_flight', methods=['POST', 'OPTIONS'])
 def end_flight():
     if request.method == 'OPTIONS': return '', 200
     global ACTIVE_SESSION_ID
     if ACTIVE_SESSION_ID:
-        supabase.table("flight_sessions").update({"status": "completed"}).eq("id", ACTIVE_SESSION_ID).execute()
+        supabase.table("flight_sessions").update({"status": "completed", "end_time": datetime.utcnow().isoformat()}).eq("id", ACTIVE_SESSION_ID).execute()
         ACTIVE_SESSION_ID = None
     return jsonify({"status": "success"})
 
-# ====================================================================
-# PERFECTLY MERGED API STATUS FOR REACT
-# ====================================================================
 @app.route('/api/status')
-def get_telemetry():
-    # 1. Get the raw hardware data from your teammate's clean receiver
+def get_status():
     hw_data = tel_receiver.get_data() 
-    
-    # 2. Get the AI status
-    with telemetry_lock:
-        ai_data = ai_telemetry.copy()
+    # Normalize fields from RPi script
+    if 'voltage' in hw_data and 'battery_voltage' not in hw_data:
+        hw_data['battery_voltage'] = hw_data['voltage']
+    if 'is_armed' in hw_data and 'armed' not in hw_data:
+        hw_data['armed'] = hw_data['is_armed']
         
-    # 3. Merge them together so React gets both the Gauges AND the AI Lock info
-    merged_payload = {**hw_data, **ai_data}
-    merged_payload["session_detections"] = session_detections
-    merged_payload["session_sprays"] = session_sprays
-    
-    return jsonify(merged_payload)
+    # Parse flight_mode string into modes object for UI indicators
+    flight_mode_str = hw_data.get('flight_mode', '').upper()
+    hw_data['modes'] = {
+        "angle": "ANGLE" in flight_mode_str,
+        "positionHold": "POSHOLD" in flight_mode_str or "POSITION HOLD" in flight_mode_str,
+        "returnToHome": "RTH" in flight_mode_str or "RETURN TO HOME" in flight_mode_str,
+        "altitudeHold": "ALTHOLD" in flight_mode_str or "ALTITUDE HOLD" in flight_mode_str,
+        "headingHold": "MAG" in flight_mode_str or "HEADING HOLD" in flight_mode_str,
+        "airmode": "AIRMODE" in flight_mode_str or "AIR MODE" in flight_mode_str,
+        "surface": "SURFACE" in flight_mode_str,
+        "mcBraking": "BRAKING" in flight_mode_str or "MC BRAKING" in flight_mode_str,
+        "beeper": "BEEPER" in flight_mode_str
+    }
+
+    with telemetry_lock: ai_data = ai_telemetry_data.copy()
+    merged = {**hw_data, **ai_data, "session_detections": session_detections, "session_sprays": session_sprays}
+    return jsonify(merged)
+
+@app.route('/video_feed')
+def video_feed():
+    def generate():
+        while True:
+            with output_lock: current_bytes = global_jpeg_bytes
+            if current_bytes:
+                yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + current_bytes + b'\r\n')
+            time.sleep(0.04)
+    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/api/manual_spray', methods=['POST', 'OPTIONS'])
 def manual_spray():
     if request.method == 'OPTIONS': return '', 200
     try:
-        sprayer = SimpleSprayer()
-        # Grab altitude safely from the new receiver
-        cur_alt = tel_receiver.get_data().get("lidar_m", 0.0)
-        res = sprayer.spray(20000, None, cur_alt) 
+        hw_data = tel_receiver.get_data()
+        cur_alt = hw_data.get("lidar_m", 0.0)
+        with telemetry_lock:
+            water_confirmed = ai_telemetry_data.get("waterConfirmed", False)
+            computed_area = ai_telemetry_data.get("activeTargetArea", 0)
+        if not water_confirmed or cur_alt > 1.0:
+            return jsonify({"error": "Conditions not met"}), 403
+        res = SimpleSprayer().spray(computed_area, None, cur_alt, trigger_type="Manual") 
         return jsonify(res)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception as e: return jsonify({"error": str(e)}), 500
 
-@app.route('/video_feed')
-@app.route('/camera_feed')
-def video_feed():
-    def generate():
-        global global_jpeg_bytes
-        def get_standby_frame():
-            frame = (50 * np.ones((480, 640, 3), dtype=np.uint8)).astype(np.uint8)
-            cv2.putText(frame, "[WAITING FOR PI STREAM]", (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 165, 255), 2)
-            ret, jpeg = cv2.imencode('.jpg', frame)
-            return jpeg.tobytes() if ret else b''
-            
-        standby_bytes = get_standby_frame()
-        while True:
-            with output_lock: current_bytes = global_jpeg_bytes
-            bytes_to_send = current_bytes if current_bytes is not None else standby_bytes
-            yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytes_to_send + b'\r\n')
-            time.sleep(0.04) 
-    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
+# --- Offline SD Card Manager Endpoints ---
+@app.route('/api/offline/list')
+def list_offline_files():
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(PI_IP, username=USERNAME, password=PASSWORD, timeout=5)
+        sftp = ssh.open_sftp()
+        files = sftp.listdir(REMOTE_VIDEO_DIR)
+        vids = [{"name": f, "size": sftp.stat(f"{REMOTE_VIDEO_DIR}/{f}").st_size} for f in files if f.endswith(".mp4")]
+        sftp.close(); ssh.close()
+        return jsonify(vids)
+    except Exception as e: return jsonify({"error": str(e)}), 500
 
-class PiSSHManager:
+@app.route('/api/offline/download/<filename>')
+def download_offline_file(filename):
+    local_path = os.path.join(LOCAL_VIDEO_DIR, filename)
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(PI_IP, username=USERNAME, password=PASSWORD, timeout=5)
+        sftp = ssh.open_sftp()
+        sftp.get(f"{REMOTE_VIDEO_DIR}/{filename}", local_path)
+        # Also try to get telemetry CSV
+        prefix = filename.split("_offlinevid")[0]
+        csv_name = f"{prefix}_offlinetelemetry.csv"
+        try: sftp.get(f"{REMOTE_VIDEO_DIR}/{csv_name}", os.path.join(LOCAL_VIDEO_DIR, csv_name))
+        except: pass
+        sftp.close(); ssh.close()
+        return send_file(local_path, as_attachment=True)
+    except Exception as e: return jsonify({"error": str(e)}), 500
+
+@app.route('/api/offline/storage')
+def check_storage():
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(PI_IP, username=USERNAME, password=PASSWORD, timeout=5)
+        stdin, stdout, stderr = ssh.exec_command("df -h / | awk 'NR==2 {print $4}'")
+        avail = stdout.read().decode().strip()
+        ssh.close()
+        return jsonify({"available": avail})
+    except Exception as e: return jsonify({"error": str(e)}), 500
+
+class SimpleSprayer:
     _instance = None
     _lock = Lock()
-
     def __new__(cls):
         with cls._lock:
             if cls._instance is None:
-                cls._instance = super(PiSSHManager, cls).__new__(cls)
-                cls._instance.ssh = None
-                # Ensures it strictly looks for Tailscale VPN IP
-                cls._instance.pi_ip = os.getenv("PI_IP", "100.127.53.123")
-                cls._instance.username = os.getenv("PI_USERNAME", "rpi3408")
-                cls._instance.password = os.getenv("PI_PASSWORD", "rpi3408")
+                cls._instance = super(SimpleSprayer, cls).__new__(cls); cls._instance.is_busy = False
             return cls._instance
-
-    def get_connection(self):
-        with self._lock:
-            if self.ssh is not None:
-                try:
-                    if self.ssh.get_transport() and self.ssh.get_transport().is_active():
-                        return self.ssh
-                except Exception: pass
-            
-            self.ssh = paramiko.SSHClient()
-            self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            try:
-                self.ssh.connect(self.pi_ip, username=self.username, password=self.password, timeout=5)
-                return self.ssh
-            except Exception as e:
-                print(f"[ERROR] SSH Connection failed to {self.pi_ip}: {e}")
-                self.ssh = None
-                return None
-
-    def execute(self, command):
-        client = self.get_connection()
-        if client:
-            try:
-                client.exec_command(command)
-                return True
-            except Exception: self.ssh = None 
-        return False
-
-# ====================================================================
-# THE SPRAYER FIX: REAL PWM SIGNAL INSTEAD OF DIGITAL HIGH
-# ====================================================================
-class SimpleSprayer:
-    def __init__(self):
-        self.manager = PiSSHManager()
-
-    def spray(self, area, detection_id=None, altitude=0.0):
+    def spray(self, area, detection_id=None, altitude=0.0, trigger_type="Manual"):
         global ACTIVE_SESSION_ID, session_sprays
+        if self.is_busy: return {"error": "Busy"}
         
-        # Bypass gatekeeper if altitude is 0 (for testing without drone flying)
-        if altitude > MAX_SPRAY_ALTITUDE:
-            return {"error": "Too high to spray", "altitude": altitude}
-
+        # Granule Math: Larger areas require more "shake" cycles
         true_area = area * (altitude ** 2) if altitude > 0.05 else area
-        if true_area < 2500: duration = 5
-        elif true_area < 7500: duration = 10
-        else: duration = 15
-
-        # THIS IS THE MAGIC FIX: A proper Python PWM script sent directly to the Pi.
-        # It sets up 50Hz PWM, rotates the servo to 90 degrees (Duty Cycle 7.5),
-        # waits for the spray duration, then rotates back to 0 degrees (Duty Cycle 2.5) and cleanly exits.
-        pwm_script = f"""import RPi.GPIO as G, time; G.setwarnings(False); G.setmode(G.BCM); G.setup(18, G.OUT); p=G.PWM(18, 50); p.start(0); p.ChangeDutyCycle(7.5); time.sleep({duration}); p.ChangeDutyCycle(2.5); time.sleep(0.5); p.stop(); G.cleanup()"""
-        cmd = f"""nohup python3 -c "{pwm_script}" > /dev/null 2>&1 &"""
+        duration = 4 if true_area < 2500 else (7 if true_area < 7500 else 10)
         
-        if self.manager.execute(cmd):
-            print(f"[ACTION] Servo Rotated via PWM for {duration}s")
-            session_sprays += 1
-            if ACTIVE_SESSION_ID:
-                supabase_queue.put({
-                    "table": "spray_operations",
-                    "data": {"detection_id": detection_id, "trigger_type": "Manual" if area == 20000 else "Auto", "duration_seconds": duration, "target_area_pixels": float(area)}
-                })
-            return {"status": "success", "duration": duration}
-        else:
-            return {"error": "SSH command failed. Check PI_IP in .env"}
+        # Granule Routine: High-speed jitter to prevent clogging in the dispenser
+        cmd = f"""python3 - << 'EOF'
+import pigpio, time
+pi = pigpio.pi()
+if not pi.connected: exit()
+SERVO_GPIO, POS_A, POS_B, JITTER_T = 18, 1200, 1800, 0.15
+start_t = time.time()
+try:
+    while time.time() - start_t < {duration}:
+        pi.set_servo_pulsewidth(SERVO_GPIO, POS_A); time.sleep(JITTER_T)
+        pi.set_servo_pulsewidth(SERVO_GPIO, POS_B); time.sleep(JITTER_T)
+finally:
+    pi.set_servo_pulsewidth(SERVO_GPIO, 1500) # Neutral/Closed
+    time.sleep(0.5)
+    pi.set_servo_pulsewidth(SERVO_GPIO, 0)
+    pi.stop()
+EOF
+"""
+        def run_spray():
+            self.is_busy = True
+            try:
+                ssh = paramiko.SSHClient(); ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(PI_IP, username=USERNAME, password=PASSWORD, timeout=5)
+                ssh.exec_command(cmd)
+                global session_sprays; session_sprays += 1
+                now_iso = datetime.utcnow().isoformat()
+                if ACTIVE_SESSION_ID:
+                    supabase_queue.put({"table": "spray_logs", "data": {"session_id": ACTIVE_SESSION_ID, "detection_id": detection_id, "trigger_type": trigger_type, "spray_duration_seconds": duration, "target_area": float(true_area), "triggered_at": now_iso}})
+                log_to_csv({"Timestamp": now_iso, "Type": "SPRAY", "Target": "Manual", "Area": true_area, "Duration": duration})
+                time.sleep(duration + 1); ssh.close()
+            finally: self.is_busy = False
+        Thread(target=run_spray, daemon=True).start()
+        return {"status": "success", "duration": duration}
 
 def camera_producer(frame_queue, stop_event):
-    udp_stream_url = "udp://@0.0.0.0:5600?overrun_nonfatal=1&fifo_size=500000&buffer_size=1024000"
-    cap = cv2.VideoCapture(udp_stream_url, cv2.CAP_FFMPEG)
-    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-    
-    last_frame_time = time.time()
+    cap = cv2.VideoCapture(f"udp://@0.0.0.0:5600", cv2.CAP_FFMPEG)
     while not stop_event.is_set():
         ret, frame = cap.read()
-        if not ret:
-            if time.time() - last_frame_time > 5:
-                cap.release(); time.sleep(1)
-                cap = cv2.VideoCapture(udp_stream_url, cv2.CAP_FFMPEG)
-                cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-                last_frame_time = time.time()
-            continue
-        last_frame_time = time.time()
-        while not frame_queue.empty():
-            try: frame_queue.get_nowait()
-            except queue.Empty: break
-        try: frame_queue.put(frame, block=False)
-        except queue.Full: pass
+        if not ret: continue
+        if not frame_queue.full(): frame_queue.put(frame)
     cap.release()
 
 def inference_consumer(frame_queue, stop_event):
-    global global_jpeg_bytes, tracked_classes, ACTIVE_SESSION_ID, session_detections
-    
-    base_dir = os.path.dirname(__file__)
-    main_model_path = os.path.join(base_dir, "main_classifier.pt")
-    water_model_path = os.path.join(base_dir, "water_classifier.pt")
-    
-    if not os.path.exists(main_model_path):
-        while not stop_event.is_set():
-            if not frame_queue.empty():
-                frame = frame_queue.get()
-                ret, jpeg = cv2.imencode('.jpg', cv2.resize(frame, (640, 480)), [int(cv2.IMWRITE_JPEG_QUALITY), 60])
-                if ret:
-                    with output_lock: global_jpeg_bytes = jpeg.tobytes()
-            time.sleep(0.1)
-        return
-
-    main_model = YOLO(main_model_path)
-    water_model = YOLO(water_model_path)
+    global global_jpeg_bytes, session_detections
+    model = YOLO(os.path.join(os.path.dirname(__file__), "main_classifier.pt"))
+    model_water = YOLO(os.path.join(os.path.dirname(__file__), "water_classifier.pt"))
     validator = StreamValidator()
-    
     telemetry_logged_this_sec = False
-
     while not stop_event.is_set():
-        if frame_queue.empty():
-            time.sleep(0.01)
-            continue
-            
-        frame = frame_queue.get()
-        start_time = time.time()
-        current_time = time.time()
-        
-        # PULL FROM TEAMMATE'S RECEIVER INSTEAD OF OLD GLOBAL
-        hw_data = tel_receiver.get_data()
-        cur_lat = hw_data.get("gps_lat", 0.0)
-        cur_lon = hw_data.get("gps_lon", 0.0)
-        cur_lidar = hw_data.get("lidar_m", 0.0)
-        
+        if frame_queue.empty(): continue
+        frame = frame_queue.get(); start_time = time.time()
         is_reliable, status_msg = validator.check_frame_reliability(frame)
         if not is_reliable:
-            ret, jpeg = cv2.imencode('.jpg', cv2.resize(frame, (640, 480)), [int(cv2.IMWRITE_JPEG_QUALITY), 60])
+            ret, jpeg = cv2.imencode('.jpg', cv2.resize(frame, (640, 480)))
             if ret:
                 with output_lock: global_jpeg_bytes = jpeg.tobytes()
-            
-            with telemetry_lock:
-                ai_telemetry["isSharpEnough"] = False
-                ai_telemetry["waterConfirmed"] = False
             continue
-
-        results_main = main_model.predict(frame, imgsz=416, conf=0.25, verbose=False)
-        annotated_frame = frame.copy() 
-        max_progress = 0
-        active_target_name = None
-        any_water_confirmed = False
-
-        if results_main[0].boxes is not None and len(results_main[0].boxes) > 0:
-            boxes = results_main[0].boxes.xyxy.cpu().numpy()
-            clss = results_main[0].boxes.cls.cpu().numpy()
-            confs = results_main[0].boxes.conf.cpu().numpy() 
-
-            for box, cls, conf in zip(boxes, clss, confs):
-                cls_name = results_main[0].names[int(cls)]
-                if cls_name not in tracked_classes:
-                    tracked_classes[cls_name] = {'first_seen': current_time, 'last_seen': current_time, 'db_logged': False, 'water_confirmed': False}
-                else: tracked_classes[cls_name]['last_seen'] = current_time
-
-                elapsed = current_time - tracked_classes[cls_name]['first_seen']
-                progress = min(100, int((elapsed / CONFIRM_AFTER) * 100))
-                max_progress = max(max_progress, progress)
+        results = model.track(frame, imgsz=416, conf=0.25, verbose=False, persist=True)
+        annotated_frame = results[0].plot(); pipeline_ms = (time.time() - start_time) * 1000
+        hw_data = tel_receiver.get_data(); cur_lidar = hw_data.get("lidar_m", 0.0); max_progress = 0
+        # Normalize fields for logging
+        bat_volts = hw_data.get("battery_voltage", hw_data.get("voltage", 0.0))
+        is_armed = hw_data.get("armed", hw_data.get("is_armed", False))
+        
+        if results[0].boxes.id is not None:
+            # ... rest of detection logic ...
+            for box in results[0].boxes:
+                obj_id = int(box.id[0])
+                if obj_id not in tracked_classes: tracked_classes[obj_id] = {'start': time.time(), 'logged': False}
+                elapsed = time.time() - tracked_classes[obj_id]['start']
+                progress = min(100, int((elapsed / CONFIRM_AFTER) * 100)); max_progress = max(max_progress, progress)
+                det_area = float(box.xywh[0][2]*box.xywh[0][3]); det_class = model.names[int(box.cls[0])]
                 
-                x1, y1, x2, y2 = map(int, box)
-                cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (255, 100, 0), 2) 
-
-                if elapsed >= CONFIRM_AFTER:
-                    active_target_name = cls_name
-                    if not tracked_classes[cls_name]['water_confirmed']:
-                        crop = frame[y1:y2, x1:x2]
-                        if crop.size > 0:
-                            water_res = water_model(crop, verbose=False)
-                            w_conf = water_res[0].probs.top1conf.item() * 100
-                            if "water" in water_model.names[water_res[0].probs.top1].lower() and w_conf > 50:
-                                tracked_classes[cls_name]['water_confirmed'] = True
+                if progress >= 100:
+                    # Stage 2: Definitively confirm water with classification model
+                    x1, y1, x2, y2 = map(int, box.xyxy[0])
+                    crop = frame[max(0,y1):min(frame.shape[0],y2), max(0,x1):min(frame.shape[1],x2)]
                     
-                    if tracked_classes[cls_name]['water_confirmed']:
-                        any_water_confirmed = True
-                        cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
-                        
-                        if not tracked_classes[cls_name]['db_logged'] and ACTIVE_SESSION_ID:
-                            tracked_classes[cls_name]['db_logged'] = True
-                            if type_id := TARGET_TYPE_MAP.get(cls_name.lower()):
-                                supabase_queue.put({"table": "detections", "data": {"session_id": ACTIVE_SESSION_ID, "target_type_id": type_id, "confidence": float(conf), "water_confirmed": True, "latitude": float(cur_lat), "longitude": float(cur_lon), "lidar_m": float(cur_lidar)}})
-                                session_detections += 1
+                    is_water_confirmed = False
+                    if crop.size > 0:
+                        water_res = model_water(crop, verbose=False)
+                        conf_score = water_res[0].probs.top1conf.item() * 100
+                        detected_label = model_water.names[water_res[0].probs.top1]
+                        if "water" in detected_label.lower() and conf_score > 50:
+                            is_water_confirmed = True
 
-                if tracked_classes[cls_name].get('water_confirmed') and not tracked_classes[cls_name].get('sprayed'):
-                    tracked_classes[cls_name]['sprayed'] = True
-                    sprayer = SimpleSprayer()
-                    sprayer.spray((x2-x1)*(y2-y1), None, cur_lidar)
-
-        tracked_classes = {k: v for k, v in tracked_classes.items() if current_time - v['last_seen'] < PRUNE_AFTER}
-        pipeline_ms = int((time.time() - start_time) * 1000)
+                    with telemetry_lock:
+                        ai_telemetry_data["activeTarget"] = det_class; ai_telemetry_data["activeTargetArea"] = det_area
+                        ai_telemetry_data["waterConfirmed"] = is_water_confirmed
+                    
+                    if is_water_confirmed and not tracked_classes[obj_id]['logged']:
+                        tracked_classes[obj_id]['logged'] = True; session_detections += 1
+                        now_iso = datetime.utcnow().isoformat()
+                        if ACTIVE_SESSION_ID:
+                            supabase_queue.put({"table": "target_detections", "data": {"session_id": ACTIVE_SESSION_ID, "target_class": det_class, "confidence": float(box.conf[0]), "latitude": float(hw_data.get("gps_lat", 0.0)), "longitude": float(hw_data.get("gps_lon", 0.0)), "bounding_box_area": det_area, "detected_at": now_iso}})
+                        log_to_csv({"Timestamp": now_iso, "Type": "DETECTION", "Target": det_class, "Area": det_area})
         
         with telemetry_lock:
-            ai_telemetry.update({"isSharpEnough": True, "trackingProgress": max_progress, "waterConfirmed": any_water_confirmed, "activeTarget": active_target_name, "totalPipelineSpeedMs": pipeline_ms})
-
-        if ACTIVE_SESSION_ID and int(current_time) % 1 == 0 and not telemetry_logged_this_sec:
-            supabase_queue.put({"table": "ai_performance_logs", "data": {"session_id": ACTIVE_SESSION_ID, "sharpness_score": 50, "tracking_progress_percent": max_progress, "pipeline_speed_ms": pipeline_ms}})
+            ai_telemetry_data.update({"trackingProgress": max_progress, "totalPipelineSpeedMs": pipeline_ms})
+        if ACTIVE_SESSION_ID and int(time.time()) % 1 == 0 and not telemetry_logged_this_sec:
+            now_iso = datetime.utcnow().isoformat()
+            supabase_queue.put({"table": "hardware_telemetry", "data": {"session_id": ACTIVE_SESSION_ID, "logged_at": now_iso, "latitude": float(hw_data.get("gps_lat", 0.0)), "longitude": float(hw_data.get("gps_lon", 0.0)), "altitude_lidar_m": float(cur_lidar), "battery_voltage": float(bat_volts), "is_armed": is_armed, "heading": float(hw_data.get("heading", 0.0))}})
+            supabase_queue.put({"table": "ai_telemetry", "data": {"session_id": ACTIVE_SESSION_ID, "logged_at": now_iso, "sharpness_score": 50, "tracking_progress_percent": max_progress, "water_confirmed": max_progress >= 100, "pipeline_speed_ms": pipeline_ms}})
             telemetry_logged_this_sec = True
-        elif int(current_time) % 1 != 0: telemetry_logged_this_sec = False
-            
-        ret, jpeg = cv2.imencode('.jpg', cv2.resize(annotated_frame, (640, 480)), [int(cv2.IMWRITE_JPEG_QUALITY), 60])
+        elif int(time.time()) % 1 != 0: telemetry_logged_this_sec = False
+        ret, jpeg = cv2.imencode('.jpg', cv2.resize(annotated_frame, (640, 480)))
         if ret:
             with output_lock: global_jpeg_bytes = jpeg.tobytes()
 
 if __name__ == "__main__":
-    fetch_target_types()
-    # START THE NEW RECEIVER
-    tel_receiver.start()
-    
-    fq, se = queue.Queue(maxsize=1), Event()
+    fq = queue.Queue(maxsize=1); se = Event()
     Thread(target=camera_producer, args=(fq, se), daemon=True).start()
     Thread(target=inference_consumer, args=(fq, se), daemon=True).start()
-    try: 
-        app.run(host='0.0.0.0', port=5000, threaded=True, debug=False)
-    finally: 
-        tel_receiver.stop()
+    app.run(host='0.0.0.0', port=5000)

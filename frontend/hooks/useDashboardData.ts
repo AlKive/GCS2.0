@@ -26,7 +26,8 @@ const defaultTelemetry: LiveTelemetry = {
       waterConfirmed: false,
       activeTarget: undefined,
       totalPipelineSpeedMs: 0,
-      lidar_m: 0
+      lidar_m: 0,
+      linkStatus: 'Healthy'
     },
     modes: {
       angle: false, positionHold: false, returnToHome: false,

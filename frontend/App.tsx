@@ -11,6 +11,7 @@ import SettingsPanel from './components/SettingsPanel';
 import GuidePanel from './components/GuidePanel';
 import AboutPanel from './components/AboutPanel';
 import DroneStreamView from './components/DroneStreamView';
+import OfflineManagerPanel from './components/OfflineManagerPanel';
 
 import { useDashboardData } from './hooks/useDashboardData';
 import type { FlightSession, BreedingSiteInfo, LiveTelemetry } from 'types';
@@ -231,6 +232,8 @@ const App: React.FC = () => {
         return <AnalyticsPanel sessions={sessions} />;
       case 'flightLogs':
         return <FlightLogsPanel sessions={sessions} />;
+      case 'offlineManager':
+        return <OfflineManagerPanel />;
       case 'settings':
         return <SettingsPanel 
           currentDarkMode={isDarkMode}
@@ -267,6 +270,7 @@ const App: React.FC = () => {
     dashboard: 'Dashboard',
     analytics: 'Analytics',
     flightLogs: 'Flight Logs',
+    offlineManager: 'Offline Manager',
     settings: 'Settings',
     guide: 'Guide',
     about: 'About Project',
