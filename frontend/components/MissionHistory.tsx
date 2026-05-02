@@ -86,7 +86,7 @@ const MissionHistory: React.FC<FlightHistoryProps> = ({ sessions }) => {
                         </div>
                         <div className="col-span-4 min-w-0">
                             <p className="font-mono text-[10px] font-bold text-main truncate tracking-tight uppercase">REC_{session.id.substring(0, 12)}</p>
-                            <p className="text-[8px] font-mono text-dim tracking-wider">LOC: {session.location?.barangay_name || 'NULL'}</p>
+                            <p className="text-[8px] font-mono text-dim tracking-wider">LOC: {session.barangays?.name || 'NULL'}</p>
                         </div>
                         <div className="col-span-3 flex justify-center">
                             <span className={`inline-flex items-center px-2 py-0.5 text-[8px] font-black font-mono rounded uppercase tracking-widest border ${

@@ -13,7 +13,7 @@ def run_database_test():
     try:
         # 1. Start a Flight Session
         print("\n1. Starting a new Flight Session...")
-        session_res = supabase.table("flight_sessions").insert({"status": "active"}).execute()
+        session_res = supabase.table("flight_sessions").insert({"status": "active", "barangay_id": 1}).execute()
         session_id = session_res.data[0]['id']
         print(f"✅ Success! Session ID generated: {session_id}")
 
@@ -24,41 +24,40 @@ def run_database_test():
             "latitude": 14.6012,
             "longitude": 120.9921,
             "altitude_lidar_m": 2.5,
-            "battery_voltage": 22.4,
-            "signal_strength_dbm": -65
+            "battery_voltage": 22.4
         }).execute()
         print("✅ Success! Hardware telemetry logged.")
 
         # 3. Insert Mock AI Telemetry
-        print("\n3. Pushing AI Telemetry...")
-        supabase.table("ai_telemetry").insert({
+        print("\n3. Pushing AI Performance Log...")
+        supabase.table("ai_performance_logs").insert({
             "session_id": session_id,
             "sharpness_score": 150,
-            "is_sharp_enough": True,
             "tracking_progress_percent": 100,
-            "water_confirmed": True,
-            "active_target": "Mosquito Breeding Site",
             "pipeline_speed_ms": 45
         }).execute()
         print("✅ Success! AI telemetry logged.")
 
         # 4. Insert Mock Target Detection
         print("\n4. Pushing Target Detection...")
-        target_res = supabase.table("target_detections").insert({
+        target_res = supabase.table("detections").insert({
             "session_id": session_id,
-            "target_class": "Mosquito Breeding Site",
-            "bounding_box_area": 12500.5
+            "target_type_id": 1,
+            "latitude": 14.6012,
+            "longitude": 120.9921,
+            "lidar_m": 2.5,
+            "water_confirmed": True
         }).execute()
         target_id = target_res.data[0]['id']
         print(f"✅ Success! Target Locked. Detection ID: {target_id}")
 
         # 5. Insert Mock Spray Log
-        print("\n5. Pushing Spray Log...")
-        supabase.table("spray_logs").insert({
+        print("\n5. Pushing Spray Operation...")
+        supabase.table("spray_operations").insert({
             "session_id": session_id,
             "trigger_type": "Auto",
-            "target_area": 12500.5,
-            "spray_duration_seconds": 4,
+            "target_area_pixels": 12500.5,
+            "duration_seconds": 4,
             "detection_id": target_id
         }).execute()
         print("✅ Success! Spray event logged.")

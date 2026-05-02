@@ -46,13 +46,17 @@ SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
 
 ACTIVE_SESSION_ID = None
+TARGET_TYPES = {}
 
-@app.after_request
-def add_cors_headers(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = '*'
-    return response
+def load_target_types():
+    global TARGET_TYPES
+    if supabase:
+        try:
+            res = supabase.table("target_types").select("id, label").execute()
+            TARGET_TYPES = {row['label'].lower(): row['id'] for row in res.data}
+            print(f"[INFO] Loaded target types: {TARGET_TYPES}")
+        except Exception as e:
+            print(f"[WARN] Failed to load target types: {e}")
 
 # --- Global State ---
 global_jpeg_bytes = None
@@ -208,8 +212,10 @@ def start_flight():
     global ACTIVE_SESSION_ID, session_detections, session_sprays
     session_detections = 0; session_sprays = 0
     try:
-        res = supabase.table("flight_sessions").insert({"location_id": 1, "status": "active", "start_time": datetime.utcnow().isoformat()}).execute()
+        # Initializing with barangay_id 1 (default)
+        res = supabase.table("flight_sessions").insert({"barangay_id": 1, "status": "active", "start_time": datetime.utcnow().isoformat()}).execute()
         ACTIVE_SESSION_ID = res.data[0]['id']
+        load_target_types()
         return jsonify({"status": "success", "session_id": ACTIVE_SESSION_ID})
     except Exception as e: return jsonify({"error": str(e)}), 500
 
@@ -230,6 +236,7 @@ def set_session():
     data = request.json
     if data and 'session_id' in data:
         ACTIVE_SESSION_ID = data['session_id']
+        load_target_types()
         return jsonify({"status": "success", "session_id": ACTIVE_SESSION_ID})
     return jsonify({"error": "No session_id provided"}), 400
 
@@ -382,7 +389,7 @@ EOF
                 global session_sprays; session_sprays += 1
                 now_iso = datetime.utcnow().isoformat()
                 if ACTIVE_SESSION_ID:
-                    supabase_queue.put({"table": "spray_logs", "data": {"session_id": ACTIVE_SESSION_ID, "detection_id": detection_id, "trigger_type": trigger_type, "spray_duration_seconds": duration, "target_area": float(true_area), "triggered_at": now_iso}})
+                    supabase_queue.put({"table": "spray_operations", "data": {"session_id": ACTIVE_SESSION_ID, "detection_id": detection_id, "trigger_type": trigger_type, "duration_seconds": duration, "target_area_pixels": float(area), "true_area_scaled": float(true_area), "triggered_at": now_iso}})
                 log_to_csv({"Timestamp": now_iso, "Type": "SPRAY", "Target": trigger_type, "Area": true_area, "Duration": duration})
                 time.sleep(duration + 1); ssh.close()
             finally: self.is_busy = False
@@ -454,7 +461,8 @@ def inference_consumer(frame_queue, stop_event):
                         now_iso = datetime.utcnow().isoformat()
                         if ACTIVE_SESSION_ID:
                             # Utilizing true_area for database logging
-                            supabase_queue.put({"table": "target_detections", "data": {"session_id": ACTIVE_SESSION_ID, "target_class": det_class, "confidence": float(box.conf[0]), "latitude": float(hw_data.get("gps_lat", 0.0)), "longitude": float(hw_data.get("gps_lon", 0.0)), "bounding_box_area": true_area, "detected_at": now_iso}})
+                            target_type_id = TARGET_TYPES.get(det_class.lower(), 1) # Default to 1 if not found
+                            supabase_queue.put({"table": "detections", "data": {"session_id": ACTIVE_SESSION_ID, "target_type_id": target_type_id, "confidence": float(box.conf[0]), "latitude": float(hw_data.get("gps_lat", 0.0)), "longitude": float(hw_data.get("gps_lon", 0.0)), "lidar_m": float(cur_lidar), "water_confirmed": True, "created_at": now_iso}})
                         log_to_csv({"Timestamp": now_iso, "Type": "DETECTION", "Target": det_class, "Area": true_area})
         
         with telemetry_lock:
@@ -463,13 +471,27 @@ def inference_consumer(frame_queue, stop_event):
         if ACTIVE_SESSION_ID and int(time.time()) % 1 == 0 and not telemetry_logged_this_sec:
             now_iso = datetime.utcnow().isoformat()
             supabase_queue.put({"table": "hardware_telemetry", "data": {"session_id": ACTIVE_SESSION_ID, "logged_at": now_iso, "latitude": float(hw_data.get("gps_lat", 0.0)), "longitude": float(hw_data.get("gps_lon", 0.0)), "altitude_lidar_m": float(cur_lidar), "battery_voltage": float(bat_volts), "is_armed": is_armed, "heading": float(hw_data.get("heading", 0.0))}})
-            supabase_queue.put({"table": "ai_telemetry", "data": {"session_id": ACTIVE_SESSION_ID, "logged_at": now_iso, "sharpness_score": 50, "tracking_progress_percent": max_progress, "water_confirmed": max_progress >= 100, "pipeline_speed_ms": pipeline_ms}})
+            supabase_queue.put({"table": "ai_performance_logs", "data": {"session_id": ACTIVE_SESSION_ID, "logged_at": now_iso, "sharpness_score": 50, "tracking_progress_percent": max_progress, "pipeline_speed_ms": pipeline_ms}})
             telemetry_logged_this_sec = True
         elif int(time.time()) % 1 != 0: telemetry_logged_this_sec = False
         
         ret, jpeg = cv2.imencode('.jpg', cv2.resize(annotated_frame, (640, 480)))
         if ret:
             with output_lock: global_jpeg_bytes = jpeg.tobytes()
+
+if __name__ == "__main__":
+    fq = queue.Queue(maxsize=1); se = Event()
+    
+    # Initialize connection dependencies before spinning up the Flask app
+    heartbeat = HeartbeatSender(ip=PI_IP).start()
+    
+    Thread(target=camera_producer, args=(fq, se), daemon=True).start()
+    Thread(target=inference_consumer, args=(fq, se), daemon=True).start()
+    
+    try:
+        app.run(host='0.0.0.0', port=5000)
+    finally:
+        heartbeat.stop()
 
 if __name__ == "__main__":
     fq = queue.Queue(maxsize=1); se = Event()

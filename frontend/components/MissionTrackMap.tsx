@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
 import L, { LatLng, LatLngBounds, Icon, DivIcon } from 'leaflet';
+import type { HardwareTelemetry, Detection, SprayOperation } from 'types';
 
 // This imports the marker icons as URLs so Vite can find them.
 import iconUrl from 'leaflet/dist/images/marker-icon.png?url';
@@ -31,9 +32,9 @@ const SprayIcon = new DivIcon({
 });
 
 interface MissionTrackMapProps {
-  telemetry?: { latitude: number; longitude: number; altitude_lidar_m: number }[];
-  detections?: { id: string; target_class: string; detected_at: string; image_url?: string; location?: any }[];
-  sprays?: { id: string; trigger_type: string; spray_duration_seconds: number; triggered_at: string; location?: any }[];
+  telemetry?: HardwareTelemetry[];
+  detections?: Detection[];
+  sprays?: SprayOperation[];
   mapStyle?: string;
   // Fallback for legacy support
   track?: { lat: number; lon: number }[];
@@ -85,18 +86,15 @@ const MissionTrackMap: React.FC<MissionTrackMapProps> = ({
 
         {/* Detections */}
         {detections.map((det, idx) => {
-          // Note: In a real scenario, detections should have coordinates. 
-          // If they don't, we might need to correlate with telemetry or assume they have a 'location' field.
-          // For now, let's assume they might have lat/lon or we skip markers without coords.
-          const lat = (det as any).latitude;
-          const lon = (det as any).longitude;
+          const lat = det.latitude;
+          const lon = det.longitude;
           if (lat && lon) {
             return (
               <Marker key={`det-${idx}`} position={[lat, lon]} icon={DetectionIcon}>
                 <Popup>
                   <div className="text-xs">
-                    <p className="font-bold">Detection: {det.target_class}</p>
-                    <p>{new Date(det.detected_at).toLocaleTimeString()}</p>
+                    <p className="font-bold">Detection: {det.target_types?.label || 'Target'}</p>
+                    <p>{new Date(det.created_at).toLocaleTimeString()}</p>
                   </div>
                 </Popup>
               </Marker>
@@ -115,7 +113,7 @@ const MissionTrackMap: React.FC<MissionTrackMapProps> = ({
                 <Popup>
                   <div className="text-xs">
                     <p className="font-bold text-green-600">Spray Triggered ({spray.trigger_type})</p>
-                    <p>Duration: {spray.spray_duration_seconds}s</p>
+                    <p>Duration: {spray.duration_seconds}s</p>
                     <p>{new Date(spray.triggered_at).toLocaleTimeString()}</p>
                   </div>
                 </Popup>

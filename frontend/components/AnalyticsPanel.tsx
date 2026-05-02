@@ -111,8 +111,8 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ sessions }) => {
       let totalSeconds = 0;
 
       sessions.forEach(s => {
-          if (s.target_detections) detections += s.target_detections.length;
-          if (s.spray_logs) sprays += s.spray_logs.length;
+          if (s.detections) detections += s.detections.length;
+          if (s.spray_operations) sprays += s.spray_operations.length;
           
           if (s.end_time) {
               const diff = new Date(s.end_time).getTime() - new Date(s.start_time).getTime();

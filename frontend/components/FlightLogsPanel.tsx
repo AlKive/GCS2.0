@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import type { FlightSession, HardwareTelemetry, AiTelemetry, SprayLog, TargetDetection, StreamHealth } from 'types'; 
+import type { FlightSession, HardwareTelemetry, AiPerformanceLog, SprayOperation, Detection, StreamHealth } from 'types'; 
 import MissionTrackMap from './MissionTrackMap';
 import { downloadMissionReport } from '../utils/downloadReport'; 
 
@@ -42,7 +42,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
 
       // Object Filter
       if (objectFilter !== 'all') {
-        const hasObject = session.target_detections?.some(d => d.target_class?.toLowerCase() === objectFilter.toLowerCase());
+        const hasObject = session.detections?.some(d => d.target_types?.label?.toLowerCase() === objectFilter.toLowerCase());
         if (!hasObject) return false;
       }
 
@@ -201,7 +201,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                   <p className="text-[9px] text-slate-500 font-mono tracking-tight uppercase">{new Date(session.start_time).toLocaleString()}</p>
                   <p className="text-[9px] text-gcs-primary/60 font-mono flex items-center gap-2 uppercase font-bold truncate">
                     <span className="w-1 h-1 bg-gcs-primary/40 rounded-full" />
-                    {session.location?.barangay_name || 'UNKNOWN_SEC'}
+                    {session.barangays?.name || 'UNKNOWN_SEC'}
                   </p>
                 </div>
               </div>
@@ -227,7 +227,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                     {/* Overview Header Stats */}
                     <div className="grid grid-cols-4 gap-4 shrink-0">
                       <StatCard label="PILOT" value={selectedSession.users?.full_name || 'N/A'} />
-                      <StatCard label="LOCATION" value={selectedSession.location?.barangay_name || 'N/A'} subValue={selectedSession.location?.city} />
+                      <StatCard label="LOCATION" value={selectedSession.barangays?.name || 'N/A'} subValue={selectedSession.barangays?.city?.name} />
                       <StatCard label="DURATION" value={getDuration(selectedSession.start_time, selectedSession.end_time)} />
                       <StatCard label="STATUS" value={selectedSession.status.toUpperCase()} />
                     </div>
@@ -236,8 +236,8 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                     <div className="h-64 relative border border-slate-800 rounded overflow-hidden group">
                       <MissionTrackMap
                           telemetry={selectedSession.hardware_telemetry || []}
-                          detections={selectedSession.target_detections || []}
-                          sprays={selectedSession.spray_logs || []}
+                          detections={selectedSession.detections || []}
+                          sprays={selectedSession.spray_operations || []}
                       />
                       <div className="absolute top-2 left-2 z-10 pointer-events-none">
                           <div className="bg-slate-900/90 border border-slate-700 p-2 rounded text-[8px] font-mono text-slate-400">
@@ -259,9 +259,9 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                       <div className="space-y-4">
                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-success pl-3">PAYLOAD_SUMMARY</h4>
                         <div className="space-y-2">
-                           <LogItem label="DETECTIONS" value={selectedSession.target_detections?.length || 0} />  
-                           <LogItem label="SPRAY_EVENTS" value={selectedSession.spray_logs?.length || 0} />       
-                           <LogItem label="AVG_SPRAY_DUR" value={`${((selectedSession.spray_logs?.reduce((a,c) => a+c.spray_duration_seconds, 0) || 0) / (selectedSession.spray_logs?.length || 1)).toFixed(1)}S`} />
+                           <LogItem label="DETECTIONS" value={selectedSession.detections?.length || 0} />  
+                           <LogItem label="SPRAY_EVENTS" value={selectedSession.spray_operations?.length || 0} />       
+                           <LogItem label="AVG_SPRAY_DUR" value={`${((selectedSession.spray_operations?.reduce((a,c) => a+c.duration_seconds, 0) || 0) / (selectedSession.spray_operations?.length || 1)).toFixed(1)}S`} />
                         </div>
                       </div>
                     </div>
@@ -278,13 +278,11 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                             <th className="p-3">LOGGED_AT</th>
                             <th className="p-3">SHARPNESS</th>
                             <th className="p-3">PROGRESS</th>
-                            <th className="p-3">CONFIRMED</th>
-                            <th className="p-3">TARGET</th>
                             <th className="p-3">PIPELINE</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/50">
-                          {selectedSession.ai_telemetry?.map((log) => (
+                          {selectedSession.ai_performance_logs?.map((log) => (
                             <tr key={log.id} className="hover:bg-slate-800/30">
                               <td className="p-3 text-slate-400">{new Date(log.logged_at).toLocaleTimeString()}</td>
                               <td className="p-3 text-slate-100">{log.sharpness_score}</td>
@@ -293,10 +291,6 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                                   <div className="bg-gcs-primary h-full" style={{ width: `${log.tracking_progress_percent}%` }} />
                                 </div>
                               </td>
-                              <td className="p-3">
-                                <span className={log.water_confirmed ? 'text-gcs-success' : 'text-slate-600'}>{log.water_confirmed ? 'YES' : 'NO'}</span>
-                              </td>
-                              <td className="p-3 text-slate-300">{log.active_target || '---'}</td>
                               <td className="p-3 text-slate-100">{log.pipeline_speed_ms}MS</td>
                             </tr>
                           ))}
@@ -306,14 +300,14 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
 
                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-primary pl-3">TARGET_DETECTION_STACK</h4>
                     <div className="grid grid-cols-2 gap-4">
-                      {selectedSession.target_detections?.map((det) => (
+                      {selectedSession.detections?.map((det) => (
                         <div key={det.id} className="p-4 bg-slate-900 border border-slate-800 rounded flex gap-4 items-center">
                            <div className="w-12 h-12 bg-slate-800 rounded border border-slate-700 flex items-center justify-center overflow-hidden">
                               {det.image_url ? <img src={det.image_url} alt="Target" className="w-full h-full object-cover" /> : <span className="text-slate-600 text-[8px]">NO_IMG</span>}
                            </div>
                            <div className="flex-1">
-                              <p className="text-[10px] font-bold text-slate-100 uppercase tracking-widest">{det.target_class}</p>
-                              <p className="text-[8px] text-slate-500 font-mono">AREA: {det.bounding_box_area.toFixed(0)}PX² | {new Date(det.detected_at).toLocaleTimeString()}</p>
+                              <p className="text-[10px] font-bold text-slate-100 uppercase tracking-widest">{det.target_types?.label}</p>
+                              <p className="text-[8px] text-slate-500 font-mono">LIDAR: {det.lidar_m?.toFixed(2)}M | {new Date(det.created_at).toLocaleTimeString()}</p>
                            </div>
                         </div>
                       ))}
@@ -332,7 +326,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                               <th className="p-3">GPS_COORDS</th>
                               <th className="p-3">ALT_LIDAR</th>
                               <th className="p-3">VOLT</th>
-                              <th className="p-3">RSSI</th>
+                              <th className="p-3">ARMED</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-800/50">
@@ -342,7 +336,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                                 <td className="p-3 text-slate-100">{log.latitude.toFixed(6)}, {log.longitude.toFixed(6)}</td>
                                 <td className="p-3 text-slate-100">{log.altitude_lidar_m.toFixed(2)}M</td>        
                                 <td className="p-3 text-gcs-success">{log.battery_voltage.toFixed(2)}V</td>       
-                                <td className="p-3 text-slate-300">{log.signal_strength_dbm}DBM</td>
+                                <td className="p-3 text-slate-300">{log.is_armed ? 'YES' : 'NO'}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -351,14 +345,14 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
 
                       <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-success pl-3">SPRAY_LOG_EVENTS</h4>
                       <div className="space-y-2">
-                        {selectedSession.spray_logs?.map((log) => (
+                        {selectedSession.spray_operations?.map((log) => (
                           <div key={log.id} className="p-3 bg-slate-900 border border-slate-800 rounded flex justify-between items-center">
                              <div>
                                 <p className="text-[10px] font-bold text-slate-100 uppercase">TRIGGER_{log.trigger_type}</p>
-                                <p className="text-[8px] text-slate-500 font-mono">{new Date(log.triggered_at).toLocaleTimeString()} | DUR: {log.spray_duration_seconds}S</p>
+                                <p className="text-[8px] text-slate-500 font-mono">{new Date(log.triggered_at).toLocaleTimeString()} | DUR: {log.duration_seconds}S</p>
                              </div>
                              <div className="text-right">
-                                <p className="text-[10px] font-mono text-gcs-success font-black">{log.target_area.toFixed(0)}PX²</p>
+                                <p className="text-[10px] font-mono text-gcs-success font-black">{log.target_area_pixels?.toFixed(0)}PX²</p>
                                 <p className="text-[7px] text-slate-600 uppercase font-mono font-bold tracking-widest">TARGET_AREA</p>
                              </div>
                           </div>
@@ -398,6 +392,66 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                     </div>
                   </div>
                 )}
+
+                {/* Secure Export Footer */}
+                <div className="flex justify-end pt-4 border-t border-slate-800 mt-auto shrink-0">
+                  <button
+                    onClick={handleDownloadReport}
+                    disabled={!selectedSession || selectedSession.status === 'active'}
+                    className="bg-gcs-primary hover:bg-red-600 text-slate-100 font-black font-mono text-[10px] uppercase tracking-[0.3em] px-8 py-3 rounded shadow-xl transition-all disabled:opacity-10 active:scale-95 flex items-center gap-3 neon-glow-red"
+                  >
+                    <ExportIcon />
+                    GENERATE_SECURE_REPORT
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full gap-4 opacity-30 grayscale border border-dashed border-slate-800 m-6 rounded">
+               <svg className="w-16 h-16 text-slate-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" strokeWidth="1.5" strokeLinecap="round"/></svg>
+               <p className="text-xs font-black font-mono uppercase tracking-[0.4em] text-slate-500">SELECT_FLIGHT_DATA_PACKET</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <style>{`
+        .animate-fade-in { animation: fadeIn 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+    </div>
+  );
+};
+
+const TabButton: React.FC<{ active: boolean, onClick: () => void, label: string }> = ({ active, onClick, label }) => (
+  <button
+    onClick={onClick}
+    className={`px-6 py-3 text-[9px] font-mono font-black tracking-[0.2em] transition-all border-b-2 whitespace-nowrap ${
+      active ? 'text-gcs-primary border-gcs-primary bg-gcs-primary/5' : 'text-slate-500 border-transparent hover:text-slate-300 hover:bg-slate-800/30'
+    }`}
+  >
+    {label}_
+  </button>
+);
+
+const StatCard: React.FC<{ label: string, value: string | number, subValue?: string }> = ({ label, value, subValue }) => (
+  <div className="p-3 bg-slate-900/50 border border-slate-800 rounded">
+     <span className="text-[7px] text-slate-600 font-mono font-bold uppercase tracking-widest block mb-1">{label}</span>
+     <p className="text-xs font-black font-mono text-slate-100 truncate">{value}</p>
+     {subValue && <p className="text-[8px] text-slate-500 font-mono truncate">{subValue}</p>}
+  </div>
+);
+
+const LogItem: React.FC<{ label: string, value: string | number }> = ({ label, value }) => (
+  <div className="flex justify-between items-center py-1.5 border-b border-slate-800/30 last:border-0">
+    <span className="text-[8px] font-mono font-bold text-slate-500 uppercase tracking-[0.1em]">{label}_</span>    
+    <span className="text-[9px] font-black font-mono text-slate-200 uppercase truncate ml-4">{value}</span>       
+  </div>
+);
+
+export default FlightLogsPanel;
 
                 {/* Secure Export Footer */}
                 <div className="flex justify-end pt-4 border-t border-slate-800 mt-auto shrink-0">

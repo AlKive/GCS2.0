@@ -32,36 +32,30 @@ export interface User {
 
 // --- Core Transactional Entities ---
 
-export interface TargetDetection {
+export interface Detection {
     id: string;
     session_id: string;
-    target_class: string;
+    target_type_id: number;
     confidence: number;
+    water_confirmed: boolean;
     latitude: number;
     longitude: number;
-    bounding_box_area: number;
+    lidar_m?: number;
     image_url?: string;
-    detected_at: string;
+    created_at: string;
+    // Joined data
+    target_types?: TargetType;
 }
 
-export interface AiTelemetry {
+export interface SprayOperation {
     id: string;
-    session_id: string;
-    logged_at: string;
-    sharpness_score: number;
-    tracking_progress_percent: number;
-    water_confirmed: boolean;
-    active_target?: string;
-    pipeline_speed_ms: number;
-}
-
-export interface SprayLog {
-    id: string;
-    session_id: string;
+    session_id: string | null;
+    detection_id: string;
     triggered_at: string;
     trigger_type: 'Manual' | 'Auto';
-    spray_duration_seconds: number;
-    target_area: number;
+    duration_seconds: number;
+    target_area_pixels?: number;
+    true_area_scaled?: number;
 }
 
 export interface StreamHealth {
@@ -71,29 +65,24 @@ export interface StreamHealth {
     pi_ip: string;
     laptop_ip: string;
     stream_pid?: string;
-    status: 'Healthy' | 'Unstable' | 'Lost';
-}
-
-export interface Location {
-    id: number;
-    barangay_name: string;
-    city: string;
+    status: 'Healthy' | 'Missing/Restarting' | 'Disconnected' | 'Failed' | 'Stream Frozen' | 'Too Blurry';
 }
 
 export interface FlightSession {
   id: string;
   pilot_id: string | null;
-  location_id: number | null;
+  barangay_id: number | null;
   start_time: string;
   end_time: string | null;
   status: MissionStatus;
+  session_name?: string;
   // Joined data
-  location?: Location | null;
+  barangays?: Barangay | null;
   users?: User | null;
-  target_detections?: TargetDetection[];
+  detections?: Detection[];
   hardware_telemetry?: HardwareTelemetry[];
-  ai_telemetry?: AiTelemetry[];
-  spray_logs?: SprayLog[];
+  ai_performance_logs?: AiPerformanceLog[];
+  spray_operations?: SprayOperation[];
   stream_health?: StreamHealth[];
 }
 

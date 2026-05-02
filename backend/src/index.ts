@@ -212,8 +212,9 @@ fastify.post('/api/sessions', async (request, reply) => {
       .from('flight_sessions')
       .insert([{ 
         pilot_id: body.pilot_id, 
-        location_id: body.location_id, 
-        status: body.status || 'active' 
+        barangay_id: body.barangay_id, 
+        status: body.status || 'active',
+        session_name: body.session_name
       }])
       .select()
       .single();
@@ -252,13 +253,13 @@ fastify.get('/api/sessions', async (request, reply) => {
       .from('flight_sessions')
       .select(`
         *,
-        location:locations(*),
-        users:users(*),
-        ai_telemetry(*),
+        barangays(*, cities(*)),
+        users(*),
+        ai_performance_logs(*),
         hardware_telemetry(*),
-        spray_logs(*),
+        spray_operations(*),
         stream_health(*),
-        target_detections(*)
+        detections(*, target_types(*))
       `)
       .order('start_time', { ascending: false });
     if (error) throw error;
@@ -313,11 +314,11 @@ fastify.post('/api/telemetry/hardware', async (request, reply) => {
   }
 });
 
-// 3. Telemetry (AI)
+// 3. Telemetry (AI Performance)
 fastify.post('/api/telemetry/ai', async (request, reply) => {
   try {
     const body = request.body as any;
-    const { error } = await supabase.from('ai_telemetry').insert([body]);
+    const { error } = await supabase.from('ai_performance_logs').insert([body]);
     if (error) throw error;
     return { success: true };
   } catch (err) {
@@ -326,11 +327,11 @@ fastify.post('/api/telemetry/ai', async (request, reply) => {
   }
 });
 
-// 4. Target Detections
+// 4. Detections
 fastify.post('/api/detections', async (request, reply) => {
   try {
     const body = request.body as any;
-    const { data, error } = await supabase.from('target_detections').insert([body]).select().single();
+    const { data, error } = await supabase.from('detections').insert([body]).select().single();
     if (error) throw error;
     return { success: true, data };
   } catch (err) {
@@ -339,11 +340,11 @@ fastify.post('/api/detections', async (request, reply) => {
   }
 });
 
-// 5. Spray Logs
+// 5. Spray Operations
 fastify.post('/api/spray-logs', async (request, reply) => {
   try {
     const body = request.body as any;
-    const { error } = await supabase.from('spray_logs').insert([body]);
+    const { error } = await supabase.from('spray_operations').insert([body]);
     if (error) throw error;
     return { success: true };
   } catch (err) {
@@ -368,7 +369,7 @@ fastify.post('/api/stream-health', async (request, reply) => {
 // 7. Reference Data
 fastify.get('/api/locations', async (request, reply) => {
   try {
-    const { data, error } = await supabase.from('locations').select('*');
+    const { data, error } = await supabase.from('barangays').select('*, cities(*)');
     if (error) throw error;
     return data;
   } catch (err) {

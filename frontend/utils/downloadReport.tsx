@@ -13,21 +13,21 @@ export const downloadMissionReport = (data: Mission | FlightSession) => {
     csvContent += `Start Time,"${data.start_time}"\r\n`;
     csvContent += `End Time,"${data.end_time || 'Ongoing'}"\r\n`;
     csvContent += `Status,"${data.status}"\r\n`;
-    csvContent += `Location,"${data.location?.barangay_name || 'N/A'}, ${data.location?.city || ''}"\r\n`;
+    csvContent += `Location,"${data.barangays?.name || 'N/A'}, ${data.barangays?.city?.name || ''}"\r\n`;
 
-    if (data.target_detections && data.target_detections.length > 0) {
+    if (data.detections && data.detections.length > 0) {
       csvContent += "\r\nDetected Objects\r\n";
       csvContent += "ID,Class Name,Detected At\r\n";
-      data.target_detections.forEach((det) => {
-        csvContent += `"${det.id}","${det.target_class}","${det.detected_at}"\r\n`;
+      data.detections.forEach((det) => {
+        csvContent += `"${det.id}","${det.target_types?.label}","${det.created_at}"\r\n`;
       });
     }
 
-    if (data.spray_logs && data.spray_logs.length > 0) {
+    if (data.spray_operations && data.spray_operations.length > 0) {
       csvContent += "\r\nSpray Logs\r\n";
       csvContent += "ID,Trigger Type,Duration (s),Triggered At\r\n";
-      data.spray_logs.forEach((log) => {
-        csvContent += `"${log.id}","${log.trigger_type}",${log.spray_duration_seconds},"${log.triggered_at}"\r\n`;
+      data.spray_operations.forEach((log) => {
+        csvContent += `"${log.id}","${log.trigger_type}",${log.duration_seconds},"${log.triggered_at}"\r\n`;
       });
     }
 

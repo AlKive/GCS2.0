@@ -22,14 +22,26 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL else None
 
+TARGET_TYPES = {}
+def load_target_types():
+    global TARGET_TYPES
+    if supabase:
+        try:
+            res = supabase.table("target_types").select("id, label").execute()
+            TARGET_TYPES = {row['label'].lower(): row['id'] for row in res.data}
+        except Exception: pass
+
 def sync_offline_to_db(detection_data, hardware_data):
     """Syncs processed offline detections and hardware path to Supabase 3NF tables."""
     if not supabase: return
     try:
+        # 0. Load types
+        load_target_types()
+
         # 1. Create a flight session
         res = supabase.table("flight_sessions").insert({
             "status": "completed",
-            "location_id": 1, 
+            "barangay_id": 1, 
             "start_time": hardware_data[0]['Timestamp'] if hardware_data else datetime.now().isoformat(),
             "end_time": hardware_data[-1]['Timestamp'] if hardware_data else datetime.now().isoformat()
         }).execute()
@@ -52,23 +64,25 @@ def sync_offline_to_db(detection_data, hardware_data):
 
         # 3. Sync Detections
         for det in detection_data:
-            det_res = supabase.table("target_detections").insert({
+            target_type_id = TARGET_TYPES.get(det['target'].lower(), 1)
+            det_res = supabase.table("detections").insert({
                 "session_id": session_id,
-                "target_class": det['target'],
+                "target_type_id": target_type_id,
                 "confidence": det['conf'],
                 "latitude": det['lat'],
                 "longitude": det['lon'],
-                "bounding_box_area": det['true_area']
+                "lidar_m": det['lidar'],
+                "water_confirmed": True
             }).execute()
 
             if det['water']:
-                supabase.table("spray_logs").insert({
+                supabase.table("spray_operations").insert({
                     "session_id": session_id,
                     "detection_id": det_res.data[0]['id'],
                     "trigger_type": "Auto",
                     "triggered_at": datetime.now().isoformat(),
-                    "spray_duration_seconds": 5,
-                    "target_area": det['true_area']
+                    "duration_seconds": 5,
+                    "target_area_pixels": det['true_area']
                 }).execute()
         
         return True
