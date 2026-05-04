@@ -306,7 +306,6 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                             </div>
                         ) : (
                             <img
-                                key={reloadKey}
                                 src={`/camera_feed?t=${reloadKey}`}
                                 className="max-w-full max-h-full object-contain opacity-90 group-hover:opacity-100 transition-opacity"
                                 alt="Live Tactical Stream"

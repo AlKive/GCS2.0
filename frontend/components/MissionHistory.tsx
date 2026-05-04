@@ -85,7 +85,9 @@ const MissionHistory: React.FC<FlightHistoryProps> = ({ sessions }) => {
                             <MiniMapView track={session.hardware_telemetry} />
                         </div>
                         <div className="col-span-4 min-w-0">
-                            <p className="font-mono text-[10px] font-bold text-main truncate tracking-tight uppercase">REC_{session.id.substring(0, 12)}</p>
+                            <p className="font-mono text-[10px] font-bold text-main truncate tracking-tight uppercase">
+                                {session.session_name || `REC_${session.id.substring(0, 12)}`}
+                            </p>
                             <p className="text-[8px] font-mono text-dim tracking-wider">LOC: {session.barangays?.name || 'NULL'}</p>
                         </div>
                         <div className="col-span-3 flex justify-center">

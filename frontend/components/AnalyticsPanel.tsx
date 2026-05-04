@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import type { FlightSession } from 'types';
 
-// --- Tactical Chart Components ---
+// --- Tactical Chart & Diagnostic Components ---
 const BarChart: React.FC<{ sessions: FlightSession[] }> = ({ sessions }) => {
     const weeklyData = useMemo(() => {
         const now = new Date();
@@ -97,22 +97,107 @@ const DonutChart: React.FC<{ percentage: number }> = ({ percentage }) => {
     );
 };
 
+const SystemDiagnosticsCard: React.FC<{ avgMs: number, warnings: number }> = ({ avgMs, warnings }) => {
+    // Arbitrary threshold for Pi inference speed warning
+    const isLagging = avgMs > 150; 
 
+    return (
+        <div className="bg-gcs-panel border border-main rounded-lg p-6 flex flex-col shadow-2xl relative overflow-hidden">
+            <div className="flex items-center justify-between mb-6 border-b border-main pb-4">
+                <div>
+                    <h3 className="text-xs font-black text-main uppercase tracking-[0.2em] font-mono opacity-60">EDGE_COMPUTE</h3>
+                    <p className="text-[9px] text-dim font-mono uppercase">Hardware_Diagnostics</p>
+                </div>
+                {warnings > 0 ? (
+                    <div className="bg-gcs-error/20 border border-gcs-error px-2 py-1 rounded flex items-center gap-2 animate-pulse">
+                        <span className="w-1.5 h-1.5 bg-gcs-error rounded-full" />
+                        <span className="text-[9px] text-gcs-error font-bold font-mono">ERR: {warnings}</span>
+                    </div>
+                ) : (
+                    <div className="bg-gcs-success/10 border border-gcs-success/30 px-2 py-1 rounded flex items-center gap-2">
+                        <span className="text-[9px] text-gcs-success font-bold font-mono">SYS_NOMINAL</span>
+                    </div>
+                )}
+            </div>
+
+            <div className="flex-1 flex flex-col justify-center gap-4 relative z-10">
+                <div>
+                    <div className="flex justify-between items-end mb-1">
+                        <span className="text-[9px] font-mono font-bold text-dim uppercase tracking-widest">AVG_PIPELINE_LATENCY</span>
+                        <span className={`text-lg font-black font-mono ${isLagging ? 'text-gcs-error' : 'text-gcs-success'}`}>
+                            {avgMs}<span className="text-xs ml-0.5">ms</span>
+                        </span>
+                    </div>
+                    {/* Visual Latency Bar */}
+                    <div className="h-1.5 w-full bg-gcs-card rounded-full overflow-hidden border border-main">
+                        <div 
+                            className={`h-full ${isLagging ? 'bg-gcs-error shadow-[0_0_10px_var(--neon-error)]' : 'bg-gcs-success shadow-[0_0_10px_var(--neon-success)]'} transition-all duration-700`} 
+                            style={{ width: `${Math.min((avgMs / 300) * 100, 100)}%` }} 
+                        />
+                    </div>
+                    <div className="flex justify-between mt-1 opacity-50">
+                        <span className="text-[7px] font-mono text-dim">0ms</span>
+                        <span className="text-[7px] font-mono text-dim">300ms</span>
+                    </div>
+                </div>
+            </div>
+             {/* Subtle BG Pattern */}
+             <div className="absolute bottom-0 right-0 w-32 h-32 bg-main/5 blur-[50px] -mr-16 -mb-16 pointer-events-none" />
+        </div>
+    );
+};
+
+// --- Main Panel Component ---
 interface AnalyticsPanelProps {
   sessions: FlightSession[];
 }
 
 const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ sessions }) => {
 
-  const { totalFlights, totalDetections, totalSprays, activeTimeStr } = useMemo(() => {
+  const { 
+      totalFlights, 
+      totalDetections, 
+      totalSprays, 
+      activeTimeStr,
+      autoSprayPercentage,
+      totalAreaTreated,
+      avgInferenceTime,
+      criticalWarnings
+  } = useMemo(() => {
       let flights = sessions.length;
       let detections = 0;
       let sprays = 0;
+      let autoSprays = 0;
+      let areaSum = 0;
       let totalSeconds = 0;
+      
+      let inferenceMsSum = 0;
+      let inferenceCount = 0;
+      let warnings = 0;
 
       sessions.forEach(s => {
           if (s.detections) detections += s.detections.length;
-          if (s.spray_operations) sprays += s.spray_operations.length;
+          
+          if (s.spray_operations) {
+              sprays += s.spray_operations.length;
+              s.spray_operations.forEach(op => {
+                  if (op.trigger_type === 'Auto') autoSprays++;
+                  if (op.true_area_scaled) areaSum += op.true_area_scaled;
+              });
+          }
+
+          if (s.ai_performance_logs) {
+              s.ai_performance_logs.forEach(log => {
+                  inferenceMsSum += log.pipeline_speed_ms;
+                  inferenceCount++;
+              });
+          }
+
+          if (s.stream_health) {
+              s.stream_health.forEach(health => {
+                  if (health.status !== 'Healthy') warnings++;
+              });
+          }
           
           if (s.end_time) {
               const diff = new Date(s.end_time).getTime() - new Date(s.start_time).getTime();
@@ -127,7 +212,11 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ sessions }) => {
           totalFlights: flights,
           totalDetections: detections,
           totalSprays: sprays,
-          activeTimeStr: `${hours}H ${minutes}M`
+          activeTimeStr: `${hours}H ${minutes}M`,
+          autoSprayPercentage: sprays > 0 ? ((autoSprays / sprays) * 100).toFixed(0) : '0',
+          totalAreaTreated: areaSum.toFixed(2),
+          avgInferenceTime: inferenceCount > 0 ? Math.round(inferenceMsSum / inferenceCount) : 0,
+          criticalWarnings: warnings
       };
   }, [sessions]);
 
@@ -153,14 +242,17 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ sessions }) => {
         </div>
 
         {/* Tactical Stat Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
             <StatCard title="Sortie Count" value={totalFlights.toString()} label="TOTAL_DEPLOYMENTS" icon={<ActivityIcon />} />
             <StatCard title="AI Identification" value={totalDetections.toString()} label="POSITIVE_TARGETS" icon={<TargetIcon />} />
             <StatCard title="Neutralization" value={totalSprays.toString()} label="SPRAY_INTERVENTIONS" icon={<DropletIcon />} />
             <StatCard title="Active Uptime" value={activeTimeStr} label="TOTAL_FLIGHT_TIME" icon={<ClockIcon />} />
+            <StatCard title="Area Treated" value={totalAreaTreated} label="SCALED_UNITS_SQ" icon={<AreaIcon />} />
+            <StatCard title="Autonomy Index" value={`${autoSprayPercentage}%`} label="AI_TRIGGERED_OPS" icon={<CpuIcon />} />
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 flex-1 min-h-0">
+        {/* Deep Analytics HUDs */}
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 flex-1 min-h-0">
             {/* Weekly Activity HUD */}
             <div className="xl:col-span-2 bg-gcs-panel border border-main rounded-lg p-6 flex flex-col shadow-2xl relative overflow-hidden">
                 <div className="flex items-center justify-between mb-8">
@@ -177,8 +269,13 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ sessions }) => {
                 </div>
             </div>
 
+            {/* Hardware Diagnostics */}
+            <div className="xl:col-span-1 flex flex-col">
+                <SystemDiagnosticsCard avgMs={avgInferenceTime} warnings={criticalWarnings} />
+            </div>
+
             {/* Spray Rate HUD */}
-            <div className="bg-gcs-panel border border-main rounded-lg p-6 flex flex-col items-center shadow-2xl relative overflow-hidden">
+            <div className="xl:col-span-1 bg-gcs-panel border border-main rounded-lg p-6 flex flex-col items-center shadow-2xl relative overflow-hidden">
                  <div className="w-full text-left mb-4 relative z-10 border-b border-main pb-4">
                     <h3 className="text-xs font-black text-main uppercase tracking-[0.2em] font-mono opacity-60">NEUTRALIZATION_RT</h3>
                     <p className="text-[9px] text-dim font-mono uppercase">Mission_Success_Efficacy</p>
@@ -199,7 +296,7 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ sessions }) => {
                  </div>
 
                  {/* Subtle BG Pattern */}
-                 <div className="absolute top-0 right-0 w-32 h-32 bg-gcs-primary/5 blur-[60px] -mr-16 -mt-16" />
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-gcs-primary/5 blur-[60px] -mr-16 -mt-16 pointer-events-none" />
             </div>
         </div>
 
@@ -221,10 +318,10 @@ const StatCard: React.FC<{ title: string, value: string, label: string, icon: Re
         <div className="p-3 bg-gcs-card text-gcs-primary rounded border border-main group-hover:scale-110 transition-transform duration-500 neon-glow">
             {icon}
         </div>
-        <div className="flex-1">
-            <p className="text-[9px] font-mono font-bold text-dim uppercase tracking-widest mb-0.5">{title}</p>
+        <div className="flex-1 min-w-0">
+            <p className="text-[9px] font-mono font-bold text-dim uppercase tracking-widest mb-0.5 truncate">{title}</p>
             <p className="text-2xl font-black text-main tracking-tight font-mono truncate">{value}</p>
-            <p className="text-[8px] font-mono text-dim uppercase tracking-tighter mt-1 font-bold">{label}</p>
+            <p className="text-[8px] font-mono text-dim uppercase tracking-tighter mt-1 font-bold truncate">{label}</p>
         </div>
         <div className="absolute top-0 right-0 p-2 opacity-5 pointer-events-none">
             <span className="text-4xl font-black text-main italic">#</span>
@@ -232,9 +329,12 @@ const StatCard: React.FC<{ title: string, value: string, label: string, icon: Re
     </div>
 );
 
+// --- SVG Icons ---
 const ActivityIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>;
 const TargetIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>;
 const DropletIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>;
 const ClockIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+const AreaIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h18v18H3zM12 8v8m-4-4h8"/></svg>;
+const CpuIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>;
 
 export default AnalyticsPanel;

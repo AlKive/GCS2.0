@@ -249,6 +249,9 @@ fastify.patch('/api/sessions/:id', async (request, reply) => {
 
 fastify.get('/api/sessions', async (request, reply) => {
   try {
+    const { limit } = request.query as { limit?: string };
+    const queryLimit = limit === 'all' ? 1000 : parseInt(limit || '20');
+
     const { data, error } = await supabase
       .from('flight_sessions')
       .select(`
@@ -261,7 +264,11 @@ fastify.get('/api/sessions', async (request, reply) => {
         stream_health(*),
         detections(*, target_types(*))
       `)
-      .order('start_time', { ascending: false });
+      .order('start_time', { ascending: false })
+      .order('logged_at', { foreignTable: 'hardware_telemetry', ascending: true })
+      .order('logged_at', { foreignTable: 'ai_performance_logs', ascending: true })
+      .order('logged_at', { foreignTable: 'stream_health', ascending: true })
+      .limit(queryLimit);
     if (error) throw error;
     return data;
   } catch (err) {
@@ -392,6 +399,48 @@ fastify.get('/api/users', async (request, reply) => {
 // Helper for starting Python processes
 fastify.post('/api/system/start', async (request, reply) => {
   try {
+    const { session_name, pilot_id, pilot_name, barangay_id } = request.body as any;
+
+    let finalPilotId = pilot_id;
+
+    // Handle "Others" pilot creation
+    if (!pilot_id && pilot_name) {
+      const email = `${pilot_name.replace(/\s+/g, '.').toLowerCase()}@lipad.local`;
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .insert([{ full_name: pilot_name, role: 'Pilot', email }])
+        .select()
+        .single();
+      
+      if (userError) {
+        // If user already exists by email, just get their ID
+        const { data: existingUser } = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', email)
+          .single();
+        if (existingUser) finalPilotId = existingUser.id;
+      } else {
+        finalPilotId = userData.id;
+      }
+    }
+
+    // 1. Create the flight session first
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('flight_sessions')
+      .insert([{
+        session_name,
+        pilot_id: finalPilotId || null,
+        barangay_id: barangay_id || null,
+        status: 'active',
+        start_time: new Date().toISOString()
+      }])
+      .select()
+      .single();
+
+    if (sessionError) throw sessionError;
+    const session_id = sessionData.id;
+
     // Kill existing processes
     try {
        if (process.platform === 'win32') {
@@ -412,7 +461,8 @@ fastify.post('/api/system/start', async (request, reply) => {
     const spawnOptions: SpawnOptions = { 
       detached: true, 
       stdio: ['ignore', log1, log2], 
-      windowsHide: true 
+      windowsHide: true,
+      env: { ...process.env, ACTIVE_SESSION_ID: session_id }
     };
 
     const p1 = spawn(pythonExec, [script1], spawnOptions);
@@ -422,7 +472,8 @@ fastify.post('/api/system/start', async (request, reply) => {
 
     return { 
       success: true, 
-      message: 'System processes launched. Session will start on SSH connection.' 
+      session_id,
+      message: 'System processes launched with session: ' + session_id 
     };
   } catch (err) {
     fastify.log.error('Error starting system: ' + String(err));

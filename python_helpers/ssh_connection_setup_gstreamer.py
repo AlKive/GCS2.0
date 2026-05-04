@@ -26,7 +26,6 @@ PI_TARGET_IPS = env_ips.split(",") if env_ips else ["192.168.7.2", "raspberrypi.
 if primary_pi_ip and primary_pi_ip not in PI_TARGET_IPS:
     PI_TARGET_IPS.insert(0, primary_pi_ip)
 elif primary_pi_ip and primary_pi_ip in PI_TARGET_IPS:
-    # Move it to the front
     PI_TARGET_IPS.remove(primary_pi_ip)
     PI_TARGET_IPS.insert(0, primary_pi_ip)
 USERNAME = os.getenv("PI_USERNAME", "rpi3408")
@@ -37,6 +36,7 @@ AI_ENGINE_URL = "http://localhost:5000"
 # --- Supabase Setup ---
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+ACTIVE_SESSION_ID = os.getenv("ACTIVE_SESSION_ID")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     print("[ERROR] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env")
@@ -45,24 +45,23 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def start_flight_session():
-    """Creates a new flight session in Supabase and syncs it with the AI engine."""
+    global ACTIVE_SESSION_ID
     try:
-        data = {
-            "barangay_id": 1,
-            "status": "active",
-            "start_time": datetime.utcnow().isoformat()
-        }
+        if ACTIVE_SESSION_ID:
+            sync_data = json.dumps({"session_id": ACTIVE_SESSION_ID}).encode('utf-8')
+            req = urllib.request.Request(f"{AI_ENGINE_URL}/api/set_session", data=sync_data, headers={'Content-Type': 'application/json'})
+            try: urllib.request.urlopen(req)
+            except: pass
+            return ACTIVE_SESSION_ID
+
+        data = {"barangay_id": 1, "status": "active", "start_time": datetime.utcnow().isoformat()}
         response = supabase.table("flight_sessions").insert(data).execute()
         if response.data:
-            session_id = response.data[0]['id']
-            print(f"[DATABASE] Mission Started via SSH: {session_id}")
-            
-            # Sync with AI Engine
-            sync_data = json.dumps({"session_id": session_id}).encode('utf-8')
+            ACTIVE_SESSION_ID = response.data[0]['id']
+            sync_data = json.dumps({"session_id": ACTIVE_SESSION_ID}).encode('utf-8')
             req = urllib.request.Request(f"{AI_ENGINE_URL}/api/set_session", data=sync_data, headers={'Content-Type': 'application/json'})
-            with urllib.request.urlopen(req) as f:
-                pass
-            return session_id
+            urllib.request.urlopen(req)
+            return ACTIVE_SESSION_ID
     except Exception as e:
         print(f"[ERROR] Failed to start/sync flight session: {e}")
     return None
@@ -70,80 +69,50 @@ def start_flight_session():
 from datetime import datetime
 
 def get_active_session():
-    """Fetches the currently active flight session from the database."""
     try:
         response = supabase.table("flight_sessions").select("id").eq("status", "active").order("start_time", desc=True).limit(1).execute()
-        if response.data:
-            return response.data[0]['id']
-    except Exception as e:
-        print(f"[ERROR] Failed to fetch active session: {e}")
-        pass
+        if response.data: return response.data[0]['id']
+    except: pass
     return None
 
 def get_laptop_ip_relative_to_pi(pi_ip):
-    """
-    Determines the correct local IP of this laptop that the Pi can actually see.
-    Includes a strict Tailscale override to prevent routing video to the wrong adapter.
-    """
-    # --- Strict Tailscale Override ---
     if pi_ip.startswith("100."):
         try:
-            # Force search through all adapters for the Tailscale IP
             host_info = socket.getaddrinfo(socket.gethostname(), None)
             for item in host_info:
                 ip = item[4][0]
-                if ip.startswith("100."):
-                    return ip
-        except Exception:
-            pass
-
-    # --- Standard Routing Detection ---
+                if ip.startswith("100."): return ip
+        except: pass
     try:
-        # Create a dummy connection to the Pi's IP to see which local interface is used
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.settimeout(2)
-        s.connect((pi_ip, 22)) # Connecting to SSH port
+        s.connect((pi_ip, 22)) 
         local_ip = s.getsockname()[0]
         s.close()
         return local_ip
-    except Exception as e:
-        print(f"[WARN] IP auto-detection failed for {pi_ip}: {e}")
-        # Fallback to standard hostname resolution
+    except:
         return socket.gethostbyname(socket.gethostname())
 
 def get_stream_command(destination_ip):
-    """
-    Returns the GStreamer command for the Pi.
-    Uses mpegtsmux which is natively readable by OpenCV/FFmpeg on Windows.
-    """
+    # Using mpegtsmux to package the H264 into 188-byte packets, easily surviving the Tailscale MTU.
     pipeline = (
         f"gst-launch-1.0 -v libcamerasrc ! "
         f"video/x-raw,width=640,height=480,framerate=20/1 ! "
         f"videoconvert ! "
-        f"x264enc threads=4 tune=zerolatency bitrate=1500 speed-preset=ultrafast key-int-max=20 ! "
-        f"h264parse config-interval=1 ! mpegtsmux alignment=7 ! "
+        f"x264enc threads=4 tune=zerolatency bitrate=800 speed-preset=ultrafast key-int-max=20 ! "
+        f"h264parse config-interval=1 ! "
+        f"mpegtsmux alignment=7 ! "
         f"udpsink host={destination_ip} port={STREAM_PORT} sync=false"
     )
-    # Wrap in nohup to keep it running if SSH hiccups
     return f"nohup {pipeline} > /tmp/gstream.log 2>&1 &"
 
 def update_target_ip(ssh, laptop_ip):
-    """Pushes the laptop's IP to the Pi's target_ip.txt for autonomous routing."""
     try:
         ssh.exec_command(f"echo '{laptop_ip}' > /home/rpi3408/target_ip.txt")
-        print(f"[NETWORK] ✅ Updated Pi's target_ip.txt to: {laptop_ip}")
         return True
-    except Exception as e:
-        print(f"[NETWORK] ❌ Failed to update target_ip.txt: {e}")
-        return False
+    except: return False
 
 def monitor_stream(ssh, pi_ip, laptop_ip):
-    """
-    Checks every 5 seconds if the gstreamer process is still alive on the Pi.
-    """
-    print(f"\n[MONITOR] Streaming to {laptop_ip}:{STREAM_PORT} | Pi: {pi_ip}")
-    print("[INFO] Press Ctrl+C to disconnect and try another IP.")
-    
     while True:
         try:
             stdin, stdout, stderr = ssh.exec_command("pgrep -f gst-launch-1.0")
@@ -160,92 +129,43 @@ def monitor_stream(ssh, pi_ip, laptop_ip):
                 time.sleep(2)
                 status = "Missing/Restarting"
             
-            # SUPABASE LOGGING
             if session_id:
                 try:
                     supabase.table("stream_health").insert({
-                        "session_id": session_id,
-                        "pi_ip": pi_ip,
-                        "laptop_ip": laptop_ip,
-                        "stream_pid": pid if pid else None,
-                        "status": status
+                        "session_id": session_id, "pi_ip": pi_ip, "laptop_ip": laptop_ip,
+                        "stream_pid": pid if pid else None, "status": status
                     }).execute()
-                except Exception as e:
-                    print(f"\n[DB ERROR] Failed to log stream health: {e}")
-                
+                except: pass
             time.sleep(5)
         except KeyboardInterrupt:
-            print("\n\n[STOP] Monitoring stopped by user.")
-            return False # Signal to stop completely
-        except Exception as e:
-            print(f"\n[ERROR] Lost connection to Pi: {e}")
-            return True # Signal to attempt reconnect
+            return False 
+        except:
+            return True 
 
 def main():
-    print("="*50)
-    print("  DRONE GCS: PI CONNECTION & STREAM MANAGER  ")
-    print("="*50)
-
     while True:
         target_found = False
         for pi_ip in PI_TARGET_IPS:
-            print(f"\n[SCAN] Checking Pi availability at: {pi_ip}...")
-            
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            
             try:
-                # 1. Connect
                 ssh.connect(pi_ip, username=USERNAME, password=PASSWORD, timeout=4)
-                print(f"[SUCCESS] Connected to Pi at {pi_ip}")
-                
-                # 2. Start Flight Session (GCS Requirement: Log on SSH)
                 start_flight_session()
-
-                # 3. Identify the return path (Laptop IP)
                 laptop_ip = get_laptop_ip_relative_to_pi(pi_ip)
-                # Push IP to Pi for autonomous logic
                 update_target_ip(ssh, laptop_ip)
-
-                # 3. Clean and Launch
-                # Using SIGINT (-2) allows the Pi's auto-manager to cleanly close recordings
-                print("[CLEAN] Requesting clean termination of existing streams...")
                 ssh.exec_command("pkill -2 -f gst-launch-1.0")
                 time.sleep(2)
-
-                print(f"[LAUNCH] Kickstarting GStreamer -> {laptop_ip}:{STREAM_PORT}")
                 ssh.exec_command(get_stream_command(laptop_ip))
                 time.sleep(2)
-                # 4. Stay in monitor loop
                 should_retry = monitor_stream(ssh, pi_ip, laptop_ip)
                 ssh.close()
-                
-                if not should_retry: # User hit Ctrl+C
-                    return
-                
+                if not should_retry: return
                 target_found = True
-                break # Exit the IP loop to restart the scan
+                break 
+            except: continue
 
-            except paramiko.AuthenticationException:
-                print(f"[AUTH ERROR] Invalid username or password for {pi_ip}")
-                continue
-            except paramiko.SSHException as ssh_err:
-                print(f"[SSH ERROR] Could not establish SSH connection to {pi_ip}: {ssh_err}")
-                continue
-            except socket.timeout:
-                print(f"[TIMEOUT] {pi_ip} did not respond within 4 seconds.")
-                continue
-            except Exception as e:
-                print(f"[SKIP] {pi_ip} connection failed: {e}")
-                continue
-
-        if not target_found:
-            print(f"\n[RETRY] No Pi found on known IPs. Sleeping 5s...")
-            time.sleep(5)
+        if not target_found: time.sleep(5)
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\n[EXIT] System manager shut down.")
-        sys.exit(0)
+    try: main()
+    except KeyboardInterrupt: sys.exit(0)

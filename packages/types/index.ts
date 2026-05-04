@@ -154,6 +154,7 @@ export interface LiveTelemetry {
       lidar_m?: number;
       heading?: number;
       battery_voltage?: number;
+      linkStatus: 'Healthy' | 'Lost';
     };
     modes: {
       angle: boolean;

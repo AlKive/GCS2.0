@@ -14,19 +14,22 @@ const ExportIcon = () => (
 
 interface FlightLogsPanelProps {
   sessions: FlightSession[];
+  fetchAll?: () => void;
 }
 
 const YOLOV8_CLASSES = [
   "tires", "pot", "bottle", "vase"
 ].sort();
 
-const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
+const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions, fetchAll }) => {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'active' | 'aborted'>('all');
   const [objectFilter, setObjectFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('');
   const [minDurationFilter, setMinDurationFilter] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'overview' | 'ai' | 'hardware' | 'health'>('overview');
+  const [isAllLoaded, setIsAllLoaded] = useState(false);
+  const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'duration_desc' | 'detections_desc'>('date_desc');
 
   // Auto-select first session on load
   useEffect(() => {
@@ -35,8 +38,16 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
     }
   }, [sessions, selectedSessionId]);
 
-  const filteredSessions = useMemo(() => {
-    return sessions.filter(session => {
+  const handleLoadAll = () => {
+    if (fetchAll) {
+      fetchAll();
+      setIsAllLoaded(true);
+    }
+  };
+
+  const filteredAndSortedSessions = useMemo(() => {
+    // 1. Filter
+    const filtered = sessions.filter(session => {
       // Status Filter
       if (statusFilter !== 'all' && session.status !== statusFilter) return false;
 
@@ -46,15 +57,15 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
         if (!hasObject) return false;
       }
 
-      // Date Filter
+      // Date Filter - resilient comparison
       if (dateFilter) {
-        const sessionDate = new Date(session.start_time).toISOString().split('T')[0];
+        const sessionDate = new Date(session.start_time).toLocaleDateString('en-CA'); // YYYY-MM-DD
         if (sessionDate !== dateFilter) return false;
       }
 
       // Duration Filter (in minutes)
       if (minDurationFilter > 0) {
-        if (!session.end_time) return true;
+        if (!session.end_time) return true; // Live sessions pass if they are currently running
         const diff = new Date(session.end_time).getTime() - new Date(session.start_time).getTime();
         const mins = diff / 1000 / 60;
         if (mins < minDurationFilter) return false;
@@ -62,7 +73,26 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
 
       return true;
     });
-  }, [sessions, statusFilter, objectFilter, dateFilter, minDurationFilter]);
+
+    // 2. Sort
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'date_desc':
+          return new Date(b.start_time).getTime() - new Date(a.start_time).getTime();
+        case 'date_asc':
+          return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+        case 'duration_desc': {
+          const durA = a.end_time ? new Date(a.end_time).getTime() - new Date(a.start_time).getTime() : Date.now() - new Date(a.start_time).getTime();
+          const durB = b.end_time ? new Date(b.end_time).getTime() - new Date(b.start_time).getTime() : Date.now() - new Date(b.start_time).getTime();
+          return durB - durA;
+        }
+        case 'detections_desc':
+          return (b.detections?.length || 0) - (a.detections?.length || 0);
+        default:
+          return 0;
+      }
+    });
+  }, [sessions, statusFilter, objectFilter, dateFilter, minDurationFilter, sortBy]);
 
   const selectedSession = useMemo(() => {
     return sessions.find(s => s.id === selectedSessionId) || null;
@@ -148,12 +178,27 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
             />
           </div>
 
+          <div className="flex flex-col gap-2">
+            <label className="text-[7px] font-mono font-black text-slate-500 uppercase tracking-[0.3em] pl-1">SORT_ORDER</label>
+            <select
+              className="bg-slate-950 border border-slate-800 text-[10px] font-mono uppercase tracking-widest p-2 rounded focus:ring-1 focus:ring-gcs-primary outline-none text-slate-300 w-44 cursor-pointer hover:border-slate-700 transition-colors"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+            >
+                <option value="date_desc">DATE: NEWEST</option>
+                <option value="date_asc">DATE: OLDEST</option>
+                <option value="duration_desc">DURATION: LONGEST</option>
+                <option value="detections_desc">DETECTIONS: MOST</option>
+            </select>
+          </div>
+
           <button
             onClick={() => {
               setStatusFilter('all');
               setObjectFilter('all');
               setDateFilter('');
               setMinDurationFilter(0);
+              setSortBy('date_desc');
             }}
             className="p-2 border border-slate-800 hover:border-gcs-primary text-slate-600 hover:text-gcs-primary transition-all rounded bg-slate-950/50"
             title="RESET_TACTICAL_FILTERS"
@@ -163,7 +208,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
 
           <div className="ml-auto text-right">
              <span className="text-[8px] font-mono text-slate-600 block tracking-widest">REGISTRY_MATCHES</span>  
-             <span className="text-sm font-black font-mono text-gcs-primary">{filteredSessions.length}</span>     
+             <span className="text-sm font-black font-mono text-gcs-primary">{filteredAndSortedSessions.length}</span>     
           </div>
         </div>
       </div>
@@ -173,10 +218,10 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
         <div className="w-80 flex flex-col bg-gcs-panel border border-slate-700/50 rounded-lg overflow-hidden shadow-2xl shrink-0">
           <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">       
             <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-bold">LOG_ARCHIVE</span>
-            <span className="text-[10px] font-mono text-gcs-primary">{filteredSessions.length} FILES</span>       
+            <span className="text-[10px] font-mono text-gcs-primary">{filteredAndSortedSessions.length} FILES</span>       
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar">
-            {filteredSessions.map((session) => (
+            {filteredAndSortedSessions.map((session) => (
               <div
                 key={session.id}
                 onClick={() => setSelectedSessionId(session.id)}
@@ -187,7 +232,9 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                 )}
 
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-mono text-[10px] font-bold text-slate-100 tracking-wider uppercase truncate pr-2">FLT_{session.id.substring(0, 8)}</h3>
+                  <h3 className="font-mono text-[10px] font-bold text-slate-100 tracking-wider uppercase truncate pr-2">
+                    {session.session_name || `FLT_${session.id.substring(0, 8)}`}
+                  </h3>
                   <span className={`text-[8px] px-1.5 py-0.5 rounded font-black border ${
                     session.status === 'completed' ? 'border-gcs-success/30 text-gcs-success bg-gcs-success/5' :  
                     session.status === 'active' ? 'border-gcs-primary/30 text-gcs-primary bg-gcs-primary/5' :     
@@ -206,6 +253,21 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                 </div>
               </div>
             ))}
+            
+            {fetchAll && !isAllLoaded && filteredAndSortedSessions.length >= 20 && (
+              <button 
+                onClick={handleLoadAll}
+                className="w-full p-4 border-t border-slate-800 bg-slate-900/30 hover:bg-slate-800/50 text-[10px] font-mono font-black text-gcs-primary uppercase tracking-[0.2em] transition-all"
+              >
+                LOAD_ALL_RECORDS_
+              </button>
+            )}
+            
+            {isAllLoaded && (
+              <div className="p-4 text-center border-t border-slate-800 bg-slate-900/20">
+                <span className="text-[8px] font-mono text-slate-600 uppercase tracking-widest">END_OF_ARCHIVE</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -214,11 +276,18 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
           {selectedSession ? (
             <div className="flex flex-col h-full">
               {/* Tactical Tabs */}
-              <div className="bg-slate-900/80 border-b border-slate-800 flex overflow-x-auto scrollbar-hide shrink-0">
-                <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} label="OVERVIEW" />
-                <TabButton active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} label="AI_DATABANK" />  
-                <TabButton active={activeTab === 'hardware'} onClick={() => setActiveTab('hardware')} label="HARDWARE_METRICS" />
-                <TabButton active={activeTab === 'health'} onClick={() => setActiveTab('health')} label="STREAM_HEALTH" />
+              <div className="bg-slate-900/80 border-b border-slate-800 flex items-center justify-between pr-4 shrink-0">
+                <div className="flex overflow-x-auto scrollbar-hide">
+                  <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} label="OVERVIEW" />
+                  <TabButton active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} label="AI_DATABANK" />  
+                  <TabButton active={activeTab === 'hardware'} onClick={() => setActiveTab('hardware')} label="HARDWARE_METRICS" />
+                  <TabButton active={activeTab === 'health'} onClick={() => setActiveTab('health')} label="STREAM_HEALTH" />
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-mono font-black text-gcs-primary uppercase tracking-widest italic">
+                    {selectedSession.session_name || `FLT_${selectedSession.id.substring(0, 8)}`}
+                  </span>
+                </div>
               </div>
 
               <div className="flex-1 overflow-y-auto custom-scrollbar p-6 flex flex-col gap-8">
@@ -247,7 +316,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                     </div>
 
                     {/* Quick Stats Grid */}
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-3 gap-6">
                       <div className="space-y-4">
                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-primary pl-3">MISSION_CHRONOLOGY</h4>
                         <div className="space-y-2">
@@ -260,8 +329,18 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-success pl-3">PAYLOAD_SUMMARY</h4>
                         <div className="space-y-2">
                            <LogItem label="DETECTIONS" value={selectedSession.detections?.length || 0} />  
-                           <LogItem label="SPRAY_EVENTS" value={selectedSession.spray_operations?.length || 0} />       
+                           <LogItem label="TOTAL_TRUE_AREA" value={`${selectedSession.spray_operations?.reduce((a,c) => a + (c.true_area_scaled || 0), 0).toFixed(2)} SQ UNITS`} />
+                           <LogItem label="AUTO_TRIGGERS" value={selectedSession.spray_operations?.filter(op => op.trigger_type === 'Auto').length || 0} />
                            <LogItem label="AVG_SPRAY_DUR" value={`${((selectedSession.spray_operations?.reduce((a,c) => a+c.duration_seconds, 0) || 0) / (selectedSession.spray_operations?.length || 1)).toFixed(1)}S`} />
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-info pl-3">TELEMETRY_SNAPSHOT</h4>
+                        <div className="space-y-2">
+                           <LogItem label="DATA_POINTS" value={selectedSession.hardware_telemetry?.length || 0} />
+                           <LogItem label="PEAK_ALTITUDE" value={`${selectedSession.hardware_telemetry?.length ? Math.max(...selectedSession.hardware_telemetry.map(t => t.altitude_lidar_m)).toFixed(1) : '0.0'}M`} />
+                           <LogItem label="AVG_VOLTAGE" value={`${selectedSession.hardware_telemetry?.length ? (selectedSession.hardware_telemetry.reduce((a, b) => a + b.battery_voltage, 0) / selectedSession.hardware_telemetry.length).toFixed(1) : '0.0'}V`} />
+                           <LogItem label="MAX_HEADING" value={`${selectedSession.hardware_telemetry?.length ? Math.max(...selectedSession.hardware_telemetry.map(t => t.heading)).toFixed(0) : '0'}°`} />
                         </div>
                       </div>
                     </div>
@@ -306,8 +385,14 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                               {det.image_url ? <img src={det.image_url} alt="Target" className="w-full h-full object-cover" /> : <span className="text-slate-600 text-[8px]">NO_IMG</span>}
                            </div>
                            <div className="flex-1">
-                              <p className="text-[10px] font-bold text-slate-100 uppercase tracking-widest">{det.target_types?.label}</p>
-                              <p className="text-[8px] text-slate-500 font-mono">LIDAR: {det.lidar_m?.toFixed(2)}M | {new Date(det.created_at).toLocaleTimeString()}</p>
+                              <div className="flex justify-between items-start">
+                                  <p className="text-[10px] font-bold text-slate-100 uppercase tracking-widest">{det.target_types?.label}</p>
+                                  <span className={`text-[7px] font-black px-1.5 py-0.5 rounded border ${det.water_confirmed ? 'border-gcs-success/30 text-gcs-success bg-gcs-success/5' : 'border-gcs-error/30 text-gcs-error bg-gcs-error/5'}`}>
+                                      {det.water_confirmed ? 'WATER: YES' : 'WATER: NO'}
+                                  </span>
+                              </div>
+                              <p className="text-[8px] text-slate-500 font-mono mt-1">CONF: {(det.confidence * 100).toFixed(1)}% | LIDAR: {det.lidar_m?.toFixed(2)}M</p>
+                              <p className="text-[8px] text-slate-600 font-mono mt-0.5">{new Date(det.created_at).toLocaleTimeString()}</p>
                            </div>
                         </div>
                       ))}
@@ -318,6 +403,33 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                 {activeTab === 'hardware' && (
                    <div className="space-y-6">
                       <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-primary pl-3">HARDWARE_TELEMETRY_DATABANK</h4>
+                      
+                      {/* Aggregate Stats */}
+                      <div className="grid grid-cols-4 gap-4">
+                        <div className="p-3 bg-slate-900 border border-slate-800 rounded">
+                          <span className="text-[7px] text-slate-600 font-mono font-bold uppercase block mb-1">MAX_ALTITUDE</span>
+                          <p className="text-xs font-black font-mono text-slate-100">
+                            {selectedSession.hardware_telemetry?.length ? Math.max(...selectedSession.hardware_telemetry.map(t => t.altitude_lidar_m)).toFixed(2) : '0.00'}M
+                          </p>
+                        </div>
+                        <div className="p-3 bg-slate-900 border border-slate-800 rounded">
+                          <span className="text-[7px] text-slate-600 font-mono font-bold uppercase block mb-1">MIN_BATTERY</span>
+                          <p className="text-xs font-black font-mono text-gcs-success">
+                            {selectedSession.hardware_telemetry?.length ? Math.min(...selectedSession.hardware_telemetry.map(t => t.battery_voltage)).toFixed(2) : '0.00'}V
+                          </p>
+                        </div>
+                        <div className="p-3 bg-slate-900 border border-slate-800 rounded">
+                          <span className="text-[7px] text-slate-600 font-mono font-bold uppercase block mb-1">AVG_HEADING</span>
+                          <p className="text-xs font-black font-mono text-slate-100">
+                            {selectedSession.hardware_telemetry?.length ? (selectedSession.hardware_telemetry.reduce((a, b) => a + b.heading, 0) / selectedSession.hardware_telemetry.length).toFixed(0) : '0'}°
+                          </p>
+                        </div>
+                        <div className="p-3 bg-slate-900 border border-slate-800 rounded">
+                          <span className="text-[7px] text-slate-600 font-mono font-bold uppercase block mb-1">DATA_POINTS</span>
+                          <p className="text-xs font-black font-mono text-slate-100">{selectedSession.hardware_telemetry?.length || 0}</p>
+                        </div>
+                      </div>
+
                       <div className="overflow-x-auto border border-slate-800 rounded">
                         <table className="w-full text-left font-mono text-[9px]">
                           <thead className="bg-slate-900 text-slate-500 uppercase tracking-widest border-b border-slate-800">
@@ -325,6 +437,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                               <th className="p-3">LOGGED_AT</th>
                               <th className="p-3">GPS_COORDS</th>
                               <th className="p-3">ALT_LIDAR</th>
+                              <th className="p-3">HEADING</th>
                               <th className="p-3">VOLT</th>
                               <th className="p-3">ARMED</th>
                             </tr>
@@ -335,6 +448,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                                 <td className="p-3 text-slate-400">{new Date(log.logged_at).toLocaleTimeString()}</td>
                                 <td className="p-3 text-slate-100">{log.latitude.toFixed(6)}, {log.longitude.toFixed(6)}</td>
                                 <td className="p-3 text-slate-100">{log.altitude_lidar_m.toFixed(2)}M</td>        
+                                <td className="p-3 text-slate-100">{log.heading.toFixed(0)}°</td>
                                 <td className="p-3 text-gcs-success">{log.battery_voltage.toFixed(2)}V</td>       
                                 <td className="p-3 text-slate-300">{log.is_armed ? 'YES' : 'NO'}</td>
                               </tr>
@@ -352,8 +466,8 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                                 <p className="text-[8px] text-slate-500 font-mono">{new Date(log.triggered_at).toLocaleTimeString()} | DUR: {log.duration_seconds}S</p>
                              </div>
                              <div className="text-right">
-                                <p className="text-[10px] font-mono text-gcs-success font-black">{log.target_area_pixels?.toFixed(0)}PX²</p>
-                                <p className="text-[7px] text-slate-600 uppercase font-mono font-bold tracking-widest">TARGET_AREA</p>
+                                <p className="text-[10px] font-mono text-gcs-success font-black">{log.true_area_scaled?.toFixed(2) || 0} SQ UNITS</p>
+                                <p className="text-[7px] text-slate-600 uppercase font-mono font-bold tracking-widest">{log.target_area_pixels?.toFixed(0)} PX² RAW</p>
                              </div>
                           </div>
                         ))}
@@ -382,7 +496,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions }) => {
                                </div>
                             </div>
                             <div className="text-right">
-                               <span className={`text-[9px] font-black font-mono px-2 py-0.5 rounded border ${log.status === 'Healthy' ? 'border-gcs-success/30 text-gcs-success' : 'border-gcs-error/30 text-gcs-error'}`}>        
+                               <span className={`text-[9px] font-black font-mono px-2 py-0.5 rounded border ${log.status === 'Healthy' ? 'border-gcs-success/30 text-gcs-success bg-gcs-success/5' : 'border-gcs-error/30 text-gcs-error bg-gcs-error/5'}`}>        
                                   {log.status.toUpperCase()}
                                </span>
                                <p className="text-[7px] text-slate-600 font-mono mt-1">{new Date(log.logged_at).toLocaleTimeString()}</p>

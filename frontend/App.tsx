@@ -12,6 +12,7 @@ import GuidePanel from './components/GuidePanel';
 import AboutPanel from './components/AboutPanel';
 import DroneStreamView from './components/DroneStreamView';
 import OfflineManagerPanel from './components/OfflineManagerPanel';
+import SessionStartModal, { SessionConfig } from './components/SessionStartModal';
 
 import { useDashboardData } from './hooks/useDashboardData';
 import type { FlightSession, BreedingSiteInfo, LiveTelemetry } from 'types';
@@ -124,6 +125,8 @@ const App: React.FC = () => {
     return localStorage.getItem('theme') || 'red';
   });
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   useEffect(() => {
     localStorage.setItem('isDarkMode', isDarkMode.toString());
   }, [isDarkMode]);
@@ -151,13 +154,14 @@ const App: React.FC = () => {
     }
   }, [isDarkMode]);
 
-  const [sessions, setSessions] = useState<FlightSession[]>([]); 
+  const [sessions, setSessions] = useState<FlightSession[]>([]);
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const { overviewStats, time, date, liveTelemetry, setArmedState } = useDashboardData(currentView === 'droneStream');
 
-  const fetchSessions = async () => {
+  const fetchSessions = async (loadAll = false) => {
     try {
-      const response = await fetch('/api/sessions'); 
+      const url = loadAll ? '/api/sessions?limit=all' : '/api/sessions';
+      const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setSessions(Array.isArray(data) ? data : []);
@@ -170,7 +174,6 @@ const App: React.FC = () => {
   useEffect(() => {
     fetchSessions();
   }, []);
-
   // Update theme handling to use dynamic variables
   useEffect(() => {
     const root = document.documentElement;
@@ -199,24 +202,20 @@ const App: React.FC = () => {
     localStorage.setItem('theme', theme);
   }, [theme]);
   
-  const launchPythonHelpers = async () => {
+  const handleStartMission = async (config: SessionConfig) => {
     try {
+      setIsModalOpen(false);
       await fetch('/api/system/start', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ location_id: 1 })
+        body: JSON.stringify(config)
       });
-      // Session ID is now assigned by the SSH script and synced to AI engine
+      setCurrentView('droneStream');
     } catch (err) {
       console.error('Failed to launch system processes:', err);
+      alert('Failed to start mission. Check backend connection.');
     }
   };
-
-  useEffect(() => {
-    if (currentView === 'droneStream') {
-      launchPythonHelpers();
-    }
-  }, [currentView]);
 
   const handleSaveSettings = (newSettings: { isDarkMode: boolean; mapStyle: string; theme: string }) => {
     setDarkMode(newSettings.isDarkMode);
@@ -231,7 +230,7 @@ const App: React.FC = () => {
       case 'analytics':
         return <AnalyticsPanel sessions={sessions} />;
       case 'flightLogs':
-        return <FlightLogsPanel sessions={sessions} />;
+        return <FlightLogsPanel sessions={sessions} fetchAll={() => fetchSessions(true)} />;
       case 'offlineManager':
         return <OfflineManagerPanel />;
       case 'settings':
@@ -259,7 +258,7 @@ const App: React.FC = () => {
         return <DashboardView 
           overviewStats={overviewStats} 
           sessions={sessions} 
-          onMissionSetup={() => setCurrentView('droneStream')} 
+          onMissionSetup={() => setIsModalOpen(true)} 
           telemetry={liveTelemetry} 
           setArmedState={setArmedState} 
         />;
@@ -296,6 +295,11 @@ const App: React.FC = () => {
           </div>
         </main>
       </div>
+      <SessionStartModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onConfirm={handleStartMission} 
+      />
     </>
   );
 };

@@ -17,11 +17,9 @@ export default defineConfig(({ mode }) => {
             target: 'ws://localhost:8080',
             ws: true,
           },
-          // forward camera MJPEG requests to the Python helper
           '/camera_feed': {
-            target: 'http://localhost:5000',
+            target: 'http://localhost:8080',
             changeOrigin: true,
-            rewrite: (path) => path.replace(/^\/camera_feed/, '/video_feed'),
           }
         }
         // --- End of proxy block ---
