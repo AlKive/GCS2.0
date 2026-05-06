@@ -399,17 +399,25 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                                         {(telemetry.aiStatus?.lidar_m ?? 0).toFixed(2)}M
                                     </span>
                                 </div>
-                                <button 
-                                    onClick={() => fetch(`http://${window.location.hostname}:5000/api/manual_spray`, { method: 'POST' })}
-                                    disabled={!telemetry.aiStatus?.waterConfirmed || (telemetry.aiStatus?.lidar_m ?? 0) > 1.5}
-                                    className={`w-full py-2.5 rounded font-black font-mono text-[9px] tracking-widest transition-all border shadow-lg ${
-                                        (telemetry.aiStatus?.waterConfirmed && (telemetry.aiStatus?.lidar_m ?? 0) <= 1.5)
-                                        ? 'bg-gcs-primary border-gcs-primary text-slate-100 neon-glow-red active:scale-95 animate-pulse' 
-                                        : 'bg-slate-900/50 border-slate-800 text-slate-600 cursor-not-allowed opacity-50'
-                                    }`}
-                                >
-                                    {(telemetry.aiStatus?.waterConfirmed && (telemetry.aiStatus?.lidar_m ?? 0) <= 1.5) ? 'CONFIRMED: DISPENSE GRANULES' : 'WAITING FOR TARGET LOCK'}
-                                </button>
+                                {/* Conditional Render: Only show button if tracked for 3 seconds (100%) AND water is confirmed */}
+                                {telemetry.aiStatus?.trackingProgress === 100 && telemetry.aiStatus?.waterConfirmed ? (
+                                    <button 
+                                        onClick={() => fetch(`http://${window.location.hostname}:5000/api/manual_spray`, { method: 'POST' })}
+                                        disabled={(telemetry.aiStatus?.lidar_m ?? 0) > 1.5}
+                                        className={`w-full py-2.5 rounded font-black font-mono text-[9px] tracking-widest transition-all border shadow-lg ${
+                                            (telemetry.aiStatus?.lidar_m ?? 0) <= 1.5
+                                            ? 'bg-gcs-primary border-gcs-primary text-slate-100 neon-glow-red active:scale-95 animate-pulse' 
+                                            : 'bg-slate-900/50 border-slate-800 text-slate-600 cursor-not-allowed opacity-50'
+                                        }`}
+                                    >
+                                        {(telemetry.aiStatus?.lidar_m ?? 0) <= 1.5 ? 'CONFIRMED: DISPENSE GRANULES' : 'ALTITUDE TOO HIGH (>1.5M)'}
+                                    </button>
+                                ) : (
+                                    // Visual placeholder so your panel height doesn't collapse when the button hides
+                                    <div className="w-full py-2.5 rounded font-black font-mono text-[9px] tracking-widest transition-all border border-slate-800 bg-slate-900/30 text-slate-600 text-center opacity-50">
+                                        NO TARGET DETECTED
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </Panel>
