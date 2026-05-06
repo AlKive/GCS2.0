@@ -16,7 +16,7 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv(override=False)
 
 # === Configuration ===
 env_ips = os.getenv("PI_IPS")

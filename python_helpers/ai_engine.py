@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', line_buffering=True)
 
-load_dotenv()
+load_dotenv(override=False)
 app = Flask(__name__)
 
 # --- Configuration ---
@@ -156,7 +156,7 @@ class TelemetryReceiver:
 
 tel_receiver = TelemetryReceiver().start()
 
-MIN_SHARPNESS, MAX_SHARPNESS, CONFIRM_AFTER, MAX_SPRAY_ALTITUDE = 40.0, 400.0, 3.0, 1.0 
+MIN_SHARPNESS, MAX_SHARPNESS, CONFIRM_AFTER, MAX_SPRAY_ALTITUDE = 40.0, 2500.0, 3.0, 1.5 
 tracked_classes = {}   
 
 class StreamValidator:
@@ -244,7 +244,7 @@ def manual_spray():
         with telemetry_lock:
             water_confirmed = ai_telemetry_data.get("waterConfirmed", False)
             computed_area = ai_telemetry_data.get("activeTargetArea", 0)
-        if not water_confirmed or cur_alt > 1.0:
+        if not computed_area or cur_alt > 1.5:
             return jsonify({"error": f"Conditions not met (Alt: {cur_alt}m)"}), 403
         return jsonify(SimpleSprayer().spray(computed_area, None, cur_alt, trigger_type="Manual"))
     except Exception as e: return jsonify({"error": str(e)}), 500

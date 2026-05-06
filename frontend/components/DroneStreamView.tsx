@@ -395,20 +395,20 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                             <div className="flex flex-col gap-1.5">
                                 <div className="flex justify-between items-center px-1">
                                     <span className="text-[7px] text-slate-500 uppercase font-black font-mono">LIDAR_ALT</span>
-                                    <span className={`font-mono text-[8px] font-bold ${(telemetry.aiStatus?.lidar_m ?? 0) <= 1.0 ? 'text-gcs-success' : 'text-gcs-error'}`}>
+                                    <span className={`font-mono text-[8px] font-bold ${(telemetry.aiStatus?.lidar_m ?? 0) <= 1.5 ? 'text-gcs-success' : 'text-gcs-error'}`}>
                                         {(telemetry.aiStatus?.lidar_m ?? 0).toFixed(2)}M
                                     </span>
                                 </div>
                                 <button 
                                     onClick={() => fetch(`http://${window.location.hostname}:5000/api/manual_spray`, { method: 'POST' })}
-                                    disabled={!telemetry.aiStatus?.waterConfirmed || (telemetry.aiStatus?.lidar_m ?? 0) > 1.0}
+                                    disabled={!telemetry.aiStatus?.waterConfirmed || (telemetry.aiStatus?.lidar_m ?? 0) > 1.5}
                                     className={`w-full py-2.5 rounded font-black font-mono text-[9px] tracking-widest transition-all border shadow-lg ${
-                                        (telemetry.aiStatus?.waterConfirmed && (telemetry.aiStatus?.lidar_m ?? 0) <= 1.0)
+                                        (telemetry.aiStatus?.waterConfirmed && (telemetry.aiStatus?.lidar_m ?? 0) <= 1.5)
                                         ? 'bg-gcs-primary border-gcs-primary text-slate-100 neon-glow-red active:scale-95 animate-pulse' 
                                         : 'bg-slate-900/50 border-slate-800 text-slate-600 cursor-not-allowed opacity-50'
                                     }`}
                                 >
-                                    {(telemetry.aiStatus?.waterConfirmed && (telemetry.aiStatus?.lidar_m ?? 0) <= 1.0) ? 'CONFIRMED: DISPENSE GRANULES' : 'WAITING FOR TARGET LOCK'}
+                                    {(telemetry.aiStatus?.waterConfirmed && (telemetry.aiStatus?.lidar_m ?? 0) <= 1.5) ? 'CONFIRMED: DISPENSE GRANULES' : 'WAITING FOR TARGET LOCK'}
                                 </button>
                             </div>
                         </div>
