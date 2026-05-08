@@ -1,78 +1,111 @@
 # LIPAD Ground Control System (GCS)
 
-Welcome to the LIPAD GCS project. Follow these steps to set up the project and get the drone stream working.
+The LIPAD Ground Control System is a comprehensive platform designed for real-time drone monitoring, AI-powered object detection (e.g., mosquito breeding sites), and tactical mission management. It integrates a Raspberry Pi-based drone stream with a modern web/desktop dashboard.
 
-## Prerequisites
+---
 
-1.  **Tailscale**: Ensure both your laptop and the Raspberry Pi are connected to the same Tailscale network.
-2.  **GStreamer**: Install the GStreamer runtime on your laptop (Windows).
-    *   Download and install `gstreamer-1.0-msvc-x86_64-1.xx.x.msi` and `gstreamer-1.0-devel-msvc-x86_64-1.xx.x.msi` from [gstreamer.freedesktop.org](https://gstreamer.freedesktop.org/download/).
-    *   Make sure the GStreamer `bin` folder (e.g., `C:\Program Files\gstreamer\1.0\msvc_x86_64\bin`) is in your system's PATH.
-3.  **Python 3.11+**: Ensure Python is installed and available in your PATH.
+## 🏗 System Architecture
 
-## Installation
+-   **Frontend**: React (Vite) + Leaflet (Maps) + Capacitor (Mobile Support).
+-   **Backend**: Node.js (Fastify) + Supabase (Cloud Database).
+-   **AI Engine**: Python (YOLOv8) + OpenCV + Flask.
+-   **Link**: Tailscale VPN (Connects Laptop and Raspberry Pi securely).
+-   **Drone Side**: Raspberry Pi streaming video via GStreamer and receiving commands via SSH/UDP.
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/AlKive/GCS2.0.git
-cd GCS_with_RaspberryPi
-```
+---
 
-### 2. Backend Setup
+## 📋 Prerequisites
+
+Before installation, ensure you have the following installed on your GCS laptop:
+
+1.  **Tailscale**: Install on both your laptop and the Raspberry Pi. Ensure both are logged into the same network.
+2.  **Node.js (v18+)**: Required for both Backend and Frontend.
+3.  **Python (3.11+)**: Required for the AI Engine and Python Helpers.
+4.  **GStreamer**: 
+    *   Download and install `gstreamer-1.0-msvc-x86_64-x.xx.x.msi` and the `-devel` version from [gstreamer.freedesktop.org](https://gstreamer.freedesktop.org/download/).
+    *   **IMPORTANT**: Add the GStreamer `bin` folder (e.g., `C:\gstreamer\1.0\msvc_x86_64\bin`) to your System **PATH**.
+5.  **Supabase Account**: A project with the LIPAD schema (Tables: `flight_sessions`, `detections`, `hardware_telemetry`, etc.).
+
+---
+
+## ⚙️ Installation
+
+### 1. Backend Setup
 ```bash
 cd backend
 npm install
 cp .env.example .env
-# Edit .env with your Supabase and Database credentials
+# Update .env with your SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY
 ```
 
-### 3. Frontend Setup
+### 2. Frontend Setup
 ```bash
 cd ../frontend
 npm install
 cp .env.example .env
-# Edit .env with your Supabase credentials
+# Update .env with your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
 ```
 
-### 4. Python Helpers Setup
+### 3. Python Helpers Setup
 ```bash
 cd ../python_helpers
-python -m venv venv
-.\venv\Scripts\activate  # Windows
 pip install -r requirements.txt
-# If GStreamer issues occur, ensure you have the full 'opencv-python' (not headless)
-pip uninstall opencv-python-headless
-pip install opencv-python
+cp .env.example .env  # Create if missing
+# Configure PI_IP (Tailscale IP of Pi), PI_USERNAME, and PI_PASSWORD
 ```
 
-## Running the Project
+---
 
-### 1. Start the Backend
-From the `backend` directory:
+## 🚀 Running the System
+
+To get the full system running, follow these steps in order:
+
+### Step 1: Start the Backend
+From the `backend` folder:
 ```bash
 npm run dev
 ```
+The backend (port 8080) handles database synchronization and orchestrates the Python scripts.
 
-### 2. Start the Frontend
-From the `frontend` directory:
+### Step 2: Start the Frontend
+From the `frontend` folder:
 ```bash
 npm run dev
 ```
-Open `http://localhost:3000` in your browser.
+Navigate to `http://localhost:3000` or use the **Electron Wrapper** by running `npm start` in the root directory.
 
-## Drone Stream Functionality
+### Step 3: Launch Mission
+1.  Open the GCS Dashboard.
+2.  Navigate to the **Live Mission** tab.
+3.  Fill in the **Session Details** (Pilot, Location) and click **START SESSION**.
+4.  The system will automatically:
+    *   Establish an SSH link to the Pi.
+    *   Trigger the GStreamer stream from the Pi to your laptop.
+    *   Launch the **AI Engine** (`ai_engine.py`) to process the feed.
 
-The **Drone Stream** tab automatically triggers the camera connection when opened.
+---
 
-*   **How it works**: The backend launches two Python scripts:
-    1.  `ssh_connection_setup_gstreamer.py`: Connects to the Pi via SSH (Tailscale), detects your laptop's IP, and starts the GStreamer stream.
-    2.  `gstreamer_test3.py`: Listens on port 5600 for the incoming stream, runs YOLOv8 object detection, and serves an MJPEG feed on port 5000.
-*   **Troubleshooting**:
-    *   Check `python_helpers/p1.log` for SSH connection and IP detection logs.
-    *   Check `python_helpers/p2.log` for GStreamer and YOLO status.
-    *   Use the **RESTART LIVESTREAM** button in the Drone Stream tab if the feed hangs.
+## 🛠 Key Features
 
-## Configuration Notes
+-   **Drone Stream (AI)**: Real-time MJPEG stream with YOLOv8 detection. Tracks detections and confirms "water" sites before logging to the database.
+-   **Telemetry Dashboard**: Live monitoring of GPS, Battery, Altitude (Lidar), and Flight Modes.
+-   **Offline Analyzer**: A standalone GUI to review mission logs and replays. (Launchable from the tactical panel).
+-   **Mission History**: View past flight paths, detection counts, and spray operations.
+-   **Manual Spray**: Trigger the drone's sprayer mechanism directly from the dashboard (Conditions: Alt < 1.5m).
 
-*   **Pi Tailscale IP**: Currently configured as `100.127.53.123` in the Python scripts. If the Pi's IP changes, update `PI_TAILSCALE_IP` in `python_helpers/ssh_connection_setup_gstreamer.py`.
-*   **Laptop IP Detection**: The system automatically detects your laptop's Tailscale IP (`100.x.x.x`). Ensure your laptop is connected to Tailscale before starting the stream.
+---
+
+## ❓ Troubleshooting
+
+-   **No Video Feed**: 
+    *   Check if the Pi is reachable: `ping <PI_TAILSCALE_IP>`.
+    *   Check `python_helpers/p1.log` and `p2.log` for SSH or GStreamer errors.
+    *   Ensure GStreamer is in your PATH.
+-   **Database Errors**: Verify your Supabase credentials in `.env` and ensure the tables exist.
+-   **AI Engine Lag**: Ensure you are using a GPU if available, or reduce the `imgsz` in `ai_engine.py`.
+
+---
+
+## 📞 Support & Configuration
+- **Update Pi IP**: If the Pi IP changes, update `PI_IP` in `python_helpers/.env`.
+- **Target Types**: The AI Engine syncs detection labels with the Supabase `target_types` table.
