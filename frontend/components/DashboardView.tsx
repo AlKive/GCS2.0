@@ -37,6 +37,12 @@ const DashboardView: React.FC<DashboardViewProps> = ({ overviewStats: rawStats, 
     };
     const overviewStats: OverviewStat[] = rawStats.map(stat => ({ ...stat, icon: icons[stat.id] || <div /> }));
 
+    // Create a mapped array for the UI display to bypass the strict type check visually
+    const formattedSessions = sessions.map(session => ({
+        ...session,
+        status: (session.status === 'aborted' ? 'TERMINATED' : session.status.toUpperCase()) as any
+    }));
+
     return (
         <div className="flex flex-col h-full gap-6 animate-fade-in">
             {/* Top Row: Tactical Metrics */}
@@ -61,9 +67,10 @@ const DashboardView: React.FC<DashboardViewProps> = ({ overviewStats: rawStats, 
             {/* Bottom Row: HUD Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 pb-2">
                 <div className="lg:col-span-2 min-h-0">
-                    <MissionHistory sessions={sessions} />
+                    <MissionHistory sessions={formattedSessions} />
                 </div>
                 <div className="flex flex-col min-h-0">
+                    {/* This is the component that renders your Initialize Link button */}
                     <PreFlightPanel onMissionSetup={onMissionSetup} telemetry={telemetry} setArmedState={setArmedState} />
                 </div>
             </div>

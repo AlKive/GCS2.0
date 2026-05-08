@@ -184,14 +184,25 @@ def start_flight():
         return jsonify({"status": "success", "session_id": ACTIVE_SESSION_ID})
     except Exception as e: return jsonify({"error": str(e)}), 500
 
+# ai_engine.py - Update the end_flight route
+
 @app.route('/api/end_flight', methods=['POST', 'OPTIONS'])
 def end_flight():
     if request.method == 'OPTIONS': return '', 200
     global ACTIVE_SESSION_ID
+    
+    # NEW: Safely get the requested status from the frontend payload
+    data = request.get_json(silent=True) or {}
+    target_status = data.get('status', 'completed')
+    
     if ACTIVE_SESSION_ID:
-        supabase.table("flight_sessions").update({"status": "completed", "end_time": datetime.utcnow().isoformat()}).eq("id", ACTIVE_SESSION_ID).execute()
+        supabase.table("flight_sessions").update({
+            "status": target_status, 
+            "end_time": datetime.utcnow().isoformat()
+        }).eq("id", ACTIVE_SESSION_ID).execute()
         ACTIVE_SESSION_ID = None
-    return jsonify({"status": "success"})
+        
+    return jsonify({"status": "success", "recorded_as": target_status})
 
 @app.route('/api/set_session', methods=['POST', 'OPTIONS'])
 def set_session():

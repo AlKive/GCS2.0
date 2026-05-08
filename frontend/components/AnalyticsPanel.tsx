@@ -297,10 +297,10 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ sessions }) => {
             />
             <StatCard 
                 title="Neutralization" 
-                value={manualSprays.toString()} 
-                label="MANUAL_INTERVENTIONS" 
+                value={totalSprays.toString()} 
+                label="TOTAL_TREATMENTS" 
                 icon={<DropletIcon />} 
-                tooltip="The total number of manual spray operations executed by the pilot to treat identified targets."
+                tooltip="The total number of spray operations (both manual and automatic) executed to neutralize identified targets."
             />
             <StatCard 
                 title="Stream Runtime" 
