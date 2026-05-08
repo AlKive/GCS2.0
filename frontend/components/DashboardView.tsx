@@ -37,8 +37,11 @@ const DashboardView: React.FC<DashboardViewProps> = ({ overviewStats: rawStats, 
     };
     const overviewStats: OverviewStat[] = rawStats.map(stat => ({ ...stat, icon: icons[stat.id] || <div /> }));
 
+    // Filter for only completed sessions for the Dashboard Mission History
+    const completedSessions = sessions.filter(s => s.status === 'completed');
+
     // Create a mapped array for the UI display to bypass the strict type check visually
-    const formattedSessions = sessions.map(session => ({
+    const formattedSessions = completedSessions.map(session => ({
         ...session,
         status: (session.status === 'aborted' ? 'TERMINATED' : session.status.toUpperCase()) as any
     }));

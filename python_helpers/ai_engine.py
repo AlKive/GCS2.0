@@ -68,6 +68,40 @@ session_sprays = 0
 is_pi_connected = True
 active_detection_id = None 
 
+# --- Performance Accumulators ---
+perf_stats = {
+    "sharpness_sum": 0.0,
+    "pipeline_ms_sum": 0.0,
+    "tracking_sum": 0.0,
+    "count": 0
+}
+perf_lock = Lock()
+
+def reset_perf_stats():
+    with perf_lock:
+        perf_stats["sharpness_sum"] = 0.0
+        perf_stats["pipeline_ms_sum"] = 0.0
+        perf_stats["tracking_sum"] = 0.0
+        perf_stats["count"] = 0
+
+def log_session_performance(session_id):
+    with perf_lock:
+        if perf_stats["count"] == 0: return
+        avg_sharpness = int(perf_stats["sharpness_sum"] / perf_stats["count"])
+        avg_pipeline = int(perf_stats["pipeline_ms_sum"] / perf_stats["count"])
+        avg_tracking = int(perf_stats["tracking_sum"] / perf_stats["count"])
+    
+    now_iso = datetime.utcnow().isoformat()
+    supabase_queue.put({"table": "ai_performance_logs", "data": {
+        "session_id": session_id,
+        "logged_at": now_iso,
+        "sharpness_score": avg_sharpness,
+        "tracking_progress_percent": avg_tracking,
+        "pipeline_speed_ms": avg_pipeline
+    }})
+    print(f"[AI] Session performance logged: Sharpness={avg_sharpness}, Speed={avg_pipeline}ms")
+    reset_perf_stats()
+
 ai_telemetry_data = {
     "sharpnessScore": 0, "isSharpEnough": False, "trackingProgress": 0,
     "waterConfirmed": False, "activeTarget": None, "activeTargetArea": 0,
@@ -198,6 +232,9 @@ def end_flight():
     target_status = data.get('status', 'completed')
     
     if ACTIVE_SESSION_ID:
+        # LOG PERFORMANCE AVERAGES BEFORE CLEARING SESSION
+        log_session_performance(ACTIVE_SESSION_ID)
+
         supabase.table("flight_sessions").update({
             "status": target_status, 
             "end_time": datetime.utcnow().isoformat()
@@ -462,16 +499,17 @@ def inference_consumer(frame_queue, stop_event):
                 "isSharpEnough": is_reliable
             })
             
+        # --- ACCUMULATE PERFORMANCE STATS ---
+        with perf_lock:
+            perf_stats["sharpness_sum"] += sharpness
+            perf_stats["pipeline_ms_sum"] += pipeline_ms
+            perf_stats["tracking_sum"] += max_progress
+            perf_stats["count"] += 1
+
         if ACTIVE_SESSION_ID and int(time.time()) % 1 == 0 and not telemetry_logged_this_sec:
             now_iso = datetime.utcnow().isoformat()
             supabase_queue.put({"table": "hardware_telemetry", "data": {"session_id": ACTIVE_SESSION_ID, "logged_at": now_iso, "latitude": float(hw_data.get("gps_lat", 0.0)), "longitude": float(hw_data.get("gps_lon", 0.0)), "altitude_lidar_m": float(cur_lidar), "battery_voltage": float(bat_volts), "is_armed": is_armed, "heading": float(hw_data.get("heading", 0.0))}})
-            supabase_queue.put({"table": "ai_performance_logs", "data": {
-                "session_id": ACTIVE_SESSION_ID, 
-                "logged_at": now_iso, 
-                "sharpness_score": int(sharpness), 
-                "tracking_progress_percent": max_progress, 
-                "pipeline_speed_ms": int(pipeline_ms)
-            }})
+            # PER-SECOND AI PERFORMANCE LOG REMOVED: Now logged as session average in end_flight
             telemetry_logged_this_sec = True
         elif int(time.time()) % 1 != 0: telemetry_logged_this_sec = False
         

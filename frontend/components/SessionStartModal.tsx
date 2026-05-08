@@ -42,8 +42,9 @@ const SessionStartModal: React.FC<SessionStartModalProps> = ({ isOpen, onClose, 
             ]);
             const users = await usersRes.json();
             const locs = await locsRes.json();
-            
-            setPilots(users.filter((u: User) => u.role === 'Pilot'));
+
+            // Allow all users to appear in the dropdown, or add specific roles
+            setPilots(users); 
             setBarangays(locs);
             
             // Set defaults if available

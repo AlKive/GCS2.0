@@ -325,9 +325,22 @@ const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ sessions }) => {
 
             {/* Spray Rate HUD */}
             <div className="xl:col-span-1 bg-gcs-panel border border-main rounded-lg p-6 flex flex-col items-center shadow-2xl relative overflow-hidden">
-                 <div className="w-full text-left mb-4 relative z-10 border-b border-main pb-4">
-                    <h3 className="text-xs font-black text-main uppercase tracking-[0.2em] font-mono opacity-60">NEUTRALIZATION_RT</h3>
-                    <p className="text-[9px] text-dim font-mono uppercase">Mission_Success_Efficacy</p>
+                 <div className="w-full flex justify-between items-start mb-4 relative z-10 border-b border-main pb-4">
+                    <div>
+                        <h3 className="text-xs font-black text-main uppercase tracking-[0.2em] font-mono opacity-60">NEUTRALIZATION_RT</h3>
+                        <p className="text-[9px] text-dim font-mono uppercase">Mission_Success_Efficacy</p>
+                    </div>
+                    
+                    {/* Tooltip for Efficacy Rate */}
+                    <div className="group/tooltip relative">
+                        <div className="w-4 h-4 rounded-full border border-dim text-dim flex items-center justify-center text-[9px] font-bold cursor-help hover:text-gcs-primary hover:border-gcs-primary transition-colors bg-gcs-card">
+                            ?
+                        </div>
+                        <div className="absolute bottom-full right-0 mb-2 w-48 p-3 bg-gcs-dark border border-main rounded shadow-2xl text-[9px] text-slate-300 font-mono leading-relaxed opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-30 pointer-events-none">
+                            Efficacy Rate is calculated by dividing the total number of neutralized targets (sprays) by the total number of unique AI-identified targets (detections).
+                            <div className="absolute top-full right-1.5 -mt-[1px] w-0 h-0 border-l-[6px] border-l-transparent border-t-[6px] border-t-main border-r-[6px] border-r-transparent" />
+                        </div>
+                    </div>
                  </div>
                  
                  <div className="flex-grow flex items-center justify-center py-4 relative z-10">
