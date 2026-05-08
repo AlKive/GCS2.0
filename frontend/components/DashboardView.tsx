@@ -2,7 +2,7 @@ import React from 'react';
 import OverviewCard from './AttitudeIndicator';
 import MissionHistory from './MissionHistory';
 import PreFlightPanel from './ActionButtons';
-import type { OverviewStat, FlightSession, LiveTelemetry } from '../types';
+import type { OverviewStat, FlightSession, LiveTelemetry } from 'types';
 
 // --- Tactical SVG Icons with Dynamic Neon Glow ---
 const DroneIcon = () => (

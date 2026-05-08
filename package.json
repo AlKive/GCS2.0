@@ -10,17 +10,19 @@
   "build": {
     "appId": "com.drone.livestream",
     "productName": "Drone GCS",
+    "extraResources": [
+      "backend/**/*",
+      "python_helpers/**/*"
+    ],
     "win": {
-      "target": [
-        "nsis"
-      ]
+      "target": ["nsis"]
     }
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.97.0"
   },
   "devDependencies": {
-    "electron": "^41.3.0",
+    "electron": "^41.5.0",
     "electron-builder": "^26.8.1"
   }
 }

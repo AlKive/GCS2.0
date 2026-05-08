@@ -172,8 +172,10 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchSessions();
+    // FIX: Pass true to fetch all records on initial load so analytics compute accurately
+    fetchSessions(true);
   }, []);
+
   // Update theme handling to use dynamic variables
   useEffect(() => {
     const root = document.documentElement;
@@ -249,7 +251,8 @@ const App: React.FC = () => {
           telemetry={liveTelemetry} 
           onClose={() => {
               setCurrentView('dashboard');
-              fetchSessions();
+              // FIX: Ensure it refetches all records upon closing the stream
+              fetchSessions(true);
           }} 
           mapStyle={mapStyle} 
         />;
