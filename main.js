@@ -48,7 +48,17 @@ function createWindow () {
     }
   });
 
-  win.loadURL('http://100.112.119.23:3000/');
+  // CRITICAL FIX: Check if we are in production or development
+  if (app.isPackaged) {
+    // In the built .exe, load the physical files we compiled 
+    // Change 'dist' to 'build' if you are using Create React App instead of Vite
+    win.loadFile(path.join(__dirname, 'frontend', 'dist', 'index.html'))
+       .catch(err => console.error("Failed to load frontend:", err));
+  } else {
+    // In development, load the live server URL
+    win.loadURL('http://100.112.119.23:3000/')
+       .catch(err => console.error("Failed to load dev server:", err));
+  }
 }
 
 app.whenReady().then(() => {
@@ -63,6 +73,8 @@ app.on('will-quit', () => {
 });
 
 app.on('window-all-closed', () => {
+  // On macOS (darwin), it's common for apps to stay open until the user explicitly quits
+  // But on Windows and Linux, we want to kill the process completely when the window closes
   if (process.platform !== 'darwin') {
     app.quit();
   }

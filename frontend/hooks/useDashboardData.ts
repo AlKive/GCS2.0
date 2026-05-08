@@ -61,10 +61,9 @@ export const useDashboardData = (isMissionActive: boolean) => {
 
   // Primary Hardware WebSocket
   useEffect(() => {
-    fetch('/api/sessions/stats').then(res => res.json()).then(setStats).catch(() => {});
+    fetch('http://localhost:8080/api/sessions/stats').then(res => res.json()).then(setStats).catch(() => {});
 
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsHost = `${wsProtocol}//${window.location.host}/ws/live`;
+    const wsHost = 'ws://localhost:8080/ws/live';
     const socket = new WebSocket(wsHost);
     socketRef.current = socket;
 
@@ -81,7 +80,7 @@ export const useDashboardData = (isMissionActive: boolean) => {
   useEffect(() => {
     const fetchAiStatus = async () => {
       try {
-        const response = await fetch(`http://${window.location.hostname}:5000/api/status`);
+        const response = await fetch('http://localhost:5000/api/status');
         if (!response.ok) return;
         
         const aiData = await response.json();

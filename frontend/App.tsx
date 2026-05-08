@@ -52,7 +52,7 @@ const SplashScreen: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
             <div className="w-full h-[2px] bg-[#ef4444] shadow-[0_0_15px_#ef4444] absolute top-0 animate-scan" />
           </div>
 
-          <img src="/logo.png" alt="LIPAD Logo" className="w-full h-full object-contain relative z-10 filter drop-shadow-[0_0_8px_rgba(239,68,68,0.3)]" />
+          <img src="./logo.png" alt="LIPAD Logo" className="w-full h-full object-contain relative z-10 filter drop-shadow-[0_0_8px_rgba(239,68,68,0.3)]" />
         </div>
 
         {/* Minimalist Typography */}
@@ -160,7 +160,7 @@ const App: React.FC = () => {
 
   const fetchSessions = async (loadAll = false) => {
     try {
-      const url = loadAll ? '/api/sessions?limit=all' : '/api/sessions';
+      const url = loadAll ? 'http://localhost:8080/api/sessions?limit=all' : 'http://localhost:8080/api/sessions';
       const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
@@ -207,7 +207,7 @@ const App: React.FC = () => {
   const handleStartMission = async (config: SessionConfig) => {
     try {
       setIsModalOpen(false);
-      await fetch('/api/system/start', { 
+      await fetch('http://localhost:8080/api/system/start', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config)

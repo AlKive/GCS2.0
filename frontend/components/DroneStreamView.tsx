@@ -143,8 +143,7 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
     const [isSessionAborted, setIsSessionAborted] = useState(false);
 
     useEffect(() => {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws/logs`;
+        const wsUrl = 'ws://localhost:8080/ws/logs';
         const ws = new WebSocket(wsUrl);
 
         return () => {
@@ -155,7 +154,7 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
     const handleFinalizeMission = (status: 'completed' | 'aborted') => {
         // We now call the backend's centralized stop endpoint which 
         // handles both process termination AND database status updates.
-        fetch('/api/system/stop', { 
+        fetch('http://localhost:8080/api/system/stop', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status })
@@ -179,7 +178,7 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
 
     const handleRestart = () => {
         setReinitializing(true);
-        fetch('/api/system/start', { method: 'POST' })
+        fetch('http://localhost:8080/api/system/start', { method: 'POST' })
             .finally(() => {
                 setTimeout(() => {
                     setReinitializing(false);
@@ -354,7 +353,7 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                             </div>
                         ) : (
                             <img
-                                src={`/camera_feed?t=${reloadKey}`}
+                                src={`http://localhost:8080/camera_feed?t=${reloadKey}`}
                                 className="max-w-full max-h-full object-contain opacity-90 group-hover:opacity-100 transition-opacity"
                                 alt="Live Tactical Stream"
                                 onError={() => setStreamError(true)}
@@ -450,7 +449,7 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
                                 {/* Conditional Render: Only show button if tracked for 3 seconds (100%) AND water is confirmed */}
                                 {telemetry.aiStatus?.trackingProgress === 100 && telemetry.aiStatus?.waterConfirmed ? (
                                     <button 
-                                        onClick={() => fetch(`http://${window.location.hostname}:5000/api/manual_spray`, { method: 'POST' })}
+                                        onClick={() => fetch('http://localhost:5000/api/manual_spray', { method: 'POST' })}
                                         disabled={(telemetry.aiStatus?.lidar_m ?? 0) > 1.5}
                                         className={`w-full py-2.5 rounded font-black font-mono text-[9px] tracking-widest transition-all border shadow-lg ${
                                             (telemetry.aiStatus?.lidar_m ?? 0) <= 1.5

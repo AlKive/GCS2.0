@@ -3,7 +3,7 @@ import React from 'react';
 const Logo = () => (
     <div className="w-24 h-24 mx-auto mb-4 relative group">
         <div className="absolute inset-0 bg-gcs-primary/10 rounded-full blur-xl group-hover:bg-gcs-primary/20 transition-all duration-700" />
-        <img src="/logo.png" alt="Mosquito Control Drone Logo" className="w-full h-full object-contain relative z-10 filter drop-shadow-[0_0_8px_var(--neon-glow)]" />
+        <img src="./logo.png" alt="Mosquito Control Drone Logo" className="w-full h-full object-contain relative z-10 filter drop-shadow-[0_0_8px_var(--neon-glow)]" />
     </div>
 );
 

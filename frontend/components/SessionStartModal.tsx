@@ -37,8 +37,8 @@ const SessionStartModal: React.FC<SessionStartModalProps> = ({ isOpen, onClose, 
         setIsLoading(true);
         try {
             const [usersRes, locsRes] = await Promise.all([
-                fetch('/api/users'),
-                fetch('/api/locations')
+                fetch('http://localhost:8080/api/users'),
+                fetch('http://localhost:8080/api/locations')
             ]);
             const users = await usersRes.json();
             const locs = await locsRes.json();

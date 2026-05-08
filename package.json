@@ -5,17 +5,27 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win nsis"
+    "build-frontend": "cd frontend && npm run build",
+    "build": "npm run build-frontend && electron-builder --win nsis"
   },
+  
   "build": {
     "appId": "com.drone.livestream",
     "productName": "Drone GCS",
+    "files": [
+      "main.js",
+      "package.json",
+      "node_modules/**/*",
+      "frontend/dist/**/*"
+    ],
     "extraResources": [
       "backend/**/*",
       "python_helpers/**/*"
     ],
     "win": {
-      "target": ["nsis"]
+      "target": [
+        "nsis"
+      ]
     }
   },
   "dependencies": {
