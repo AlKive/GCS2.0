@@ -20,13 +20,18 @@ async function setupDatabase() {
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_schema = 'public' 
-        AND table_name = 'mission_logs'
-      ) as mission_logs_exists,
+        AND table_name = 'cities'
+      ) as cities_exists,
       EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_schema = 'public' 
-        AND table_name = 'mission_plans'
-      ) as mission_plans_exists,
+        AND table_name = 'barangays'
+      ) as barangays_exists,
+      EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'users'
+      ) as users_exists,
       EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_schema = 'public' 
@@ -35,19 +40,193 @@ async function setupDatabase() {
       EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_schema = 'public' 
+        AND table_name = 'target_types'
+      ) as target_types_exists,
+      EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
         AND table_name = 'detections'
-      ) as detections_exists
+      ) as detections_exists,
+      EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'hardware_telemetry'
+      ) as hardware_telemetry_exists,
+      EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'ai_performance_logs'
+      ) as ai_performance_logs_exists,
+      EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'spray_operations'
+      ) as spray_operations_exists,
+      EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'stream_health'
+      ) as stream_health_exists
     `);
     
-    const { mission_logs_exists, mission_plans_exists, flight_sessions_exists, detections_exists } = tablesCheckResult.rows[0];
-    
-    if (mission_logs_exists) {
-      console.log('✓ mission_logs table already exists - data will be preserved');
-    } else {
-      console.log('📝 Creating mission_logs table...');
+    const { 
+      cities_exists, barangays_exists, users_exists, flight_sessions_exists, 
+      target_types_exists, detections_exists, hardware_telemetry_exists,
+      ai_performance_logs_exists, spray_operations_exists, stream_health_exists
+    } = tablesCheckResult.rows[0];
+
+    // 1. Cities
+    if (!cities_exists) {
+      console.log('📝 Creating cities table...');
+      await pool.query(`
+        CREATE TABLE cities (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL UNIQUE
+        );
+      `);
     }
 
-    // Create mission_logs table (safe - won't drop existing data)
+    // 2. Barangays
+    if (!barangays_exists) {
+      console.log('📝 Creating barangays table...');
+      await pool.query(`
+        CREATE TABLE barangays (
+          id SERIAL PRIMARY KEY,
+          city_id INTEGER REFERENCES cities(id),
+          name TEXT NOT NULL
+        );
+      `);
+    }
+
+    // 3. Users
+    if (!users_exists) {
+      console.log('📝 Creating users table...');
+      await pool.query(`
+        CREATE TABLE users (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          full_name TEXT NOT NULL,
+          role TEXT CHECK (role = ANY (ARRAY['Pilot'::text, 'LGU Personnel'::text, 'Sanitation Officer'::text])),
+          email TEXT NOT NULL UNIQUE,
+          barangay_id INTEGER REFERENCES barangays(id)
+        );
+      `);
+    }
+
+    // 4. Flight Sessions
+    if (!flight_sessions_exists) {
+      console.log('📝 Creating flight_sessions table...');
+      await pool.query(`
+        CREATE TABLE flight_sessions (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          pilot_id UUID REFERENCES users(id),
+          barangay_id INTEGER REFERENCES barangays(id),
+          start_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          end_time TIMESTAMP WITH TIME ZONE,
+          status TEXT DEFAULT 'active' CHECK (status = ANY (ARRAY['active'::text, 'completed'::text, 'aborted'::text])),
+          session_name TEXT
+        );
+      `);
+    }
+
+    // 5. Target Types
+    if (!target_types_exists) {
+      console.log('📝 Creating target_types table...');
+      await pool.query(`
+        CREATE TABLE target_types (
+          id SERIAL PRIMARY KEY,
+          label TEXT NOT NULL UNIQUE,
+          description TEXT
+        );
+      `);
+    }
+
+    // 6. Detections
+    if (!detections_exists) {
+      console.log('📝 Creating detections table...');
+      await pool.query(`
+        CREATE TABLE detections (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          session_id UUID NOT NULL REFERENCES flight_sessions(id) ON DELETE CASCADE,
+          target_type_id INTEGER NOT NULL REFERENCES target_types(id),
+          confidence DOUBLE PRECISION,
+          water_confirmed BOOLEAN DEFAULT FALSE,
+          latitude DOUBLE PRECISION NOT NULL,
+          longitude DOUBLE PRECISION NOT NULL,
+          lidar_m DOUBLE PRECISION,
+          image_url TEXT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `);
+      await pool.query(`CREATE INDEX idx_detections_session ON detections(session_id);`);
+    }
+
+    // 7. Hardware Telemetry
+    if (!hardware_telemetry_exists) {
+      console.log('📝 Creating hardware_telemetry table...');
+      await pool.query(`
+        CREATE TABLE hardware_telemetry (
+          id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+          session_id UUID NOT NULL REFERENCES flight_sessions(id),
+          logged_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          latitude DOUBLE PRECISION,
+          longitude DOUBLE PRECISION,
+          altitude_lidar_m DOUBLE PRECISION,
+          battery_voltage DOUBLE PRECISION,
+          heading INTEGER,
+          is_armed BOOLEAN
+        );
+      `);
+    }
+
+    // 8. AI Performance Logs
+    if (!ai_performance_logs_exists) {
+      console.log('📝 Creating ai_performance_logs table...');
+      await pool.query(`
+        CREATE TABLE ai_performance_logs (
+          id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+          session_id UUID NOT NULL REFERENCES flight_sessions(id),
+          logged_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          sharpness_score INTEGER,
+          tracking_progress_percent INTEGER,
+          pipeline_speed_ms INTEGER
+        );
+      `);
+    }
+
+    // 9. Spray Operations
+    if (!spray_operations_exists) {
+      console.log('📝 Creating spray_operations table...');
+      await pool.query(`
+        CREATE TABLE spray_operations (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          detection_id UUID NOT NULL REFERENCES detections(id),
+          session_id UUID REFERENCES flight_sessions(id),
+          triggered_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          trigger_type TEXT CHECK (trigger_type = ANY (ARRAY['Manual'::text, 'Auto'::text])),
+          duration_seconds INTEGER NOT NULL,
+          target_area_pixels DOUBLE PRECISION,
+          true_area_scaled DOUBLE PRECISION
+        );
+      `);
+    }
+
+    // 10. Stream Health
+    if (!stream_health_exists) {
+      console.log('📝 Creating stream_health table...');
+      await pool.query(`
+        CREATE TABLE stream_health (
+          id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+          session_id UUID REFERENCES flight_sessions(id),
+          logged_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          pi_ip TEXT,
+          laptop_ip TEXT,
+          stream_pid TEXT,
+          status TEXT CHECK (status = ANY (ARRAY['Healthy'::text, 'Missing/Restarting'::text, 'Disconnected'::text, 'Failed'::text, 'Stream Frozen'::text, 'Too Blurry'::text]))
+        );
+      `);
+    }
+
+    // --- Legacy mission tables (keep for compatibility) ---
     await pool.query(`
       CREATE TABLE IF NOT EXISTS mission_logs (
         id SERIAL PRIMARY KEY,
@@ -61,15 +240,7 @@ async function setupDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    console.log('✓ mission_logs table created/verified');
 
-    if (mission_plans_exists) {
-      console.log('✓ mission_plans table already exists - data will be preserved');
-    } else {
-      console.log('📝 Creating mission_plans table...');
-    }
-
-    // Create mission_plans table (safe - won't drop existing data)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS mission_plans (
         id SERIAL PRIMARY KEY,
@@ -80,52 +251,6 @@ async function setupDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    console.log('✓ mission_plans table created/verified');
-
-    if (flight_sessions_exists) {
-      console.log('✓ flight_sessions table already exists');
-    } else {
-      console.log('📝 Creating flight_sessions table...');
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS flight_sessions (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          pilot_id UUID,
-          barangay_id INTEGER,
-          session_name TEXT,
-          start_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          end_time TIMESTAMP WITH TIME ZONE,
-          status VARCHAR(50) DEFAULT 'active'
-        );
-      `);
-    }
-
-    if (detections_exists) {
-      console.log('✓ detections table already exists');
-    } else {
-      console.log('📝 Creating detections table...');
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS target_types (
-          id SERIAL PRIMARY KEY,
-          label VARCHAR(255) NOT NULL,
-          description TEXT
-        );
-      `);
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS detections (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          session_id UUID NOT NULL REFERENCES flight_sessions(id) ON DELETE CASCADE,
-          target_type_id INTEGER NOT NULL REFERENCES target_types(id),
-          confidence DOUBLE PRECISION,
-          water_confirmed BOOLEAN DEFAULT FALSE,
-          latitude DOUBLE PRECISION NOT NULL,
-          longitude DOUBLE PRECISION NOT NULL,
-          lidar_m DOUBLE PRECISION,
-          image_url TEXT,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-      `);
-      await pool.query(`CREATE INDEX IF NOT EXISTS idx_detections_session ON detections(session_id);`);
-    }
 
     // SEED DATA
     console.log('🌱 Seeding reference data...');

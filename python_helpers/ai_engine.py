@@ -10,6 +10,7 @@ import numpy as np
 import socket
 import json
 import csv
+import uuid
 from ultralytics import YOLO
 from datetime import datetime
 from flask import Flask, Response, jsonify, request, send_file
@@ -65,6 +66,7 @@ global_jpeg_bytes = generate_placeholder()
 session_detections = 0
 session_sprays = 0
 is_pi_connected = True
+active_detection_id = None 
 
 ai_telemetry_data = {
     "sharpnessScore": 0, "isSharpEnough": False, "trackingProgress": 0,
@@ -162,15 +164,15 @@ tracked_classes = {}
 class StreamValidator:
     def __init__(self): self.last_frame = None
     def check_frame_reliability(self, frame):
-        if frame is None: return False, "NO FRAME"
+        if frame is None: return False, "NO FRAME", 0
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        if self.last_frame is not None and np.mean(cv2.absdiff(gray, self.last_frame)) < 0.5:
-            return False, "STREAM FROZEN"
-        self.last_frame = gray.copy()
         sharpness = cv2.Laplacian(gray, cv2.CV_64F).var()
-        if sharpness < MIN_SHARPNESS: return False, f"TOO BLURRY ({int(sharpness)})"
-        if sharpness > MAX_SHARPNESS: return False, f"PIXELATED ({int(sharpness)})"
-        return True, f"READY ({int(sharpness)})"
+        if self.last_frame is not None and np.mean(cv2.absdiff(gray, self.last_frame)) < 0.5:
+            return False, "STREAM FROZEN", sharpness
+        self.last_frame = gray.copy()
+        if sharpness < MIN_SHARPNESS: return False, f"TOO BLURRY ({int(sharpness)})", sharpness
+        if sharpness > MAX_SHARPNESS: return False, f"PIXELATED ({int(sharpness)})", sharpness
+        return True, f"READY ({int(sharpness)})", sharpness
 
 @app.route('/api/start_flight', methods=['POST', 'OPTIONS'])
 def start_flight():
@@ -255,9 +257,12 @@ def manual_spray():
         with telemetry_lock:
             water_confirmed = ai_telemetry_data.get("waterConfirmed", False)
             computed_area = ai_telemetry_data.get("activeTargetArea", 0)
-        if not computed_area or cur_alt > 1.5:
-            return jsonify({"error": f"Conditions not met (Alt: {cur_alt}m)"}), 403
-        return jsonify(SimpleSprayer().spray(computed_area, None, cur_alt, trigger_type="Manual"))
+        
+        # We always allow manual spray if altitude is low, even if no target is "confirmed"
+        if cur_alt > 1.5:
+            return jsonify({"error": f"Altitude too high ({cur_alt}m)"}), 403
+            
+        return jsonify(SimpleSprayer().spray(computed_area or 1000, None, cur_alt, trigger_type="Manual"))
     except Exception as e: return jsonify({"error": str(e)}), 500
 
 class SimpleSprayer:
@@ -270,12 +275,35 @@ class SimpleSprayer:
             return cls._instance
             
     def spray(self, area, detection_id=None, altitude=0.0, trigger_type="Manual"):
-        global ACTIVE_SESSION_ID, session_sprays
+        global ACTIVE_SESSION_ID, session_sprays, active_detection_id
         if self.is_busy: return {"error": "Busy"}
         
         true_area = area * (altitude ** 2) if altitude > 0.05 else area
         duration = 5 if true_area < 2500 else (10 if true_area < 7500 else 15)
+
+        # Ensure we have a detection_id for the spray_operations table (NOT NULL constraint)
+        target_det_id = detection_id or active_detection_id
         
+        if not target_det_id and ACTIVE_SESSION_ID:
+            # Create a "Manual Intervention" detection record if none exists
+            try:
+                manual_det_id = str(uuid.uuid4())
+                hw_data = tel_receiver.get_data()
+                supabase.table("detections").insert({
+                    "id": manual_det_id,
+                    "session_id": ACTIVE_SESSION_ID,
+                    "target_type_id": 1, # Default to Water
+                    "confidence": 1.0,
+                    "water_confirmed": True,
+                    "latitude": float(hw_data.get("gps_lat", 0.0)),
+                    "longitude": float(hw_data.get("gps_lon", 0.0)),
+                    "lidar_m": altitude
+                }).execute()
+                target_det_id = manual_det_id
+            except Exception as e:
+                print(f"[Error] Failed to create manual detection: {e}")
+                return {"error": "DB_CONSTRAINT_FAIL"}
+
         cmd = f"""python3 - << 'EOF'
 import pigpio, time
 pi = pigpio.pi()
@@ -302,7 +330,15 @@ EOF
                 global session_sprays; session_sprays += 1
                 now_iso = datetime.utcnow().isoformat()
                 if ACTIVE_SESSION_ID:
-                    supabase_queue.put({"table": "spray_operations", "data": {"session_id": ACTIVE_SESSION_ID, "detection_id": detection_id, "trigger_type": trigger_type, "duration_seconds": duration, "target_area_pixels": float(area), "true_area_scaled": float(true_area), "triggered_at": now_iso}})
+                    supabase_queue.put({"table": "spray_operations", "data": {
+                        "session_id": ACTIVE_SESSION_ID, 
+                        "detection_id": target_det_id, 
+                        "trigger_type": trigger_type, 
+                        "duration_seconds": duration, 
+                        "target_area_pixels": float(area), 
+                        "true_area_scaled": float(true_area), 
+                        "triggered_at": now_iso
+                    }})
                 log_to_csv({"Timestamp": now_iso, "Type": "SPRAY", "Target": trigger_type, "Area": true_area, "Duration": duration})
                 time.sleep(duration + 1); ssh.close()
             finally: self.is_busy = False
@@ -338,7 +374,7 @@ def camera_producer(frame_queue, stop_event):
     cap.release()
 
 def inference_consumer(frame_queue, stop_event):
-    global global_jpeg_bytes, session_detections
+    global global_jpeg_bytes, session_detections, active_detection_id
     model = YOLO(os.path.join(os.path.dirname(__file__), "main_classifier.pt"))
     model_water = YOLO(os.path.join(os.path.dirname(__file__), "water_classifier.pt"))
     validator = StreamValidator()
@@ -347,7 +383,7 @@ def inference_consumer(frame_queue, stop_event):
     while not stop_event.is_set():
         if frame_queue.empty(): continue
         frame = frame_queue.get(); start_time = time.time()
-        is_reliable, status_msg = validator.check_frame_reliability(frame)
+        is_reliable, status_msg, sharpness = validator.check_frame_reliability(frame)
         
         if not is_reliable:
             annotated_frame = frame.copy()
@@ -368,7 +404,12 @@ def inference_consumer(frame_queue, stop_event):
         if results[0].boxes.id is not None:
             for box in results[0].boxes:
                 obj_id = int(box.id[0])
-                if obj_id not in tracked_classes: tracked_classes[obj_id] = {'start': time.time(), 'logged': False}
+                if obj_id not in tracked_classes: 
+                    tracked_classes[obj_id] = {
+                        'start': time.time(), 
+                        'logged': False,
+                        'uuid': str(uuid.uuid4())
+                    }
                 elapsed = time.time() - tracked_classes[obj_id]['start']
                 progress = min(100, int((elapsed / CONFIRM_AFTER) * 100)); max_progress = max(max_progress, progress)
                 
@@ -394,20 +435,43 @@ def inference_consumer(frame_queue, stop_event):
                         ai_telemetry_data["activeTargetArea"] = true_area
                         ai_telemetry_data["waterConfirmed"] = is_water_confirmed
                     
+                    active_detection_id = tracked_classes[obj_id]['uuid']
+                    
                     if is_water_confirmed and not tracked_classes[obj_id]['logged']:
                         tracked_classes[obj_id]['logged'] = True; session_detections += 1
                         now_iso = datetime.utcnow().isoformat()
                         if ACTIVE_SESSION_ID:
-                            supabase_queue.put({"table": "detections", "data": {"session_id": ACTIVE_SESSION_ID, "target_type_id": TARGET_TYPES.get(det_class.lower(), 1), "confidence": float(box.conf[0]), "latitude": float(hw_data.get("gps_lat", 0.0)), "longitude": float(hw_data.get("gps_lon", 0.0)), "lidar_m": float(cur_lidar), "water_confirmed": True, "created_at": now_iso}})
+                            supabase_queue.put({"table": "detections", "data": {
+                                "id": tracked_classes[obj_id]['uuid'],
+                                "session_id": ACTIVE_SESSION_ID, 
+                                "target_type_id": TARGET_TYPES.get(det_class.lower(), 1), 
+                                "confidence": float(box.conf[0]), 
+                                "latitude": float(hw_data.get("gps_lat", 0.0)), 
+                                "longitude": float(hw_data.get("gps_lon", 0.0)), 
+                                "lidar_m": float(cur_lidar), 
+                                "water_confirmed": True, 
+                                "created_at": now_iso
+                            }})
                         log_to_csv({"Timestamp": now_iso, "Type": "DETECTION", "Target": det_class, "Area": true_area})
         
         with telemetry_lock:
-            ai_telemetry_data.update({"trackingProgress": max_progress, "totalPipelineSpeedMs": pipeline_ms})
+            ai_telemetry_data.update({
+                "trackingProgress": max_progress, 
+                "totalPipelineSpeedMs": pipeline_ms,
+                "sharpnessScore": int(sharpness),
+                "isSharpEnough": is_reliable
+            })
             
         if ACTIVE_SESSION_ID and int(time.time()) % 1 == 0 and not telemetry_logged_this_sec:
             now_iso = datetime.utcnow().isoformat()
             supabase_queue.put({"table": "hardware_telemetry", "data": {"session_id": ACTIVE_SESSION_ID, "logged_at": now_iso, "latitude": float(hw_data.get("gps_lat", 0.0)), "longitude": float(hw_data.get("gps_lon", 0.0)), "altitude_lidar_m": float(cur_lidar), "battery_voltage": float(bat_volts), "is_armed": is_armed, "heading": float(hw_data.get("heading", 0.0))}})
-            supabase_queue.put({"table": "ai_performance_logs", "data": {"session_id": ACTIVE_SESSION_ID, "logged_at": now_iso, "sharpness_score": 50, "tracking_progress_percent": max_progress, "pipeline_speed_ms": pipeline_ms}})
+            supabase_queue.put({"table": "ai_performance_logs", "data": {
+                "session_id": ACTIVE_SESSION_ID, 
+                "logged_at": now_iso, 
+                "sharpness_score": int(sharpness), 
+                "tracking_progress_percent": max_progress, 
+                "pipeline_speed_ms": int(pipeline_ms)
+            }})
             telemetry_logged_this_sec = True
         elif int(time.time()) % 1 != 0: telemetry_logged_this_sec = False
         
