@@ -27,7 +27,7 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions, fetchAll })
   const [objectFilter, setObjectFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('');
   const [minDurationFilter, setMinDurationFilter] = useState<number>(0);
-  const [activeTab, setActiveTab] = useState<'overview' | 'ai' | 'hardware' | 'health'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'ai' | 'health'>('overview');
   const [isAllLoaded, setIsAllLoaded] = useState(false);
   const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'duration_desc' | 'detections_desc'>('date_desc');
 
@@ -280,7 +280,6 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions, fetchAll })
                 <div className="flex overflow-x-auto scrollbar-hide">
                   <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} label="OVERVIEW" />
                   <TabButton active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} label="AI_DATABANK" />  
-                  <TabButton active={activeTab === 'hardware'} onClick={() => setActiveTab('hardware')} label="HARDWARE_METRICS" />
                   <TabButton active={activeTab === 'health'} onClick={() => setActiveTab('health')} label="STREAM_HEALTH" />
                 </div>
                 <div className="text-right">
@@ -398,81 +397,6 @@ const FlightLogsPanel: React.FC<FlightLogsPanelProps> = ({ sessions, fetchAll })
                       ))}
                     </div>
                   </div>
-                )}
-
-                {activeTab === 'hardware' && (
-                   <div className="space-y-6">
-                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-primary pl-3">HARDWARE_TELEMETRY_DATABANK</h4>
-                      
-                      {/* Aggregate Stats */}
-                      <div className="grid grid-cols-4 gap-4">
-                        <div className="p-3 bg-slate-900 border border-slate-800 rounded">
-                          <span className="text-[7px] text-slate-600 font-mono font-bold uppercase block mb-1">MAX_ALTITUDE</span>
-                          <p className="text-xs font-black font-mono text-slate-100">
-                            {selectedSession.hardware_telemetry?.length ? Math.max(...selectedSession.hardware_telemetry.map(t => t.altitude_lidar_m)).toFixed(2) : '0.00'}M
-                          </p>
-                        </div>
-                        <div className="p-3 bg-slate-900 border border-slate-800 rounded">
-                          <span className="text-[7px] text-slate-600 font-mono font-bold uppercase block mb-1">MIN_BATTERY</span>
-                          <p className="text-xs font-black font-mono text-gcs-success">
-                            {selectedSession.hardware_telemetry?.length ? Math.min(...selectedSession.hardware_telemetry.map(t => t.battery_voltage)).toFixed(2) : '0.00'}V
-                          </p>
-                        </div>
-                        <div className="p-3 bg-slate-900 border border-slate-800 rounded">
-                          <span className="text-[7px] text-slate-600 font-mono font-bold uppercase block mb-1">AVG_HEADING</span>
-                          <p className="text-xs font-black font-mono text-slate-100">
-                            {selectedSession.hardware_telemetry?.length ? (selectedSession.hardware_telemetry.reduce((a, b) => a + b.heading, 0) / selectedSession.hardware_telemetry.length).toFixed(0) : '0'}°
-                          </p>
-                        </div>
-                        <div className="p-3 bg-slate-900 border border-slate-800 rounded">
-                          <span className="text-[7px] text-slate-600 font-mono font-bold uppercase block mb-1">DATA_POINTS</span>
-                          <p className="text-xs font-black font-mono text-slate-100">{selectedSession.hardware_telemetry?.length || 0}</p>
-                        </div>
-                      </div>
-
-                      <div className="overflow-x-auto border border-slate-800 rounded">
-                        <table className="w-full text-left font-mono text-[9px]">
-                          <thead className="bg-slate-900 text-slate-500 uppercase tracking-widest border-b border-slate-800">
-                            <tr>
-                              <th className="p-3">LOGGED_AT</th>
-                              <th className="p-3">GPS_COORDS</th>
-                              <th className="p-3">ALT_LIDAR</th>
-                              <th className="p-3">HEADING</th>
-                              <th className="p-3">VOLT</th>
-                              <th className="p-3">ARMED</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-800/50">
-                            {selectedSession.hardware_telemetry?.map((log) => (
-                              <tr key={log.id} className="hover:bg-slate-800/30">
-                                <td className="p-3 text-slate-400">{new Date(log.logged_at).toLocaleTimeString()}</td>
-                                <td className="p-3 text-slate-100">{log.latitude.toFixed(6)}, {log.longitude.toFixed(6)}</td>
-                                <td className="p-3 text-slate-100">{log.altitude_lidar_m.toFixed(2)}M</td>        
-                                <td className="p-3 text-slate-100">{log.heading.toFixed(0)}°</td>
-                                <td className="p-3 text-gcs-success">{log.battery_voltage.toFixed(2)}V</td>       
-                                <td className="p-3 text-slate-300">{log.is_armed ? 'YES' : 'NO'}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-mono border-l-2 border-gcs-success pl-3">SPRAY_LOG_EVENTS</h4>
-                      <div className="space-y-2">
-                        {selectedSession.spray_operations?.map((log) => (
-                          <div key={log.id} className="p-3 bg-slate-900 border border-slate-800 rounded flex justify-between items-center">
-                             <div>
-                                <p className="text-[10px] font-bold text-slate-100 uppercase">TRIGGER_{log.trigger_type}</p>
-                                <p className="text-[8px] text-slate-500 font-mono">{new Date(log.triggered_at).toLocaleTimeString()} | DUR: {log.duration_seconds}S</p>
-                             </div>
-                             <div className="text-right">
-                                <p className="text-[10px] font-mono text-gcs-success font-black">{log.true_area_scaled?.toFixed(2) || 0} SQ UNITS</p>
-                                <p className="text-[7px] text-slate-600 uppercase font-mono font-bold tracking-widest">{log.target_area_pixels?.toFixed(0)} PX² RAW</p>
-                             </div>
-                          </div>
-                        ))}
-                      </div>
-                   </div>
                 )}
 
                 {activeTab === 'health' && (
