@@ -140,22 +140,41 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
     const [streamError, setStreamError] = useState(false);
     const [showExitConfirm, setShowExitConfirm] = useState(false);
 
+    const [isSessionAborted, setIsSessionAborted] = useState(false);
+
     useEffect(() => {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/ws/logs`;
         const ws = new WebSocket(wsUrl);
 
-        // GCS Requirement: End flight session when user exits panel
         return () => {
             ws.close();
         };
     }, []);
 
-    const handleTerminate = () => {
-        const hostname = window.location.hostname;
-        fetch(`http://${hostname}:5000/api/end_flight`, { method: 'POST' })
-            .catch(err => console.error("Failed to finalize mission log:", err))
-            .finally(() => onClose());
+    const handleFinalizeMission = (status: 'completed' | 'aborted') => {
+        // We now call the backend's centralized stop endpoint which 
+        // handles both process termination AND database status updates.
+        fetch('/api/system/stop', { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (status === 'aborted') {
+                // If aborted, we stay in the view but acknowledge the session is dead
+                setIsSessionAborted(true);
+                setShowExitConfirm(false);
+            } else {
+                // If completed, we exit the view entirely
+                onClose();
+            }
+        })
+        .catch(err => {
+            console.error(`Failed to finalize mission as ${status}:`, err);
+            if (status === 'completed') onClose();
+        });
     };
 
     const handleRestart = () => {
@@ -175,23 +194,52 @@ const DroneStreamView: React.FC<DroneStreamViewProps> = ({ telemetry, onClose, m
             {/* Confirmation Modal */}
             {showExitConfirm && (
                 <div className="absolute inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 max-w-sm w-full shadow-2xl animate-fade-in">
-                        <h2 className="text-lg font-black text-slate-100 uppercase tracking-widest mb-2 font-mono italic">Confirm Termination</h2>
+                    <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 max-w-md w-full shadow-2xl animate-fade-in">
+                        <h2 className="text-lg font-black text-slate-100 uppercase tracking-widest mb-2 font-mono italic">
+                            {isSessionAborted ? 'TERMINATE TACTICAL LINK' : 'FINALIZE MISSION LOG'}
+                        </h2>
                         <p className="text-xs text-slate-400 mb-6 font-mono uppercase tracking-wider leading-relaxed">
-                            Ending the stream will finalize the current mission log and disconnect the tactical link. Continue?
+                            {isSessionAborted 
+                                ? 'The flight session has been marked as aborted. Do you want to terminate the link and exit to dashboard?' 
+                                : 'Ending the stream will disconnect the tactical link. How would you like to classify this flight session?'}
                         </p>
-                        <div className="flex gap-4">
+                        
+                        <div className="flex flex-col gap-3">
+                            <div className="flex gap-3">
+                                {isSessionAborted ? (
+                                    <button 
+                                        onClick={() => handleFinalizeMission('completed')}
+                                        className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded font-mono text-[10px] font-black uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)]"
+                                    >
+                                        TERMINATE LINK & EXIT
+                                    </button>
+                                ) : (
+                                    <>
+                                        {/* Abort Button -> Maps to 'aborted' / 'TERMINATED' */}
+                                        <button 
+                                            onClick={() => handleFinalizeMission('aborted')}
+                                            className="flex-1 py-3 border border-red-900/50 bg-slate-900 hover:bg-red-900/30 text-red-500 rounded font-mono text-[10px] font-black uppercase tracking-widest transition-all neon-glow-red"
+                                        >
+                                            ABORT MISSION
+                                        </button>
+                                        
+                                        {/* End Button -> Maps to 'completed' / 'COMPLETED' */}
+                                        <button 
+                                            onClick={() => handleFinalizeMission('completed')}
+                                            className="flex-1 py-3 bg-gcs-success hover:bg-emerald-600 text-slate-900 rounded font-mono text-[10px] font-black uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+                                        >
+                                            END MISSION
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                            
+                            {/* Cancel Button */}
                             <button 
                                 onClick={() => setShowExitConfirm(false)}
-                                className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-mono text-[10px] font-black uppercase tracking-widest transition-all"
+                                className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded font-mono text-[10px] font-black uppercase tracking-widest transition-all mt-2"
                             >
-                                Cancel
-                            </button>
-                            <button 
-                                onClick={handleTerminate}
-                                className="flex-1 py-2 bg-gcs-primary hover:bg-red-600 text-slate-100 rounded font-mono text-[10px] font-black uppercase tracking-widest transition-all shadow-lg neon-glow-red"
-                            >
-                                Terminate
+                                {isSessionAborted ? 'KEEP LINK ACTIVE' : 'RETURN TO STREAM'}
                             </button>
                         </div>
                     </div>

@@ -396,6 +396,56 @@ fastify.get('/api/users', async (request, reply) => {
   }
 });
 
+// --- REFERENCE DATA ---
+let activeSession: {
+  id: string | null;
+  p1: any | null;
+  p2: any | null;
+  isManualStop: boolean;
+} = {
+  id: null,
+  p1: null,
+  p2: null,
+  isManualStop: false
+};
+
+const killProcesses = () => {
+  activeSession.isManualStop = true;
+  try {
+    if (activeSession.p1) activeSession.p1.kill();
+    if (activeSession.p2) activeSession.p2.kill();
+    
+    // Fallback aggressive kill
+    if (process.platform === 'win32') {
+      execSync('taskkill /F /IM python.exe /T', { stdio: 'ignore' });
+    } else {
+      execSync('pkill -f python', { stdio: 'ignore' });
+    }
+  } catch (e) {}
+  activeSession.p1 = null;
+  activeSession.p2 = null;
+};
+
+const stopActiveSession = async (status: 'completed' | 'aborted' = 'aborted') => {
+  if (activeSession.id) {
+    try {
+      await supabase
+        .from('flight_sessions')
+        .update({ 
+          status: status, 
+          end_time: new Date().toISOString()
+        })
+        .eq('id', activeSession.id);
+    } catch (err) {
+      console.error('Failed to update session status on stop:', err);
+    }
+    activeSession.id = null;
+  }
+
+  killProcesses();
+  activeSession = { id: null, p1: null, p2: null, isManualStop: false };
+};
+
 // Helper for starting Python processes
 fastify.post('/api/system/start', async (request, reply) => {
   try {
@@ -441,14 +491,8 @@ fastify.post('/api/system/start', async (request, reply) => {
     if (sessionError) throw sessionError;
     const session_id = sessionData.id;
 
-    // Kill existing processes
-    try {
-       if (process.platform === 'win32') {
-         execSync('taskkill /F /IM python.exe /T', { stdio: 'ignore' });
-       } else {
-         execSync('pkill -f python', { stdio: 'ignore' });
-       }
-    } catch (e) {}
+    // Force kill existing processes before starting new ones
+    killProcesses();
 
     const pythonExec = process.env.PYTHON_PATH || 'python';
     const scriptsDir = process.env.SCRIPTS_DIR || path.join(process.cwd(), '..', 'python_helpers');
@@ -470,6 +514,25 @@ fastify.post('/api/system/start', async (request, reply) => {
     const p2 = spawn(pythonExec, [script2], spawnOptions);
     p2.unref();
 
+    activeSession = {
+      id: session_id,
+      p1,
+      p2,
+      isManualStop: false
+    };
+
+    // --- WATCHER LOGIC ---
+    const handleExit = async (code: number | null, signal: string | null) => {
+      if (!activeSession.isManualStop && activeSession.id === session_id) {
+        console.warn(`Process exited unexpectedly (code: ${code}, signal: ${signal}). Marking session as aborted.`);
+        // Note: We use the helper that also kills the other sibling process
+        await stopActiveSession('aborted');
+      }
+    };
+
+    p1.on('exit', handleExit);
+    p2.on('exit', handleExit);
+
     return { 
       success: true, 
       session_id,
@@ -478,6 +541,34 @@ fastify.post('/api/system/start', async (request, reply) => {
   } catch (err) {
     fastify.log.error('Error starting system: ' + String(err));
     reply.code(500).send({ error: 'Failed to launch system processes' });
+  }
+});
+
+// NEW: Endpoint to manually stop/abort the session
+fastify.post('/api/system/stop', async (request, reply) => {
+  const { status } = request.body as { status: 'completed' | 'aborted' };
+  
+  if (status === 'aborted') {
+    // If user clicks "Abort", we record it as aborted but KEEP the processes running (tactical link remains)
+    if (activeSession.id) {
+      try {
+        await supabase
+          .from('flight_sessions')
+          .update({ 
+            status: 'aborted', 
+            end_time: new Date().toISOString()
+          })
+          .eq('id', activeSession.id);
+        activeSession.id = null; // Clear ID so we don't update it again
+      } catch (err) {
+        console.error('Failed to update session status on abort:', err);
+      }
+    }
+    return { success: true, status: 'aborted', message: 'Tactical link remains active' };
+  } else {
+    // If user clicks "End Mission", we stop everything
+    await stopActiveSession('completed');
+    return { success: true, status: 'completed' };
   }
 });
 
